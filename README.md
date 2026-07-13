@@ -158,8 +158,8 @@ Follow the **START HERE** protocol at the top of this file. See `AI_WORKFLOW.md`
 
 | Role | Name | Responsibility |
 |---|---|---|
-| Project Lead | <!-- Name --> | Final decisions on scope and direction |
-| Tech Lead | <!-- Name --> | Architecture and technical decisions |
+| Project Lead | S Manoj Gowda | Final decisions on scope and direction |
+| Tech Lead | Kiran Gowda | Architecture and technical decisions |
 | AI Sessions | Claude | Implementation, documentation, analysis |
 
 ---
