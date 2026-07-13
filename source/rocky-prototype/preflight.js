@@ -177,6 +177,11 @@ async function waitForServer(ms = 20000) {
     const clean = await get('/api/labstate');
     ok('Reset restores pristine demo state', clean.validations.filter((v) => v.status === 'failed').length === 3);
 
+    // 8b. Simulated CloudLabs learner environment (the demo STAGE for Act 1)
+    const clsim = await fetch(BASE + '/cloudlabs-sim.html');
+    const clsimTxt = await clsim.text();
+    ok('CloudLabs-sim stage serves with SIMULATED labelling + live guide wiring', clsim.status === 200 && clsimTxt.includes('SIMULATED ENVIRONMENT') && clsimTxt.includes('evidenceCard') && clsimTxt.includes('/api/labstate'));
+
     // 9. Dead routes stay dead
     act('Cleanup');
     for (const dead of ['/classic', '/api/insight', '/api/labhealth/ask']) {

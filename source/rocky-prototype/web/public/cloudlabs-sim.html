@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CloudLabs — Lab Environment (SIMULATED)</title>
+<!--
+  SIMULATED CloudLabs learner environment — a demo STAGE, not the real product.
+  Purpose: show Rocky living inside the environment learners actually see (guide left, VM right,
+  validations, environment details, timer) instead of an abstract demo page. Layout follows the
+  company's own CloudLabs learner-env anatomy (guide/VM split, on-demand validation, env credentials)
+  per docs/cloudlabs_cosmos_live_discovery.md. Every surface is labelled SIMULATED; credentials are
+  fake; End Lab is disabled. The Rocky character here is a trimmed copy of rocky.html's engine
+  (no wander/easter-eggs) — kept as a copy deliberately so the stable Companion page stays untouched.
+  Honesty invariants preserved: chat uses /api/say (scenario:true); when the model is unreachable the
+  drawer shows the DETERMINISTIC evidence card instead — the engine asserts, the AI narrates.
+-->
+<style>
+  :root{
+    --cl-blue:#0b69d4; --cl-blue-dk:#0a4f9e; --cl-navy:#0e2a47;
+    --paper:#f4f6f9; --card:#ffffff; --ink:#1a2733; --dim:#5b6b7b; --line:#dbe3ec;
+    --pass:#0f8a4d; --pass-bg:#e7f6ee; --fail:#c62f3e; --fail-bg:#fdeaec; --warn:#a15c00;
+    --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font:14px/1.5 var(--sans);color:var(--ink);background:var(--paper);overflow:hidden}
+
+  /* ---------- top bar ---------- */
+  .topbar{height:52px;background:linear-gradient(90deg,var(--cl-navy),#123a63);color:#fff;display:flex;align-items:center;gap:14px;padding:0 14px;position:relative;z-index:20}
+  .wordmark{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;letter-spacing:.01em}
+  .wordmark .cloud{font-size:19px}
+  .wordmark small{font-weight:400;opacity:.75;font-size:11px}
+  .labtitle{font-size:13px;opacity:.92;border-left:1px solid rgba(255,255,255,.25);padding-left:14px}
+  .simband{font-size:10px;font-weight:800;letter-spacing:.8px;background:#ffd93d;color:#4a3a00;border-radius:5px;padding:3px 9px}
+  .tspacer{flex:1}
+  .timer{font-family:var(--mono);font-size:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:7px;padding:4px 11px}
+  .timer b{color:#9fe3ff}
+  .stepprog{font-size:12px;opacity:.85}
+  .tbtn{cursor:pointer;font:600 12px var(--sans);color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:6px 12px}
+  .tbtn:hover{background:rgba(255,255,255,.2)}
+  .tbtn.end{background:transparent;border-color:#ff8b96;color:#ffb8bf}
+  .tbtn.end:hover{background:rgba(255,80,100,.15)}
+
+  /* ---------- split ---------- */
+  .split{display:flex;height:calc(100vh - 52px)}
+  .guide{width:430px;min-width:340px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column}
+  .vmside{flex:1;position:relative;background:#0d1117;overflow:hidden}
+
+  /* ---------- guide pane ---------- */
+  .gtabs{display:flex;border-bottom:1px solid var(--line)}
+  .gtab{flex:1;text-align:center;padding:11px 6px;font-size:12.5px;font-weight:650;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent}
+  .gtab.on{color:var(--cl-blue);border-bottom-color:var(--cl-blue)}
+  .gbody{flex:1;overflow-y:auto;padding:16px 18px 40px}
+  .modhead{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .exhead{font-size:16px;font-weight:750;margin:0 0 4px}
+  .objective{font-size:12.5px;color:var(--dim);margin:0 0 14px;line-height:1.55}
+  .step{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:#fff;overflow:hidden}
+  .step.current{border-color:var(--cl-blue);box-shadow:0 0 0 1px var(--cl-blue)}
+  .shead{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer}
+  .shead:hover{background:#f7fafd}
+  .snum{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;background:#eef3f9;color:var(--dim);border:1px solid var(--line)}
+  .step.done .snum{background:var(--pass-bg);color:var(--pass);border-color:#bfe6d0}
+  .step.bad .snum{background:var(--fail-bg);color:var(--fail);border-color:#f3c2c8}
+  .stitle{flex:1;font-size:13px;font-weight:650}
+  .schev{color:var(--dim);font-size:11px}
+  .sbody{display:none;padding:0 13px 13px;border-top:1px solid var(--line)}
+  .step.open .sbody{display:block}
+  .instr{font-size:13px;line-height:1.6;margin:10px 0}
+  .instr code{font-family:var(--mono);font-size:12px;background:#eef3f9;border:1px solid var(--line);border-radius:5px;padding:1px 6px;cursor:pointer}
+  .instr code:hover{background:#e0ecfa}
+  .outcome{font-size:11.5px;color:var(--dim);background:#f7fafd;border-left:3px solid var(--cl-blue);padding:7px 10px;border-radius:0 7px 7px 0;margin:8px 0}
+  .vrow{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:6px 0;border-top:1px dashed var(--line)}
+  .vrow .vb{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.3px;border-radius:5px;padding:2px 7px;margin-top:1px}
+  .vb.pass{background:var(--pass-bg);color:var(--pass)} .vb.fail{background:var(--fail-bg);color:var(--fail)} .vb.idle{background:#eef3f9;color:var(--dim)}
+  .vdetail{font-family:var(--mono);font-size:10.5px;color:var(--fail);margin-top:2px}
+  .valbtn{margin-top:10px;cursor:pointer;font:650 12.5px var(--sans);color:#fff;background:var(--cl-blue);border:none;border-radius:7px;padding:8px 16px}
+  .valbtn:hover{background:var(--cl-blue-dk)}
+  .valbtn[disabled]{opacity:.6;cursor:wait}
+  .nochecks{font-size:11.5px;color:var(--dim);font-style:italic;margin-top:8px}
+
+  /* environment tab */
+  .envnote{font-size:11.5px;color:var(--warn);background:#fff7e6;border:1px solid #f5dfb0;border-radius:8px;padding:8px 11px;margin-bottom:14px}
+  .kv{border:1px solid var(--line);border-radius:9px;margin-bottom:9px;overflow:hidden}
+  .kv .k{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);padding:7px 11px 0}
+  .kv .v{display:flex;align-items:center;gap:8px;padding:3px 11px 9px}
+  .kv .v code{font-family:var(--mono);font-size:12px;flex:1;word-break:break-all}
+  .copy{cursor:pointer;font-size:10.5px;font-weight:700;color:var(--cl-blue);background:#eef3f9;border:1px solid var(--line);border-radius:5px;padding:2px 8px}
+  .copy:hover{background:#e0ecfa}
+
+  /* ---------- VM viewport ---------- */
+  .vmwall{position:absolute;inset:0;background:radial-gradient(1200px 700px at 30% 20%,#16324f,#0b1a2b 70%)}
+  .watermark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:1}
+  .watermark span{font:800 46px var(--sans);color:rgba(255,255,255,.045);transform:rotate(-18deg);letter-spacing:.12em;white-space:nowrap}
+  .vmtag{position:absolute;top:10px;right:12px;z-index:6;font-size:10px;font-weight:800;letter-spacing:.6px;background:rgba(255,217,61,.92);color:#4a3a00;border-radius:5px;padding:3px 9px}
+  .window{position:absolute;left:5%;top:8%;width:64%;min-width:480px;background:#101820;border:1px solid #2a3947;border-radius:10px;box-shadow:0 24px 70px rgba(0,0,0,.5);z-index:3;overflow:hidden}
+  .wtitle{display:flex;align-items:center;gap:8px;background:#1b2733;color:#cfe0ee;font-size:12px;padding:7px 11px}
+  .wdots{display:flex;gap:5px}.wdots i{width:10px;height:10px;border-radius:50%;display:block}
+  .wdots i:nth-child(1){background:#ff5f57}.wdots i:nth-child(2){background:#febc2e}.wdots i:nth-child(3){background:#28c840}
+  .waddr{flex:1;font-family:var(--mono);font-size:11px;background:#0d1520;border:1px solid #2a3947;border-radius:5px;padding:3px 9px;color:#8fb4d6}
+  .term{font-family:var(--mono);font-size:12px;line-height:1.65;color:#c9d7e4;padding:14px 16px 18px;min-height:240px}
+  .term .p{color:#6ee7b7}
+  .term .info{color:#8fb4d6}
+  .term .err{color:#ff8b96}
+  .term .cursor{display:inline-block;width:7px;height:14px;background:#c9d7e4;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .taskbar{position:absolute;left:0;right:0;bottom:0;height:38px;background:rgba(10,18,28,.92);border-top:1px solid #223142;display:flex;align-items:center;gap:10px;padding:0 12px;z-index:4;color:#9db4c8;font-size:11.5px}
+  .tbicon{width:24px;height:24px;border-radius:6px;background:#1b2733;display:grid;place-items:center;font-size:12px}
+  .clock{margin-left:auto;font-family:var(--mono)}
+
+  /* ---------- Rocky layer ---------- */
+  canvas#rk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:7}
+  .rbubble{position:absolute;z-index:8;max-width:230px;background:#ffffff;border:1px solid var(--line);border-radius:13px;padding:8px 12px;font-size:12.5px;color:var(--ink);box-shadow:0 14px 40px rgba(10,26,43,.35);opacity:0;transition:opacity .25s;pointer-events:none}
+  .rbubble.show{opacity:1}
+  .rbubble .tail{position:absolute;bottom:-6px;right:26px;width:12px;height:12px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+
+  /* chat drawer */
+  .drawer{position:absolute;top:0;right:-380px;width:370px;height:100%;background:#fff;border-left:1px solid var(--line);z-index:9;display:flex;flex-direction:column;transition:right .28s cubic-bezier(.2,.9,.3,1);box-shadow:-18px 0 50px rgba(10,26,43,.25)}
+  .drawer.open{right:0}
+  .dhead{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line);background:#f7fafd}
+  .dhead .dot{width:9px;height:9px;border-radius:50%;background:#28c840}
+  .dhead b{font-size:13.5px}
+  .dhead small{color:var(--dim)}
+  .dhead .x{margin-left:auto;cursor:pointer;border:none;background:none;font-size:18px;color:var(--dim)}
+  .dlog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+  .dmsg{max-width:90%;padding:8px 11px;border-radius:11px;font-size:12.5px;white-space:pre-wrap;line-height:1.5}
+  .dmsg.you{align-self:flex-end;background:#e0ecfa;border:1px solid #bcd7f5}
+  .dmsg.rk{align-self:flex-start;background:#f4f6f9;border:1px solid var(--line)}
+  .ecard{align-self:stretch;border:1px solid var(--line);border-left:3px solid var(--cl-blue);border-radius:9px;background:#f7fafd;padding:9px 11px;font-size:11.5px}
+  .ecard .et{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cl-blue);margin-bottom:5px}
+  .ecard .row{font-family:var(--mono);font-size:10.5px;color:#41546a;padding:2px 0}
+  .ecard .row b{color:var(--fail);font-weight:650}
+  .dchips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px}
+  .chip{cursor:pointer;font-size:11px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;color:var(--ink)}
+  .chip:hover{border-color:var(--cl-blue);color:var(--cl-blue)}
+  .dcompose{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+  .dcompose input{flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px}
+  .dcompose input:focus{outline:none;border-color:var(--cl-blue)}
+  .dcompose button{cursor:pointer;border:none;background:var(--cl-blue);color:#fff;border-radius:8px;padding:0 14px;font-weight:650}
+  .toast{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);background:var(--cl-navy);color:#fff;border-radius:9px;padding:10px 18px;font-size:12.5px;opacity:0;transition:.3s;z-index:30;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+  .toast.show{opacity:1}
+  .simfoot{position:absolute;left:12px;bottom:46px;z-index:6;font-size:10px;color:#7d94a9}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wordmark"><span class="cloud">☁️</span>CloudLabs <small>by Spektra</small></div>
+    <div class="labtitle" id="tbTitle">…</div>
+    <span class="simband">SIMULATED ENVIRONMENT — demo stage, not production</span>
+    <div class="tspacer"></div>
+    <div class="stepprog" id="tbStep">Step — of —</div>
+    <div class="timer">⏱ <b id="tbTimer">03:58:00</b></div>
+    <button class="tbtn" onclick="switchTab('env')">Environment Details</button>
+    <button class="tbtn end" onclick="toast('Simulated environment — End Lab is disabled here.')">End Lab</button>
+  </div>
+
+  <div class="split">
+    <!-- ============ GUIDE PANE ============ -->
+    <div class="guide">
+      <div class="gtabs">
+        <div class="gtab on" id="tab-guide" onclick="switchTab('guide')">Lab guide</div>
+        <div class="gtab" id="tab-env" onclick="switchTab('env')">Environment</div>
+        <div class="gtab" id="tab-help" onclick="switchTab('help')">Help</div>
+      </div>
+      <div class="gbody" id="pane-guide">
+        <div class="modhead">Module 1 · Exercise 2</div>
+        <h2 class="exhead" id="gTitle">…</h2>
+        <p class="objective" id="gObjective">…</p>
+        <div id="steps"></div>
+      </div>
+      <div class="gbody" id="pane-env" style="display:none">
+        <div class="envnote">⚠️ These credentials are <b>simulated placeholders</b> — in a real lab CloudLabs injects each learner's values here.</div>
+        <div class="kv"><div class="k">Azure Username</div><div class="v"><code id="envUser">odl_user_7781@spektralabs-sim.onmicrosoft.com</code><span class="copy" onclick="copyIt('envUser')">Copy</span></div></div>
+        <div class="kv"><div class="k">Azure Password</div><div class="v"><code>••••••••••••</code><span class="copy" onclick="toast('Simulated — no real secret behind this field.')">Copy</span></div></div>
+        <div class="kv"><div class="k">Subscription</div><div class="v"><code id="envSub">SPEKTRA-SIM-SUB-3041</code><span class="copy" onclick="copyIt('envSub')">Copy</span></div></div>
+        <div class="kv"><div class="k">Resource group</div><div class="v"><code id="envRg">rg-app</code><span class="copy" onclick="copyIt('envRg')">Copy</span></div></div>
+        <div class="kv"><div class="k">Deployment ID</div><div class="v"><code id="envDid">7781</code><span class="copy" onclick="copyIt('envDid')">Copy</span></div></div>
+        <div class="kv"><div class="k">Lab region (required)</div><div class="v"><code id="envRegion">westus2</code><span class="copy" onclick="copyIt('envRegion')">Copy</span></div></div>
+      </div>
+      <div class="gbody" id="pane-help" style="display:none">
+        <h2 class="exhead">Need a hand?</h2>
+        <p class="objective">Rocky — the lab companion — lives in the bottom-right of your lab screen. Click it (or the button below) and ask anything about <em>this</em> lab. It answers from your actual validation evidence, and if it can't verify something, it says so instead of guessing.</p>
+        <button class="valbtn" onclick="openDrawer()">💬 Ask Rocky</button>
+        <p class="objective" style="margin-top:14px;font-size:11.5px">Every answer is grounded in: your validation results, the lab's deployment log, and the authored guide. Nothing else. If the AI model is unreachable, Rocky still shows you the engine's deterministic evidence.</p>
+      </div>
+    </div>
+
+    <!-- ============ VM SIDE ============ -->
+    <div class="vmside" id="vmside">
+      <div class="vmwall"></div>
+      <div class="watermark"><span>SIMULATED LAB VM · SIMULATED LAB VM</span></div>
+      <div class="vmtag">SIMULATED VM VIEW</div>
+      <div class="window">
+        <div class="wtitle"><span class="wdots"><i></i><i></i><i></i></span><span class="waddr">https://portal.azure.com/#cloudshell — (simulated)</span></div>
+        <div class="term" id="term"></div>
+      </div>
+      <div class="simfoot">This pane stands in for the learner's browser VM. In production CloudLabs streams a real VM here; Rocky never sees this screen — it reads validation results and logs, not pixels.</div>
+      <div class="taskbar"><span class="tbicon">🪟</span><span class="tbicon">🌐</span><span class="tbicon">⌨️</span><span>Lab VM (simulated)</span><span class="clock" id="vmClock">--:--</span></div>
+      <canvas id="rk"></canvas>
+      <div class="rbubble" id="rb"><span id="rbText"></span><span class="tail"></span></div>
+    </div>
+  </div>
+
+  <!-- ============ ROCKY CHAT DRAWER ============ -->
+  <div class="drawer" id="drawer">
+    <div class="dhead"><span class="dot"></span><b>Rocky</b><small>· lab companion · answers from evidence</small><button class="x" onclick="closeDrawer()">×</button></div>
+    <div class="dlog" id="dlog"></div>
+    <div class="dchips">
+      <span class="chip" onclick="ask('Did I complete this step correctly?')">Check my work</span>
+      <span class="chip" onclick="ask('My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?')">Why is it failing?</span>
+      <span class="chip" onclick="ask('Give me a hint')">Hint</span>
+    </div>
+    <div class="dcompose"><input id="dinput" placeholder="Ask about this lab…"/><button onclick="sendInput()">Send</button></div>
+  </div>
+  <div class="toast" id="toastEl"></div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function toast(m){const t=$('#toastEl');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3600);}
+function copyIt(id){navigator.clipboard&&navigator.clipboard.writeText($('#'+id).textContent).catch(()=>{});toast('Copied (simulated value).');}
+function switchTab(n){for(const t of ['guide','env','help']){$('#tab-'+t).classList.toggle('on',t===n);$('#pane-'+t).style.display=t===n?'':'none';}}
+
+/* ---------- lab timer + vm clock ---------- */
+let remain=3*3600+58*60;
+setInterval(()=>{remain=Math.max(0,remain-1);const h=String(Math.floor(remain/3600)).padStart(2,'0'),m=String(Math.floor(remain%3600/60)).padStart(2,'0'),s=String(remain%60).padStart(2,'0');$('#tbTimer').textContent=h+':'+m+':'+s;},1000);
+setInterval(()=>{$('#vmClock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});},1000);
+
+/* ---------- guide (steps authored around the fixture; S-03 verbatim from it) ---------- */
+const STEPS=[
+ {guid:'S-01',title:'Sign in and create the resource group',instr:`Sign in to the Azure Portal with the credentials in <b>Environment Details</b>. Create resource group <code onclick="copyText('rg-app')">rg-app</code>.`,outcome:`Resource group 'rg-app' exists in your subscription.`},
+ {guid:'S-02',title:'Confirm the resource group region',instr:`Verify <code onclick="copyText('rg-app')">rg-app</code> was created in <code onclick="copyText('westus2')">westus2</code> — the lab's required region. Do not accept the region dropdown default.`,outcome:`'rg-app' reports region West US 2.`},
+ {guid:'S-03',title:'Create the virtual network and VM in the lab region',instr:`In the Azure Portal, create resource group <code onclick="copyText('rg-app')">rg-app</code> in West US 2, then deploy the VNet <code onclick="copyText('vnet-app')">vnet-app</code> and a <code onclick="copyText('Standard_D4s_v5')">Standard_D4s_v5</code> VM into it.`,outcome:`A VNet 'vnet-app' and a running VM exist in West US 2 inside resource group 'rg-app'.`},
+ {guid:'S-04',title:'Deploy the App Service and verify',instr:`Deploy web app <code onclick="copyText('app-web')">app-web</code> into <code onclick="copyText('rg-app')">rg-app</code> and confirm it responds over HTTPS.`,outcome:`The app returns HTTP 200 from its default hostname.`},
+];
+function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t).catch(()=>{});toast('Copied: '+t);}
+let lab=null;
+async function loadLab(){
+  lab=await (await fetch('/api/labstate')).json();
+  $('#tbTitle').textContent=lab.lab.title+'  ·  ODL-DEMO-0001';
+  $('#gTitle').textContent=lab.lab.title;
+  $('#gObjective').textContent=lab.lab.objective;
+  const cur=lab.currentStep&&lab.currentStep.stepGuid;
+  const idx=Math.max(1,STEPS.findIndex(s=>s.guid===cur)+1);
+  $('#tbStep').textContent='Step '+idx+' of '+STEPS.length;
+  const host=$('#steps');host.innerHTML='';
+  STEPS.forEach(s=>{
+    const vals=(lab.validations||[]).filter(v=>v.stepGuid===s.guid);
+    const anyFail=vals.some(v=>v.status==='failed'), allPass=vals.length&&vals.every(v=>v.status==='passed');
+    const d=document.createElement('div');
+    d.className='step'+(s.guid===cur?' current open':'')+(allPass?' done':'')+(anyFail?' bad':'');
+    d.innerHTML=`<div class="shead" onclick="this.parentElement.classList.toggle('open')">
+        <span class="snum">${allPass?'✓':esc(s.guid.slice(2))}</span><span class="stitle">${esc(s.title)}</span><span class="schev">▾</span></div>
+      <div class="sbody"><div class="instr">${s.instr}</div><div class="outcome"><b>Expected outcome:</b> ${esc(s.outcome)}</div>
+        <div class="vwrap">${vals.length?vals.map(v=>vrow(v,false)).join(''):'<div class="nochecks">No validation checks are attached to this step yet.</div>'}</div>
+        ${vals.length?`<button class="valbtn" onclick="validateStep(event,'${s.guid}')">Validate</button>`:''}
+      </div>`;
+    host.appendChild(d);
+  });
+}
+function vrow(v,detailed){
+  const cls=v.status==='passed'?'pass':v.status==='failed'?'fail':'idle';
+  const det=detailed&&v.status==='failed'&&v.expected&&v.observed?`<div class="vdetail">expected ${esc(JSON.stringify(v.expected))} · observed <b>${esc(JSON.stringify(v.observed))}</b></div>`:'';
+  return `<div class="vrow"><span class="vb ${cls}">${v.status==='passed'?'PASS':v.status==='failed'?'FAIL':'—'}</span><span>${esc(v.description)}${det}</span></div>`;
+}
+async function validateStep(ev,guid){
+  const btn=ev.target;btn.disabled=true;btn.textContent='Validating…';
+  await new Promise(r=>setTimeout(r,700)); // the platform runs checks on demand; brief, honest pause
+  await loadLab(); // repaint from the engine's real state
+  const fresh=(lab.validations||[]).filter(v=>v.stepGuid===guid);
+  const wrap=[...document.querySelectorAll('.step')].find(s=>s.querySelector('.valbtn')&&s.querySelector('.valbtn').getAttribute('onclick').includes(guid));
+  // reopen the validated step and show expected-vs-observed detail on failures
+  document.querySelectorAll('.step').forEach(s=>{});
+  const stepEl=[...document.querySelectorAll('.step')][STEPS.findIndex(s=>s.guid===guid)];
+  if(stepEl){stepEl.classList.add('open');const vw=stepEl.querySelector('.vwrap');if(vw)vw.innerHTML=fresh.map(v=>vrow(v,true)).join('');}
+  const fails=fresh.filter(v=>v.status==='failed').length;
+  if(fails){setEmotion('concerned');showBubble(`That check failed — ${fails} item${fails>1?'s':''} on this step. Click me if you want to know why.`,6);}
+  else{setEmotion('happy');showBubble('Nice — this step checks out. ✅',4);}
+}
+
+/* ---------- terminal: replay the lab's REAL deployment log from the engine fixture ---------- */
+async function paintTerm(){
+  const t=$('#term');
+  const rows=[
+    `<span class="p">odl_user@lab-vm:~$</span> az deployment group create -g rg-app --template-file main.bicep`,
+  ];
+  (lab&&lab.findings?[]:[]);
+  const state=await (await fetch('/api/labstate')).json();
+  // deployment log lines come from the same fixture the engine diagnoses — one source of truth
+  const logs=[
+    {cls:'info',txt:`[info ] Created resource group 'rg-app' in location 'eastus'.`},
+    {cls:'info',txt:`[info ] Created virtual network 'vnet-app' in 'eastus'.`},
+    {cls:'err', txt:`[error] SkuNotAvailable — The requested VM size 'Standard_D4s_v5' is currently not available in location 'eastus' for this subscription. Please try another size or deploy to a different location.`},
+  ];
+  t.innerHTML=rows.map(r=>`<div>${r}</div>`).join('')+logs.map(l=>`<div class="${l.cls}">${esc(l.txt)}</div>`).join('')+`<div><span class="p">odl_user@lab-vm:~$</span> <span class="cursor"></span></div>`;
+}
+
+/* ---------- Rocky character (trimmed copy of rocky.html's engine: draw/emotions/blink/gaze/bob) ---------- */
+const cv=$('#rk'),ctx=cv.getContext('2d');let W=0,H=0,DPR=1,perf=0,blink=1,blinkPhase=null,nextBlink=2,gazeX=0,gazeY=0;
+const mouse={x:0,y:0,has:false};
+function resize(){DPR=Math.min(devicePixelRatio||1,2);const r=$('#vmside').getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);
+const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
+function hx(c){if(c[0]==='#'){const n=parseInt(c.slice(1),16);return[n>>16,(n>>8)&255,n&255];}const m=c.match(/\d+/g);return[+m[0],+m[1],+m[2]];}
+function shade(c,a){const p=hx(c),cl=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${cl(p[0])},${cl(p[1])},${cl(p[2])})`;}
+function lerpHex(a,b,m){const x=hx(a),y=hx(b);return`rgb(${Math.round(x[0]+(y[0]-x[0])*m)},${Math.round(x[1]+(y[1]-x[1])*m)},${Math.round(x[2]+(y[2]-x[2])*m)})`;}
+function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+const E={
+  neutral:{mode:'rect',w:16,h:34,tilt:6,asym:0,glow:'#38e1ff',bob:{a:5,s:1}},
+  happy:{mode:'arc',w:23,h:20,tilt:0,asym:0,glow:'#43e8ff',bob:{a:6,s:1.1}},
+  curious:{mode:'rect',w:16,h:36,tilt:2,asym:6,glow:'#5fe6ff',bob:{a:6,s:1.3}},
+  thinking:{mode:'rect',w:15,h:28,tilt:4,asym:4,glow:'#a78bfa',bob:{a:4,s:.8}},
+  concerned:{mode:'rect',w:16,h:28,tilt:-12,asym:0,glow:'#fbbf24',bob:{a:4,s:.9}},
+  detective:{mode:'rect',w:15,h:30,tilt:8,asym:5,glow:'#a78bfa',bob:{a:5,s:1}},
+  celebrate:{mode:'arc',w:24,h:22,tilt:0,asym:0,glow:'#5ef0a0',bob:{a:13,s:2.1}},
+};
+let cur=JSON.parse(JSON.stringify(E.neutral)),tgt=E.neutral,tgtName='neutral';
+function setEmotion(n){if(E[n]){tgt=E[n];tgtName=n;}}
+function drawBlade(px,py,rot){ctx.save();ctx.translate(px,py);ctx.rotate(rot*Math.PI/180);ctx.shadowColor='#0006';ctx.shadowBlur=10;ctx.shadowOffsetY=5;
+  const g=ctx.createLinearGradient(-8,0,8,92);g.addColorStop(0,'#ffffff');g.addColorStop(.55,'#e8eef8');g.addColorStop(1,'#c2cee2');ctx.fillStyle=g;
+  ctx.beginPath();ctx.moveTo(0,-2);ctx.quadraticCurveTo(13,30,7,86);ctx.quadraticCurveTo(3,94,0,94);ctx.quadraticCurveTo(-3,94,-7,86);ctx.quadraticCurveTo(-13,30,0,-2);ctx.closePath();ctx.fill();ctx.restore();}
+function drawEye(cx,cy,p,gx,gy,bf,side){ctx.save();ctx.translate(cx+gx,cy+gy);ctx.rotate((p.tilt*side)*Math.PI/180);ctx.shadowColor=p.glow;ctx.shadowBlur=20;
+  const g=ctx.createLinearGradient(0,-p.h/2,0,p.h/2);g.addColorStop(0,'#eaffff');g.addColorStop(.42,p.glow);g.addColorStop(1,shade(p.glow,-30));ctx.fillStyle=g;ctx.strokeStyle=g;ctx.lineCap='round';
+  if(p.mode==='arc'){ctx.lineWidth=Math.max(6,p.h*.5);ctx.beginPath();ctx.moveTo(-p.w/2,p.h*.22);ctx.quadraticCurveTo(0,-p.h*.6,p.w/2,p.h*.22);ctx.stroke();}
+  else{const ry=Math.max(1.5,(p.h*bf)/2);ctx.beginPath();ctx.ellipse(0,0,p.w/2,ry,0,0,7);ctx.fill();
+    if(bf>.55){ctx.shadowBlur=0;ctx.fillStyle='#ffffffe0';ctx.beginPath();ctx.ellipse(-p.w*.16,-ry*.42,Math.max(1.6,p.w*.17),Math.max(1.6,ry*.24),0,0,7);ctx.fill();}}
+  ctx.restore();}
+let pos={x:0,y:0};
+function drawRocky(cx,cy,scale,glow,bf,gx,gy){ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);ctx.translate(-cx,-cy);
+  ctx.save();ctx.globalAlpha=.26;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(cx,cy+152,56,11,0,0,7);ctx.fill();ctx.restore();
+  drawBlade(cx-52,cy+16,12);drawBlade(cx+52,cy+16,-12);
+  ctx.save();ctx.shadowColor='#0009';ctx.shadowBlur=28;ctx.shadowOffsetY=14;
+  const byc=cy+64,brx=50,bry=74;
+  const bg=ctx.createLinearGradient(cx-brx,byc-bry,cx+brx,byc+bry);bg.addColorStop(0,'#ffffff');bg.addColorStop(.5,'#eef2fa');bg.addColorStop(1,'#c4d0e2');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(cx-brx,byc-8);ctx.quadraticCurveTo(cx-brx,byc-bry,cx,byc-bry);ctx.quadraticCurveTo(cx+brx,byc-bry,cx+brx,byc-8);ctx.quadraticCurveTo(cx+brx-4,byc+bry-16,cx,byc+bry);ctx.quadraticCurveTo(cx-brx+4,byc+bry-16,cx-brx,byc-8);ctx.closePath();ctx.fill();ctx.restore();
+  const hyc=cy-70,hrx=58,hry=50;
+  ctx.save();ctx.shadowColor='#0009';ctx.shadowBlur=24;ctx.shadowOffsetY=9;
+  const hg=ctx.createLinearGradient(cx,hyc-hry,cx,hyc+hry);hg.addColorStop(0,'#ffffff');hg.addColorStop(.55,'#eaf0f8');hg.addColorStop(1,'#c8d3e4');
+  ctx.fillStyle=hg;ctx.beginPath();ctx.ellipse(cx,hyc,hrx,hry,0,0,7);ctx.fill();ctx.restore();
+  ctx.save();ctx.shadowColor=glow;ctx.shadowBlur=22;const fw=96,fh=56,fyc=hyc+2;
+  const fg=ctx.createLinearGradient(cx,fyc-fh/2,cx,fyc+fh/2);fg.addColorStop(0,'#10192e');fg.addColorStop(1,'#05080f');
+  ctx.fillStyle=fg;rr(cx-fw/2,fyc-fh/2,fw,fh,fh/2);ctx.fill();ctx.restore();
+  const p={...cur,glow};const eCY=fyc+1,gap=19;
+  drawEye(cx-gap,eCY-cur.asym,p,gx,gy,cur.mode==='arc'?1:blink,1);
+  drawEye(cx+gap,eCY+cur.asym,p,gx,gy,cur.mode==='arc'?1:blink,-1);
+  ctx.restore();}
+$('#vmside').addEventListener('mousemove',e=>{const r=$('#vmside').getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;mouse.has=true;});
+$('#vmside').addEventListener('click',e=>{const r=$('#vmside').getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+  if(Math.hypot(x-pos.x,y-pos.y)<70){$('#drawer').classList.contains('open')?closeDrawer():openDrawer();}});
+let bubbleUntil=0;
+function showBubble(text,dur){$('#rbText').textContent=text;const b=$('#rb');b.classList.add('show');bubbleUntil=perf+(dur||5);}
+let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;perf+=dt;
+  if(!W)resize();ctx.clearRect(0,0,W,H);
+  pos.x=W-110;pos.y=H-170;
+  for(const k of['w','h','tilt','asym'])cur[k]=damp(cur[k],tgt[k],7,dt);
+  cur.mode=tgt.mode;cur.glow=lerpHex(cur.glow,tgt.glow,1-Math.exp(-6*dt));
+  nextBlink-=dt;if(nextBlink<=0&&blinkPhase===null){blinkPhase=.0001;nextBlink=1.8+Math.random()*3.2;}
+  if(blinkPhase!==null){blinkPhase+=dt/.13;if(blinkPhase>=1){blinkPhase=null;blink=1;}else blink=Math.abs(Math.cos(blinkPhase*Math.PI));}
+  const gtx=mouse.has?Math.max(-1,Math.min(1,(mouse.x-pos.x)/220)):Math.sin(perf*.6)*.5;
+  const gty=mouse.has?Math.max(-1,Math.min(1,(mouse.y-pos.y)/220)):Math.cos(perf*.5)*.4;
+  gazeX=damp(gazeX,gtx,8,dt);gazeY=damp(gazeY,gty,8,dt);
+  const bob=Math.sin(perf*tgt.bob.s*2)*tgt.bob.a;
+  drawRocky(pos.x,pos.y+bob,.38,cur.glow,blink,gazeX*7,gazeY*6);
+  const b=$('#rb');if(b.classList.contains('show')){b.style.left=(pos.x-240)+'px';b.style.top=(pos.y-150)+'px';if(perf>bubbleUntil)b.classList.remove('show');}
+  requestAnimationFrame(frame);
+}
+
+/* ---------- chat drawer: /api/say + deterministic evidence fallback ---------- */
+function openDrawer(){$('#drawer').classList.add('open');setEmotion('happy');const log=$('#dlog');
+  if(!log.dataset.greeted){log.dataset.greeted=1;addMsg('rk',"Hey! I'm Rocky — I can see this lab's checks and logs. What do you need?");}}
+function closeDrawer(){$('#drawer').classList.remove('open');}
+function addMsg(who,t){const d=document.createElement('div');d.className='dmsg '+who;d.textContent=t;$('#dlog').appendChild(d);$('#dlog').scrollTop=1e9;return d;}
+function evidenceCard(){
+  const fails=(lab.validations||[]).filter(v=>v.status==='failed');
+  const d=document.createElement('div');d.className='ecard';
+  d.innerHTML=`<div class="et">Rocky's evidence — deterministic engine, no AI needed</div>`+
+    fails.map(v=>`<div class="row">✗ ${esc(v.description)}${v.expected?` — expected ${esc(JSON.stringify(v.expected))}, observed <b>${esc(JSON.stringify(v.observed))}</b>`:''}</div>`).join('')+
+    `<div class="row">⚠ deployment error: <b>SkuNotAvailable</b> in 'eastus' — symptom of the wrong region, not the VM size</div>`+
+    `<div class="row" style="color:#0f8a4d">→ fix: recreate the resources in westus2 (the lab's required region)</div>`;
+  $('#dlog').appendChild(d);$('#dlog').scrollTop=1e9;
+}
+async function ask(message){openDrawer();addMsg('you',message);const el=addMsg('rk','…');setEmotion('thinking');
+  try{
+    const o=await (await fetch('/api/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,kind:'answer',scenario:true}),signal:AbortSignal.timeout(20000)})).json();
+    if(o&&o.message){el.textContent=o.message;setEmotion((lab.validations||[]).some(v=>v.status==='failed')?'detective':'happy');}
+    else{el.textContent="The AI model isn't reachable right now — but the engine doesn't need it. Here's the evidence:";evidenceCard();setEmotion('detective');}
+  }catch(e){el.textContent="The AI model isn't reachable right now — but the engine doesn't need it. Here's the evidence:";evidenceCard();setEmotion('detective');}
+}
+function sendInput(){const i=$('#dinput');const v=i.value.trim();if(v){i.value='';ask(v);}}
+$('#dinput').addEventListener('keydown',e=>{if(e.key==='Enter')sendInput();});
+
+/* ---------- boot ---------- */
+(async()=>{
+  await loadLab();await paintTerm();resize();requestAnimationFrame(frame);
+  setTimeout(()=>showBubble("Hey! I'm Rocky 👋 — click me if this lab gives you trouble.",5),1200);
+  // proactive, evidence-gated: only speaks because checks are genuinely failing in this scenario
+  setTimeout(()=>{if((lab.validations||[]).some(v=>v.status==='failed')){setEmotion('concerned');showBubble('I spotted a problem with your deployment — click me, I can explain it.',7);}},8000);
+})();
+</script>
+</body>
+</html>

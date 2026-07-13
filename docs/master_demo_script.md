@@ -15,8 +15,12 @@ verification → prevention.** Features are never named as features; each screen
 in the story."
 
 ## Pre-demo state (2 minutes before you speak — non-negotiable)
-1. `start-demo.bat` → wait for **✅ READY FOR DEMO (50/50)**. Keep the server window open.
-2. Open THREE tabs in this order: ① `/rocky.html?demo=1` ② `/labdoctor.html` ③ `/monitor.html`.
+1. `start-demo.bat` → wait for **✅ READY FOR DEMO**. Keep the server window open.
+2. Open THREE tabs in this order: ① `/cloudlabs-sim.html` — the simulated CloudLabs learner
+   environment (guide left, lab VM right, Rocky living bottom-right; the strongest Act-1 stage because
+   the audience sees Rocky **inside the product learners actually use**) ② `/labdoctor.html`
+   ③ `/monitor.html`. (`/rocky.html?demo=1` remains the fallback Act-1 stage if you prefer the plain
+   companion view.)
 3. On tab ③ click **↻ Reset timeline** (monitor state wipes on server restart — always reset fresh).
 4. On tab ① click the robot once to open its chat panel, and **pre-type the trap question** into the
    input box: `My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?`
