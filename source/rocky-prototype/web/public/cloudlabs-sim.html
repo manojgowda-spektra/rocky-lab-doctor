@@ -6,14 +6,15 @@
 <title>CloudLabs — Lab Environment (SIMULATED)</title>
 <!--
   SIMULATED CloudLabs learner environment — a demo STAGE, not the real product.
-  Purpose: show Rocky living inside the environment learners actually see (guide left, VM right,
-  validations, environment details, timer) instead of an abstract demo page. Layout follows the
-  company's own CloudLabs learner-env anatomy (guide/VM split, on-demand validation, env credentials)
-  per docs/cloudlabs_cosmos_live_discovery.md. Every surface is labelled SIMULATED; credentials are
-  fake; End Lab is disabled. The Rocky character here is a trimmed copy of rocky.html's engine
-  (no wander/easter-eggs) — kept as a copy deliberately so the stable Companion page stays untouched.
-  Honesty invariants preserved: chat uses /api/say (scenario:true); when the model is unreachable the
-  drawer shows the DETERMINISTIC evidence card instead — the engine asserts, the AI narrates.
+  Guide left / lab-VM right, per the company's own CloudLabs learner-env anatomy
+  (docs/cloudlabs_cosmos_live_discovery.md). Every surface is labelled SIMULATED; credentials are
+  fake; End Lab is disabled. The Rocky character is the FULL engine ported from rocky.html
+  (gestures, presence machine, hover prompt, easter eggs, evidence-gated celebration) — kept as a
+  page-local copy so the stable Companion page stays untouched; the chat is the same compact
+  floating panel as rocky.html, re-skinned light to match the CloudLabs frame.
+  Honesty invariants: chat uses /api/say (scenario:true); when the model is unreachable the panel
+  shows the DETERMINISTIC evidence card instead — the engine asserts, the AI narrates. Confetti
+  fires ONLY when a Validate click reports every check on the step passing (a verified fact).
 -->
 <style>
   :root{
@@ -107,39 +108,49 @@
   .taskbar{position:absolute;left:0;right:0;bottom:0;height:38px;background:rgba(10,18,28,.92);border-top:1px solid #223142;display:flex;align-items:center;gap:10px;padding:0 12px;z-index:4;color:#9db4c8;font-size:11.5px}
   .tbicon{width:24px;height:24px;border-radius:6px;background:#1b2733;display:grid;place-items:center;font-size:12px}
   .clock{margin-left:auto;font-family:var(--mono)}
+  .simfoot{position:absolute;left:12px;bottom:46px;z-index:6;font-size:10px;color:#7d94a9}
 
-  /* ---------- Rocky layer ---------- */
+  /* ---------- Rocky layer (canvas gets pointer events only near the robot via JS hit-test on vmside) ---------- */
   canvas#rk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:7}
-  .rbubble{position:absolute;z-index:8;max-width:230px;background:#ffffff;border:1px solid var(--line);border-radius:13px;padding:8px 12px;font-size:12.5px;color:var(--ink);box-shadow:0 14px 40px rgba(10,26,43,.35);opacity:0;transition:opacity .25s;pointer-events:none}
-  .rbubble.show{opacity:1}
-  .rbubble .tail{position:absolute;bottom:-6px;right:26px;width:12px;height:12px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+  .float{position:absolute;z-index:8;transform:translate(-50%,-50%);pointer-events:none;transition:opacity .22s}
+  #rb{max-width:230px;background:#ffffff;border:1px solid var(--line);border-radius:13px;padding:8px 12px;font-size:12.5px;color:var(--ink);box-shadow:0 14px 40px rgba(10,26,43,.4);opacity:0;transform:none}
+  #rb.show{opacity:1}
+  #rb .tail{position:absolute;bottom:-6px;width:12px;height:12px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+  #rb[data-side="left"] .tail{right:20px}
+  #rb[data-side="right"] .tail{left:20px}
+  #hoverPrompt{background:var(--cl-blue);color:#fff;border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;box-shadow:0 10px 30px rgba(11,105,212,.45);opacity:0;white-space:nowrap}
+  #hoverPrompt.show{opacity:1}
+  #confetti{position:absolute;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+  .conf{position:absolute;width:8px;height:13px;border-radius:2px;will-change:transform}
 
-  /* chat drawer */
-  .drawer{position:absolute;top:0;right:-380px;width:370px;height:100%;background:#fff;border-left:1px solid var(--line);z-index:9;display:flex;flex-direction:column;transition:right .28s cubic-bezier(.2,.9,.3,1);box-shadow:-18px 0 50px rgba(10,26,43,.25)}
-  .drawer.open{right:0}
-  .dhead{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line);background:#f7fafd}
-  .dhead .dot{width:9px;height:9px;border-radius:50%;background:#28c840}
-  .dhead b{font-size:13.5px}
-  .dhead small{color:var(--dim)}
-  .dhead .x{margin-left:auto;cursor:pointer;border:none;background:none;font-size:18px;color:var(--dim)}
-  .dlog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-  .dmsg{max-width:90%;padding:8px 11px;border-radius:11px;font-size:12.5px;white-space:pre-wrap;line-height:1.5}
-  .dmsg.you{align-self:flex-end;background:#e0ecfa;border:1px solid #bcd7f5}
-  .dmsg.rk{align-self:flex-start;background:#f4f6f9;border:1px solid var(--line)}
-  .ecard{align-self:stretch;border:1px solid var(--line);border-left:3px solid var(--cl-blue);border-radius:9px;background:#f7fafd;padding:9px 11px;font-size:11.5px}
-  .ecard .et{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cl-blue);margin-bottom:5px}
-  .ecard .row{font-family:var(--mono);font-size:10.5px;color:#41546a;padding:2px 0}
+  /* ---------- compact floating chat panel (rocky.html's panel, re-skinned light) ---------- */
+  #panel{position:absolute;z-index:10;width:280px;max-width:86%;background:#ffffff;border:1px solid var(--line);border-radius:15px;
+    box-shadow:0 26px 70px rgba(10,26,43,.45);opacity:0;transform:scale(.85);transform-origin:bottom right;pointer-events:none;
+    transition:opacity .16s ease, transform .32s cubic-bezier(.16,1.2,.3,1)}
+  #panel.open{opacity:1;transform:scale(1);pointer-events:auto}
+  #panel .head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:grab;font-size:12.5px;background:#f7fafd;border-radius:15px 15px 0 0}
+  #panel .head:active{cursor:grabbing}
+  #panel .dot{width:8px;height:8px;border-radius:50%;background:#28c840;box-shadow:0 0 8px #28c84088}
+  #panel .title{font-weight:700;font-size:13px}#panel .title small{color:var(--dim);font-weight:400}
+  #panel .x{margin-left:auto;cursor:pointer;color:var(--dim);border:none;background:none;font-size:17px}
+  #plog{height:170px;overflow:auto;padding:10px 11px;display:flex;flex-direction:column;gap:7px}
+  .msg{max-width:92%;padding:6px 10px;border-radius:11px;font-size:12.5px;white-space:pre-wrap;line-height:1.45}
+  .msg.you{align-self:flex-end;background:#e0ecfa;border:1px solid #bcd7f5}
+  .msg.rk{align-self:flex-start;background:#f4f6f9;border:1px solid var(--line)}
+  .ecard{align-self:stretch;border:1px solid var(--line);border-left:3px solid var(--cl-blue);border-radius:9px;background:#f7fafd;padding:8px 10px;font-size:11px}
+  .ecard .et{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cl-blue);margin-bottom:4px}
+  .ecard .row{font-family:var(--mono);font-size:10px;color:#41546a;padding:2px 0}
   .ecard .row b{color:var(--fail);font-weight:650}
-  .dchips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px}
-  .chip{cursor:pointer;font-size:11px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;color:var(--ink)}
-  .chip:hover{border-color:var(--cl-blue);color:var(--cl-blue)}
-  .dcompose{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
-  .dcompose input{flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px}
-  .dcompose input:focus{outline:none;border-color:var(--cl-blue)}
-  .dcompose button{cursor:pointer;border:none;background:var(--cl-blue);color:#fff;border-radius:8px;padding:0 14px;font-weight:650}
+  .qbar{display:flex;gap:5px;flex-wrap:wrap;padding:0 11px 9px}
+  .q{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:4px 9px;font-size:11px}
+  .q:hover{border-color:var(--cl-blue);color:var(--cl-blue)}
+  .compose{display:flex;gap:6px;padding:9px 11px;border-top:1px solid var(--line)}
+  .compose input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px}
+  .compose input:focus{outline:none;border-color:var(--cl-blue)}
+  .compose button{cursor:pointer;border:none;background:var(--cl-blue);color:#fff;border-radius:8px;padding:0 12px;font-weight:650}
   .toast{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);background:var(--cl-navy);color:#fff;border-radius:9px;padding:10px 18px;font-size:12.5px;opacity:0;transition:.3s;z-index:30;box-shadow:0 12px 40px rgba(0,0,0,.35)}
   .toast.show{opacity:1}
-  .simfoot{position:absolute;left:12px;bottom:46px;z-index:6;font-size:10px;color:#7d94a9}
+  @media (prefers-reduced-motion: reduce){#panel{transition:opacity .12s ease}.conf{animation-duration:.01ms}}
 </style>
 </head>
 <body>
@@ -180,8 +191,8 @@
       <div class="gbody" id="pane-help" style="display:none">
         <h2 class="exhead">Need a hand?</h2>
         <p class="objective">Rocky — the lab companion — lives in the bottom-right of your lab screen. Click it (or the button below) and ask anything about <em>this</em> lab. It answers from your actual validation evidence, and if it can't verify something, it says so instead of guessing.</p>
-        <button class="valbtn" onclick="openDrawer()">💬 Ask Rocky</button>
-        <p class="objective" style="margin-top:14px;font-size:11.5px">Every answer is grounded in: your validation results, the lab's deployment log, and the authored guide. Nothing else. If the AI model is unreachable, Rocky still shows you the engine's deterministic evidence.</p>
+        <button class="valbtn" onclick="openPanel()">💬 Ask Rocky</button>
+        <p class="objective" style="margin-top:14px;font-size:11.5px">Every answer is grounded in: your validation results, the lab's deployment log, and the authored guide. Nothing else. If the AI model is unreachable, Rocky still shows you the engine's deterministic evidence. (Psst — try double-clicking Rocky.)</p>
       </div>
     </div>
 
@@ -197,20 +208,21 @@
       <div class="simfoot">This pane stands in for the learner's browser VM. In production CloudLabs streams a real VM here; Rocky never sees this screen — it reads validation results and logs, not pixels.</div>
       <div class="taskbar"><span class="tbicon">🪟</span><span class="tbicon">🌐</span><span class="tbicon">⌨️</span><span>Lab VM (simulated)</span><span class="clock" id="vmClock">--:--</span></div>
       <canvas id="rk"></canvas>
-      <div class="rbubble" id="rb"><span id="rbText"></span><span class="tail"></span></div>
+      <div class="float" id="rb"><span id="rbText"></span><span class="tail"></span></div>
+      <div class="float" id="hoverPrompt"></div>
+      <div id="confetti"></div>
+      <!-- compact chat panel, anchored near Rocky -->
+      <div id="panel">
+        <div class="head" id="panelHead"><span class="dot"></span><span class="title">Rocky <small>· lab companion</small></span><button class="x" onclick="closePanel()">×</button></div>
+        <div id="plog"></div>
+        <div class="qbar">
+          <span class="q" onclick="ask('Did I complete this step correctly?')">Check my work</span>
+          <span class="q" onclick="ask('My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?')">Why failing?</span>
+          <span class="q" onclick="ask('Give me a hint')">Hint</span>
+        </div>
+        <div class="compose"><input id="pinput" placeholder="Ask about this lab…"/><button onclick="sendInput()">Send</button></div>
+      </div>
     </div>
-  </div>
-
-  <!-- ============ ROCKY CHAT DRAWER ============ -->
-  <div class="drawer" id="drawer">
-    <div class="dhead"><span class="dot"></span><b>Rocky</b><small>· lab companion · answers from evidence</small><button class="x" onclick="closeDrawer()">×</button></div>
-    <div class="dlog" id="dlog"></div>
-    <div class="dchips">
-      <span class="chip" onclick="ask('Did I complete this step correctly?')">Check my work</span>
-      <span class="chip" onclick="ask('My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?')">Why is it failing?</span>
-      <span class="chip" onclick="ask('Give me a hint')">Hint</span>
-    </div>
-    <div class="dcompose"><input id="dinput" placeholder="Ask about this lab…"/><button onclick="sendInput()">Send</button></div>
   </div>
   <div class="toast" id="toastEl"></div>
 
@@ -219,6 +231,7 @@ const $=(s)=>document.querySelector(s);
 const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 function toast(m){const t=$('#toastEl');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3600);}
 function copyIt(id){navigator.clipboard&&navigator.clipboard.writeText($('#'+id).textContent).catch(()=>{});toast('Copied (simulated value).');}
+function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t).catch(()=>{});toast('Copied: '+t);}
 function switchTab(n){for(const t of ['guide','env','help']){$('#tab-'+t).classList.toggle('on',t===n);$('#pane-'+t).style.display=t===n?'':'none';}}
 
 /* ---------- lab timer + vm clock ---------- */
@@ -233,7 +246,6 @@ const STEPS=[
  {guid:'S-03',title:'Create the virtual network and VM in the lab region',instr:`In the Azure Portal, create resource group <code onclick="copyText('rg-app')">rg-app</code> in West US 2, then deploy the VNet <code onclick="copyText('vnet-app')">vnet-app</code> and a <code onclick="copyText('Standard_D4s_v5')">Standard_D4s_v5</code> VM into it.`,outcome:`A VNet 'vnet-app' and a running VM exist in West US 2 inside resource group 'rg-app'.`},
  {guid:'S-04',title:'Deploy the App Service and verify',instr:`Deploy web app <code onclick="copyText('app-web')">app-web</code> into <code onclick="copyText('rg-app')">rg-app</code> and confirm it responds over HTTPS.`,outcome:`The app returns HTTP 200 from its default hostname.`},
 ];
-function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t).catch(()=>{});toast('Copied: '+t);}
 let lab=null;
 async function loadLab(){
   lab=await (await fetch('/api/labstate')).json();
@@ -265,137 +277,267 @@ function vrow(v,detailed){
 }
 async function validateStep(ev,guid){
   const btn=ev.target;btn.disabled=true;btn.textContent='Validating…';
+  setEmotion('thinking');setGesture('think');
   await new Promise(r=>setTimeout(r,700)); // the platform runs checks on demand; brief, honest pause
-  await loadLab(); // repaint from the engine's real state
+  await loadLab();
   const fresh=(lab.validations||[]).filter(v=>v.stepGuid===guid);
-  const wrap=[...document.querySelectorAll('.step')].find(s=>s.querySelector('.valbtn')&&s.querySelector('.valbtn').getAttribute('onclick').includes(guid));
-  // reopen the validated step and show expected-vs-observed detail on failures
-  document.querySelectorAll('.step').forEach(s=>{});
   const stepEl=[...document.querySelectorAll('.step')][STEPS.findIndex(s=>s.guid===guid)];
   if(stepEl){stepEl.classList.add('open');const vw=stepEl.querySelector('.vwrap');if(vw)vw.innerHTML=fresh.map(v=>vrow(v,true)).join('');}
   const fails=fresh.filter(v=>v.status==='failed').length;
-  if(fails){setEmotion('concerned');showBubble(`That check failed — ${fails} item${fails>1?'s':''} on this step. Click me if you want to know why.`,6);}
-  else{setEmotion('happy');showBubble('Nice — this step checks out. ✅',4);}
+  if(fails){setEmotion('detective');showBubble(`That check failed — ${fails} item${fails>1?'s':''} on this step. Click me, I can tell you why.`,6);}
+  else if(fresh.length){setEmotion('celebrate');confetti();showBubble('This step checks out — nice work! 🎉',5);setTimeout(()=>{if(tgtName==='celebrate')setEmotion(anyFailing()?'concerned':'happy');},2600);}
 }
+function anyFailing(){return lab&&(lab.validations||[]).some(v=>v.status==='failed');}
 
-/* ---------- terminal: replay the lab's REAL deployment log from the engine fixture ---------- */
-async function paintTerm(){
+/* ---------- terminal: replay the lab's deployment log (same story the engine diagnoses) ---------- */
+function paintTerm(){
   const t=$('#term');
-  const rows=[
-    `<span class="p">odl_user@lab-vm:~$</span> az deployment group create -g rg-app --template-file main.bicep`,
-  ];
-  (lab&&lab.findings?[]:[]);
-  const state=await (await fetch('/api/labstate')).json();
-  // deployment log lines come from the same fixture the engine diagnoses — one source of truth
-  const logs=[
-    {cls:'info',txt:`[info ] Created resource group 'rg-app' in location 'eastus'.`},
-    {cls:'info',txt:`[info ] Created virtual network 'vnet-app' in 'eastus'.`},
-    {cls:'err', txt:`[error] SkuNotAvailable — The requested VM size 'Standard_D4s_v5' is currently not available in location 'eastus' for this subscription. Please try another size or deploy to a different location.`},
-  ];
-  t.innerHTML=rows.map(r=>`<div>${r}</div>`).join('')+logs.map(l=>`<div class="${l.cls}">${esc(l.txt)}</div>`).join('')+`<div><span class="p">odl_user@lab-vm:~$</span> <span class="cursor"></span></div>`;
+  t.innerHTML=`<div><span class="p">odl_user@lab-vm:~$</span> az deployment group create -g rg-app --template-file main.bicep</div>
+    <div class="info">[info ] Created resource group 'rg-app' in location 'eastus'.</div>
+    <div class="info">[info ] Created virtual network 'vnet-app' in 'eastus'.</div>
+    <div class="err">[error] SkuNotAvailable — The requested VM size 'Standard_D4s_v5' is currently not available in location 'eastus' for this subscription. Please try another size or deploy to a different location.</div>
+    <div><span class="p">odl_user@lab-vm:~$</span> <span class="cursor"></span></div>`;
 }
 
-/* ---------- Rocky character (trimmed copy of rocky.html's engine: draw/emotions/blink/gaze/bob) ---------- */
-const cv=$('#rk'),ctx=cv.getContext('2d');let W=0,H=0,DPR=1,perf=0,blink=1,blinkPhase=null,nextBlink=2,gazeX=0,gazeY=0;
-const mouse={x:0,y:0,has:false};
-function resize(){DPR=Math.min(devicePixelRatio||1,2);const r=$('#vmside').getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+/* ============================================================================
+   ROCKY — FULL character engine (ported from rocky.html: emotions+gestures,
+   presence machine, hover prompt, portal entrance, easter eggs, hero aura).
+   Scoped to the VM pane; all emotions remain evidence-gated.
+   ============================================================================ */
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv=$('#rk'),ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);const r=$('#vmside').getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);placePanel();}
 addEventListener('resize',resize);
 const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
 function hx(c){if(c[0]==='#'){const n=parseInt(c.slice(1),16);return[n>>16,(n>>8)&255,n&255];}const m=c.match(/\d+/g);return[+m[0],+m[1],+m[2]];}
 function shade(c,a){const p=hx(c),cl=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${cl(p[0])},${cl(p[1])},${cl(p[2])})`;}
 function lerpHex(a,b,m){const x=hx(a),y=hx(b);return`rgb(${Math.round(x[0]+(y[0]-x[0])*m)},${Math.round(x[1]+(y[1]-x[1])*m)},${Math.round(x[2]+(y[2]-x[2])*m)})`;}
 function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
 const E={
-  neutral:{mode:'rect',w:16,h:34,tilt:6,asym:0,glow:'#38e1ff',bob:{a:5,s:1}},
-  happy:{mode:'arc',w:23,h:20,tilt:0,asym:0,glow:'#43e8ff',bob:{a:6,s:1.1}},
-  curious:{mode:'rect',w:16,h:36,tilt:2,asym:6,glow:'#5fe6ff',bob:{a:6,s:1.3}},
-  thinking:{mode:'rect',w:15,h:28,tilt:4,asym:4,glow:'#a78bfa',bob:{a:4,s:.8}},
-  concerned:{mode:'rect',w:16,h:28,tilt:-12,asym:0,glow:'#fbbf24',bob:{a:4,s:.9}},
-  detective:{mode:'rect',w:15,h:30,tilt:8,asym:5,glow:'#a78bfa',bob:{a:5,s:1}},
-  celebrate:{mode:'arc',w:24,h:22,tilt:0,asym:0,glow:'#5ef0a0',bob:{a:13,s:2.1}},
+  neutral :{mode:'rect',w:16,h:34,tilt:6,yOff:0,asym:0,glow:'#38e1ff',bob:{a:5,s:1},g:'rest'},
+  happy   :{mode:'arc', w:23,h:20,tilt:0,yOff:0,asym:0,glow:'#43e8ff',bob:{a:6,s:1.1},g:'rest'},
+  curious :{mode:'rect',w:16,h:36,tilt:2,yOff:-5,asym:6,glow:'#5fe6ff',bob:{a:6,s:1.3},g:'wave'},
+  thinking:{mode:'rect',w:15,h:28,tilt:4,yOff:-7,asym:4,glow:'#a78bfa',bob:{a:4,s:.8},g:'think'},
+  concerned:{mode:'rect',w:16,h:28,tilt:-12,yOff:3,asym:0,glow:'#fbbf24',bob:{a:4,s:.9},g:'think'},
+  hero    :{mode:'arc',w:24,h:20,tilt:0,yOff:-1,asym:0,glow:'#2ee6c8',bob:{a:7,s:1.2},g:'palm'},
+  detective:{mode:'rect',w:15,h:30,tilt:8,yOff:-3,asym:5,glow:'#a78bfa',bob:{a:5,s:1},g:'investigate'},
+  celebrate:{mode:'arc',w:24,h:22,tilt:0,yOff:0,asym:0,glow:'#5ef0a0',bob:{a:13,s:2.1},g:'celebrate'},
 };
 let cur=JSON.parse(JSON.stringify(E.neutral)),tgt=E.neutral,tgtName='neutral';
-function setEmotion(n){if(E[n]){tgt=E[n];tgtName=n;}}
+function setEmotion(n){if(E[n]){tgt=E[n];tgtName=n;setGesture(E[n].g);}}
+const GEST={
+  rest:{l:12,r:-12}, wave:{l:12,r:-54,wave:true}, think:{l:12,r:-34},
+  celebrate:{l:54,r:-54}, investigate:{l:12,r:-30,mag:true}, palm:{l:24,r:-24},
+};
+let gestName='rest', hand={l:12,r:-12};
+function setGesture(n){if(GEST[n])gestName=n;}
+
 function drawBlade(px,py,rot){ctx.save();ctx.translate(px,py);ctx.rotate(rot*Math.PI/180);ctx.shadowColor='#0006';ctx.shadowBlur=10;ctx.shadowOffsetY=5;
   const g=ctx.createLinearGradient(-8,0,8,92);g.addColorStop(0,'#ffffff');g.addColorStop(.55,'#e8eef8');g.addColorStop(1,'#c2cee2');ctx.fillStyle=g;
-  ctx.beginPath();ctx.moveTo(0,-2);ctx.quadraticCurveTo(13,30,7,86);ctx.quadraticCurveTo(3,94,0,94);ctx.quadraticCurveTo(-3,94,-7,86);ctx.quadraticCurveTo(-13,30,0,-2);ctx.closePath();ctx.fill();ctx.restore();}
-function drawEye(cx,cy,p,gx,gy,bf,side){ctx.save();ctx.translate(cx+gx,cy+gy);ctx.rotate((p.tilt*side)*Math.PI/180);ctx.shadowColor=p.glow;ctx.shadowBlur=20;
+  ctx.beginPath();ctx.moveTo(0,-2);ctx.quadraticCurveTo(13,30,7,86);ctx.quadraticCurveTo(3,94,0,94);ctx.quadraticCurveTo(-3,94,-7,86);ctx.quadraticCurveTo(-13,30,0,-2);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;ctx.strokeStyle='#ffffff88';ctx.globalAlpha=.5;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-3,6);ctx.quadraticCurveTo(-8,44,-4,82);ctx.stroke();ctx.globalAlpha=1;ctx.restore();}
+function drawMag(px,py,rot,glow){ctx.save();ctx.translate(px,py);ctx.rotate(rot*Math.PI/180);ctx.translate(0,96);ctx.rotate(-rot*Math.PI/180);ctx.strokeStyle=glow;ctx.lineWidth=3.2;ctx.shadowColor=glow;ctx.shadowBlur=10;
+  ctx.beginPath();ctx.arc(0,0,10,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(7,7);ctx.lineTo(15,15);ctx.stroke();ctx.restore();}
+function drawGlasses(cx,cy,glow){ctx.save();ctx.strokeStyle=glow;ctx.lineWidth=2.4;ctx.shadowColor=glow;ctx.shadowBlur=8;ctx.globalAlpha=.9;
+  rr(cx-30,cy-14,24,28,9);ctx.stroke();rr(cx+6,cy-14,24,28,9);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-6,cy-2);ctx.lineTo(cx+6,cy-2);ctx.stroke();ctx.restore();}
+function drawEye(cx,cy,p,gx,gy,bf,side,override){ctx.save();ctx.translate(cx+gx,cy+gy);ctx.rotate((p.tilt*side)*Math.PI/180);ctx.shadowColor=p.glow;ctx.shadowBlur=20;
   const g=ctx.createLinearGradient(0,-p.h/2,0,p.h/2);g.addColorStop(0,'#eaffff');g.addColorStop(.42,p.glow);g.addColorStop(1,shade(p.glow,-30));ctx.fillStyle=g;ctx.strokeStyle=g;ctx.lineCap='round';
+  if(override==='x'){ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-7,-7);ctx.lineTo(7,7);ctx.moveTo(7,-7);ctx.lineTo(-7,7);ctx.stroke();ctx.restore();return;}
+  if(override==='spiral'){ctx.lineWidth=3;ctx.beginPath();for(let a=0;a<9;a+=.35){const rad=a*1.1;ctx.lineTo(Math.cos(a*1.6+perf*6)*rad,Math.sin(a*1.6+perf*6)*rad);}ctx.stroke();ctx.restore();return;}
   if(p.mode==='arc'){ctx.lineWidth=Math.max(6,p.h*.5);ctx.beginPath();ctx.moveTo(-p.w/2,p.h*.22);ctx.quadraticCurveTo(0,-p.h*.6,p.w/2,p.h*.22);ctx.stroke();}
   else{const ry=Math.max(1.5,(p.h*bf)/2);ctx.beginPath();ctx.ellipse(0,0,p.w/2,ry,0,0,7);ctx.fill();
     if(bf>.55){ctx.shadowBlur=0;ctx.fillStyle='#ffffffe0';ctx.beginPath();ctx.ellipse(-p.w*.16,-ry*.42,Math.max(1.6,p.w*.17),Math.max(1.6,ry*.24),0,0,7);ctx.fill();}}
   ctx.restore();}
-let pos={x:0,y:0};
-function drawRocky(cx,cy,scale,glow,bf,gx,gy){ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);ctx.translate(-cx,-cy);
+
+function drawRocky(cx,cy,scale,glow,bf,gx,gy,bodyRot,eyeOv){ctx.save();ctx.translate(cx,cy);ctx.rotate(bodyRot||0);ctx.scale(scale,scale);ctx.translate(-cx,-cy);
+  const G=GEST[gestName]||GEST.rest;
+  if(tgtName==='hero'){ctx.save();const a=.5+.2*Math.sin(perf*3);
+    const ag=ctx.createRadialGradient(cx,cy,40,cx,cy,162);ag.addColorStop(0,'#2ee6c800');ag.addColorStop(.68,`rgba(46,230,200,${a*.38})`);ag.addColorStop(1,'#2ee6c800');
+    ctx.fillStyle=ag;ctx.beginPath();ctx.arc(cx,cy,162,0,7);ctx.fill();
+    ctx.strokeStyle=`rgba(255,211,107,${a})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,128,0,7);ctx.stroke();ctx.restore();}
   ctx.save();ctx.globalAlpha=.26;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(cx,cy+152,56,11,0,0,7);ctx.fill();ctx.restore();
-  drawBlade(cx-52,cy+16,12);drawBlade(cx+52,cy+16,-12);
+  drawBlade(cx-52,cy+16,hand.l);
+  drawBlade(cx+52,cy+16,hand.r);
+  if(G.mag)drawMag(cx+52,cy+16,hand.r,glow);
   ctx.save();ctx.shadowColor='#0009';ctx.shadowBlur=28;ctx.shadowOffsetY=14;
   const byc=cy+64,brx=50,bry=74;
   const bg=ctx.createLinearGradient(cx-brx,byc-bry,cx+brx,byc+bry);bg.addColorStop(0,'#ffffff');bg.addColorStop(.5,'#eef2fa');bg.addColorStop(1,'#c4d0e2');
   ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(cx-brx,byc-8);ctx.quadraticCurveTo(cx-brx,byc-bry,cx,byc-bry);ctx.quadraticCurveTo(cx+brx,byc-bry,cx+brx,byc-8);ctx.quadraticCurveTo(cx+brx-4,byc+bry-16,cx,byc+bry);ctx.quadraticCurveTo(cx-brx+4,byc+bry-16,cx-brx,byc-8);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(cx-16,byc-22,11,30,-.2,0,7);ctx.fill();ctx.restore();
   const hyc=cy-70,hrx=58,hry=50;
   ctx.save();ctx.shadowColor='#0009';ctx.shadowBlur=24;ctx.shadowOffsetY=9;
   const hg=ctx.createLinearGradient(cx,hyc-hry,cx,hyc+hry);hg.addColorStop(0,'#ffffff');hg.addColorStop(.55,'#eaf0f8');hg.addColorStop(1,'#c8d3e4');
   ctx.fillStyle=hg;ctx.beginPath();ctx.ellipse(cx,hyc,hrx,hry,0,0,7);ctx.fill();ctx.restore();
+  ctx.strokeStyle='#ffffff88';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,hyc-1,hrx-2,hry-2,0,Math.PI*1.05,Math.PI*1.95);ctx.stroke();
   ctx.save();ctx.shadowColor=glow;ctx.shadowBlur=22;const fw=96,fh=56,fyc=hyc+2;
   const fg=ctx.createLinearGradient(cx,fyc-fh/2,cx,fyc+fh/2);fg.addColorStop(0,'#10192e');fg.addColorStop(1,'#05080f');
   ctx.fillStyle=fg;rr(cx-fw/2,fyc-fh/2,fw,fh,fh/2);ctx.fill();ctx.restore();
+  ctx.save();ctx.globalAlpha=.10;ctx.fillStyle='#9fd8ff';rr(cx-fw/2+9,fyc-fh/2+5,fw-18,fh*0.38,13);ctx.fill();ctx.restore();
   const p={...cur,glow};const eCY=fyc+1,gap=19;
-  drawEye(cx-gap,eCY-cur.asym,p,gx,gy,cur.mode==='arc'?1:blink,1);
-  drawEye(cx+gap,eCY+cur.asym,p,gx,gy,cur.mode==='arc'?1:blink,-1);
+  drawEye(cx-gap,eCY-cur.asym,p,gx,gy,blink,1,eyeOv);
+  drawEye(cx+gap,eCY+cur.asym,p,gx,gy,blink,-1,eyeOv);
+  if(tgtName==='detective')drawGlasses(cx,eCY,glow);
   ctx.restore();}
+
+/* presence — enters via portal, rests bottom-right of the VM pane, reacts to hover, plays on double-click */
+const SCALE=.38, HIT=52;
+let pos={x:0,y:0}, ptgt=null, vel={x:0,y:0};
+let mode='enter',modeT=0,lastActivity=0,perf=0,blink=1,blinkPhase=null,nextBlink=2,portalT=1;
+let gazeX=0,gazeY=0,mouse={x:0,y:0,has:false},hovering=false,hoverDwell=0,panelOpen=false;
+let egg=null;
+const restPos=()=>({x:W-110,y:H-176});
 $('#vmside').addEventListener('mousemove',e=>{const r=$('#vmside').getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;mouse.has=true;});
-$('#vmside').addEventListener('click',e=>{const r=$('#vmside').getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
-  if(Math.hypot(x-pos.x,y-pos.y)<70){$('#drawer').classList.contains('open')?closeDrawer():openDrawer();}});
-let bubbleUntil=0;
-function showBubble(text,dur){$('#rbText').textContent=text;const b=$('#rb');b.classList.add('show');bubbleUntil=perf+(dur||5);}
+
+/* click (debounced) vs double-click — identical to rocky.html */
+function dist(ax,ay,bx,by){return Math.hypot(ax-bx,ay-by);}
+function onRocky(x,y){return dist(x,y,pos.x,pos.y)<HIT*1.4;}
+let clicks=0,clickTimer=null;
+$('#vmside').addEventListener('mousedown',e=>{
+  if(e.target.closest('#panel'))return;
+  const r=$('#vmside').getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+  if(!onRocky(x,y))return; if(egg)return; clicks++;
+  if(clicks===1){clickTimer=setTimeout(()=>{clicks=0;panelOpen?closePanel():openPanel();},250);}
+  else{clearTimeout(clickTimer);clicks=0;playEgg();}
+});
+addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+
+const EGGS=[
+  {type:'dizzy',dur:2.2,line:'whoa… 😵‍💫'},
+  {type:'glitch',dur:1.4,line:'—bzzt— 🤖'},
+  {type:'fall',dur:2.0,line:'ow! 😆 just kidding'},
+  {type:'playdead',dur:2.4,line:'💀 …jk! 😆'},
+  {type:'spin',dur:1.6,line:'wheee! 🌀'},
+];
+function playEgg(){if(egg)return;egg={...EGGS[Math.floor(Math.random()*EGGS.length)],t:0};showBubble(egg.line,2);}
+
+const PROMPTS=['Need help?','Stuck somewhere?','Want me to investigate?','Need a hint?','Got a question?'];
+let bag=[],promptCur='';
+function nextPrompt(){if(!bag.length)bag=[...PROMPTS];return bag.splice(Math.floor(Math.random()*bag.length),1)[0];}
+
+let bubbleUntil=0,bubbleW=220,bubbleH=44;
+function showBubble(text,dur){const b=$('#rb');$('#rbText').textContent=text;b.className='float show';bubbleW=b.offsetWidth;bubbleH=b.offsetHeight;bubbleUntil=perf+(dur||Math.max(3.2,Math.min(9,1+text.split(/\s+/).length*.4)));}
+function hideBubble(){$('#rb').classList.remove('show');}
+
+function confetti(){const c=$('#confetti'),cols=['#0b69d4','#a78bfa','#5ef0a0','#7df9ff','#fbbf24'];
+  for(let i=0;i<40;i++){const d=document.createElement('div');d.className='conf';d.style.left=(pos.x/W*100)+'%';d.style.top=(pos.y/H*100)+'%';d.style.background=cols[i%cols.length];
+    const dx=(Math.random()-.5)*420,dy=Math.random()*-260-60;d.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy+340}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:1600+Math.random()*700,easing:'cubic-bezier(.2,.7,.3,1)'});c.appendChild(d);setTimeout(()=>d.remove(),2300);}}
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&perf>6){setEmotion('happy');showBubble('Welcome back! 👋 Pick up where you left off?',4);}});
+
+/* main loop */
 let last=performance.now();
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;perf+=dt;
-  if(!W)resize();ctx.clearRect(0,0,W,H);
-  pos.x=W-110;pos.y=H-170;
-  for(const k of['w','h','tilt','asym'])cur[k]=damp(cur[k],tgt[k],7,dt);
+  if(document.hidden){requestAnimationFrame(frame);return;}
+  const r=$('#vmside').getBoundingClientRect();
+  if(Math.abs(r.width-W)>2||Math.abs(r.height-H)>2)resize();
+  if(!ptgt){pos=restPos();ptgt=restPos();}
+  ctx.clearRect(0,0,W,H);
+
+  let eyeOv=null,bodyRot=0;
+  if(egg){egg.t+=dt;const k=egg.t/egg.dur;
+    if(egg.type==='dizzy'){eyeOv='spiral';bodyRot=Math.sin(perf*10)*0.18;}
+    else if(egg.type==='fall'){bodyRot=Math.min(1.4,k*3)*(k<.7?1:Math.max(0,(1-(k-.7)/.3)));eyeOv=k<.7?'x':null;}
+    else if(egg.type==='playdead'){bodyRot=Math.min(1.57,k*4)*(k<.85?1:Math.max(0,1-(k-.85)/.15));eyeOv='x';}
+    else if(egg.type==='spin'){bodyRot=k*Math.PI*4;}
+    if(egg.t>=egg.dur){egg=null;setEmotion(anyFailing()?'concerned':'happy');}
+  }
+
+  for(const k of['w','h','tilt','yOff','asym'])cur[k]=damp(cur[k],tgt[k],7,dt);
   cur.mode=tgt.mode;cur.glow=lerpHex(cur.glow,tgt.glow,1-Math.exp(-6*dt));
-  nextBlink-=dt;if(nextBlink<=0&&blinkPhase===null){blinkPhase=.0001;nextBlink=1.8+Math.random()*3.2;}
-  if(blinkPhase!==null){blinkPhase+=dt/.13;if(blinkPhase>=1){blinkPhase=null;blink=1;}else blink=Math.abs(Math.cos(blinkPhase*Math.PI));}
+  if(!reduce){nextBlink-=dt;if(nextBlink<=0&&blinkPhase===null){blinkPhase=.0001;nextBlink=1.8+Math.random()*3.2;}
+    if(blinkPhase!==null){blinkPhase+=dt/.13;if(blinkPhase>=1){blinkPhase=null;blink=1;}else blink=Math.abs(Math.cos(blinkPhase*Math.PI));}}
+
+  // hover → curious + rotating prompt pill (the "alive" tell)
+  const d=dist(mouse.x,mouse.y,pos.x,pos.y);
+  if(mouse.has&&d<150&&!panelOpen&&!egg){hoverDwell+=dt;if(hoverDwell>.12&&!hovering){hovering=true;promptCur=nextPrompt();if(tgtName!=='hero')setEmotion('curious');}}
+  else if(hovering&&(d>=160||panelOpen||egg)){hovering=false;hoverDwell=0;if(!panelOpen&&tgtName!=='hero')setEmotion(anyFailing()?'concerned':'neutral');}
+
+  // presence: portal entrance, then rest
+  modeT+=dt;
+  if(mode==='enter'){portalT=Math.max(0,1-modeT/1.1);ptgt=restPos();if(modeT>1.2){mode='rest';modeT=0;}}
+  else{ptgt=restPos();}
+  const spd=egg?6:2.6;
+  const nx=damp(pos.x,(hovering||panelOpen)&&!egg?pos.x:ptgt.x,spd,dt),ny=damp(pos.y,(hovering||panelOpen)&&!egg?pos.y:ptgt.y,spd,dt);
+  vel.x=nx-pos.x;pos.x=nx;pos.y=ny;
+
+  // gestures: rotations + wave oscillation + velocity lag (weightless secondary motion)
+  const G=GEST[gestName]||GEST.rest;
+  let rL=G.l,rR=G.r;
+  if(G.wave)rR=G.r+Math.sin(perf*9)*16;
+  const lag=vel.x*0.5;
+  hand.l=damp(hand.l,rL-lag,9,dt);
+  hand.r=damp(hand.r,rR-lag,9,dt);
+
   const gtx=mouse.has?Math.max(-1,Math.min(1,(mouse.x-pos.x)/220)):Math.sin(perf*.6)*.5;
   const gty=mouse.has?Math.max(-1,Math.min(1,(mouse.y-pos.y)/220)):Math.cos(perf*.5)*.4;
   gazeX=damp(gazeX,gtx,8,dt);gazeY=damp(gazeY,gty,8,dt);
-  const bob=Math.sin(perf*tgt.bob.s*2)*tgt.bob.a;
-  drawRocky(pos.x,pos.y+bob,.38,cur.glow,blink,gazeX*7,gazeY*6);
-  const b=$('#rb');if(b.classList.contains('show')){b.style.left=(pos.x-240)+'px';b.style.top=(pos.y-150)+'px';if(perf>bubbleUntil)b.classList.remove('show');}
+
+  if(portalT>0){portalT=Math.max(0,portalT-dt);ctx.save();ctx.globalAlpha=portalT;ctx.strokeStyle='#a78bfa';ctx.lineWidth=4;ctx.shadowColor='#a78bfa';ctx.shadowBlur=28;const rad=70*(1-portalT)+18;ctx.beginPath();ctx.ellipse(pos.x,pos.y,rad*.7,rad,0,0,7);ctx.stroke();ctx.restore();}
+
+  const bob=reduce?0:Math.sin(perf*tgt.bob.s*2)*tgt.bob.a;
+  const drawAt=(ox,oy,al,col)=>{ctx.save();ctx.globalAlpha=al;drawRocky(pos.x+ox,pos.y+bob+oy,SCALE,col||cur.glow,blink,gazeX*7,gazeY*6,bodyRot,eyeOv);ctx.restore();};
+  if(egg&&egg.type==='glitch'){const j=()=>(Math.random()-.5)*6;drawAt(j()-3,j(),.5,'#ff5a7a');drawAt(j()+3,j(),.5,'#5af0ff');drawAt(j(),j(),.9);}
+  else drawAt(0,0,1);
+
+  // overlays follow Rocky
+  const b=$('#rb');
+  if(b.classList.contains('show')){const bside=pos.x>W*0.5?'left':'right';let bl=bside==='left'?pos.x-34-bubbleW/2:pos.x+34+bubbleW/2;let bt=pos.y-70-bubbleH/2;
+    bl=Math.max(bubbleW/2+8,Math.min(bl,W-bubbleW/2-8));bt=Math.max(bubbleH/2+8,bt);
+    b.style.left=bl+'px';b.style.top=bt+'px';b.dataset.side=bside;}
+  if(perf>bubbleUntil)hideBubble();
+  const hp=$('#hoverPrompt');
+  if(hovering){hp.textContent=promptCur;hp.className='float show';hp.style.left=pos.x+'px';hp.style.top=(pos.y-64)+'px';}else hp.className='float';
   requestAnimationFrame(frame);
 }
 
-/* ---------- chat drawer: /api/say + deterministic evidence fallback ---------- */
-function openDrawer(){$('#drawer').classList.add('open');setEmotion('happy');const log=$('#dlog');
-  if(!log.dataset.greeted){log.dataset.greeted=1;addMsg('rk',"Hey! I'm Rocky — I can see this lab's checks and logs. What do you need?");}}
-function closeDrawer(){$('#drawer').classList.remove('open');}
-function addMsg(who,t){const d=document.createElement('div');d.className='dmsg '+who;d.textContent=t;$('#dlog').appendChild(d);$('#dlog').scrollTop=1e9;return d;}
+/* ---------- compact chat panel (anchored near Rocky, draggable, springy) ---------- */
+const panel=$('#panel');
+let panelPos=null;
+function placePanel(){if(!W)return;let left,top;
+  if(panelPos){left=panelPos.x;top=panelPos.y;}
+  else{left=pos.x-296;top=pos.y-330;}
+  left=Math.max(10,Math.min(left,W-290));top=Math.max(10,Math.min(top,H-330));
+  panel.style.left=left+'px';panel.style.top=top+'px';}
+function openPanel(){panelOpen=true;placePanel();panel.classList.add('open');if(tgtName==='neutral'||tgtName==='curious')setEmotion('happy');
+  setTimeout(()=>$('#pinput').focus(),120);
+  const log=$('#plog');if(!log.dataset.greeted){log.dataset.greeted=1;addMsg('rk',"Hey! I'm Rocky — I can see this lab's checks and logs. What do you need? 🙂");}}
+function closePanel(){panelOpen=false;dragging=false;panel.classList.remove('open');}
+let dragging=false,dragOff={x:0,y:0};
+$('#panelHead').addEventListener('mousedown',e=>{if(e.target.closest('.x'))return;dragging=true;const r=panel.getBoundingClientRect(),vr=$('#vmside').getBoundingClientRect();dragOff={x:e.clientX-r.left,y:e.clientY-r.top};e.preventDefault();});
+addEventListener('mousemove',e=>{if(dragging){const vr=$('#vmside').getBoundingClientRect();panelPos={x:e.clientX-vr.left-dragOff.x,y:e.clientY-vr.top-dragOff.y};placePanel();}});
+addEventListener('mouseup',()=>dragging=false);
+
+function addMsg(who,t){const d=document.createElement('div');d.className='msg '+who;d.textContent=t;$('#plog').appendChild(d);$('#plog').scrollTop=1e9;return d;}
+function typeInto(el,text){el.textContent='';let i=0;(function step(){el.textContent=text.slice(0,i++);if(i<=text.length)setTimeout(step,Math.max(8,16-text.length/24));})();}
 function evidenceCard(){
   const fails=(lab.validations||[]).filter(v=>v.status==='failed');
   const d=document.createElement('div');d.className='ecard';
   d.innerHTML=`<div class="et">Rocky's evidence — deterministic engine, no AI needed</div>`+
     fails.map(v=>`<div class="row">✗ ${esc(v.description)}${v.expected?` — expected ${esc(JSON.stringify(v.expected))}, observed <b>${esc(JSON.stringify(v.observed))}</b>`:''}</div>`).join('')+
-    `<div class="row">⚠ deployment error: <b>SkuNotAvailable</b> in 'eastus' — symptom of the wrong region, not the VM size</div>`+
+    `<div class="row">⚠ deployment error: <b>SkuNotAvailable</b> in 'eastus' — a symptom of the wrong region, not the VM size</div>`+
     `<div class="row" style="color:#0f8a4d">→ fix: recreate the resources in westus2 (the lab's required region)</div>`;
-  $('#dlog').appendChild(d);$('#dlog').scrollTop=1e9;
+  $('#plog').appendChild(d);$('#plog').scrollTop=1e9;
 }
-async function ask(message){openDrawer();addMsg('you',message);const el=addMsg('rk','…');setEmotion('thinking');
+async function ask(message){if(!panelOpen)openPanel();addMsg('you',message);const el=addMsg('rk','…');
+  setEmotion(anyFailing()&&/fail|stuck|wrong|error|why|deploy/i.test(message)?'detective':'thinking');
   try{
     const o=await (await fetch('/api/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,kind:'answer',scenario:true}),signal:AbortSignal.timeout(20000)})).json();
-    if(o&&o.message){el.textContent=o.message;setEmotion((lab.validations||[]).some(v=>v.status==='failed')?'detective':'happy');}
+    if(o&&o.message){typeInto(el,o.message);setEmotion(anyFailing()?'detective':'happy');}
     else{el.textContent="The AI model isn't reachable right now — but the engine doesn't need it. Here's the evidence:";evidenceCard();setEmotion('detective');}
   }catch(e){el.textContent="The AI model isn't reachable right now — but the engine doesn't need it. Here's the evidence:";evidenceCard();setEmotion('detective');}
 }
-function sendInput(){const i=$('#dinput');const v=i.value.trim();if(v){i.value='';ask(v);}}
-$('#dinput').addEventListener('keydown',e=>{if(e.key==='Enter')sendInput();});
+function sendInput(){const i=$('#pinput');const v=i.value.trim();if(v){i.value='';ask(v);}}
+$('#pinput').addEventListener('keydown',e=>{if(e.key==='Enter')sendInput();});
 
 /* ---------- boot ---------- */
 (async()=>{
-  await loadLab();await paintTerm();resize();requestAnimationFrame(frame);
-  setTimeout(()=>showBubble("Hey! I'm Rocky 👋 — click me if this lab gives you trouble.",5),1200);
-  // proactive, evidence-gated: only speaks because checks are genuinely failing in this scenario
-  setTimeout(()=>{if((lab.validations||[]).some(v=>v.status==='failed')){setEmotion('concerned');showBubble('I spotted a problem with your deployment — click me, I can explain it.',7);}},8000);
+  await loadLab();paintTerm();resize();pos=restPos();ptgt=restPos();
+  setEmotion('neutral');requestAnimationFrame(frame);
+  setTimeout(()=>{setEmotion('curious');showBubble("Hey! I'm Rocky 👋 — click me if this lab gives you trouble.",5);},1200);
+  // proactive + evidence-gated: speaks only because checks are genuinely failing in this scenario
+  setTimeout(()=>{if(anyFailing()&&!panelOpen){setEmotion('hero');showBubble('Hold on — I spotted a problem with your deployment. Click me, I can explain it. 🛡️',7);setTimeout(()=>{if(tgtName==='hero'&&!panelOpen)setEmotion('concerned');},7500);}},8000);
 })();
 </script>
 </body>
