@@ -1,0 +1,30 @@
+{
+  "_comment": "Injected reference list for the Synthetic Learner Probe's DETERMINISTIC checks (token match — zero model risk). Real, citable Azure retirements/deprecations/default-flips from the labdoctor-proactive-intel research (web + Microsoft Learn). 'asOf' logic: a retirement is IMMINENT/past relative to the catalog asOf date. Illustrative dates — verify against the Azure lifecycle API in production.",
+  "retiredSkus": [
+    { "token": "Standard_NC6s_v3", "family": "NCv3", "retired": "2025-09-30", "replacement": "NCasT4_v3 / NCadsH100_v5", "note": "NCv3 (V100) sizes retired in public regions." },
+    { "token": "Standard_NC6", "family": "NC", "retired": "2023-08-31", "replacement": "NCasT4_v3", "note": "Original NC-series (K80) retired." },
+    { "token": "Standard_NV6", "family": "NV", "retired": "2023-08-31", "replacement": "NVadsA10_v5", "note": "Original NV-series (M60) retired." },
+    { "token": "Standard_DS1_v1", "family": "DSv1", "retired": "2024-09-01", "replacement": "Dsv5 / Dasv5", "note": "First-gen DS retired." }
+  ],
+  "deprecatedCommands": [
+    { "token": "az vm image accept-terms", "replacement": "az vm image terms accept", "removed": "2020 (CLI 3.0.0)", "note": "Removed alias; marketplace terms silently not accepted → downstream az vm create fails with VMMarketplaceInvalidInput." },
+    { "token": "--image UbuntuLTS", "replacement": "--image Ubuntu2204 (versioned URN)", "deprecated": "2023", "note": "Unversioned image aliases removed from az vm create." },
+    { "token": "azurerm", "replacement": "Az PowerShell module", "deprecated": "2024-02-29", "note": "AzureRM PowerShell module retired; use Az." },
+    { "token": "text-embedding-ada-002", "replacement": "text-embedding-3-large / text-embedding-3-small", "deprecated": "retirement announced on the Azure OpenAI model lifecycle", "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family." },
+    { "token": "gpt-35-turbo", "replacement": "gpt-4o-mini", "deprecated": "legacy model on the Azure OpenAI retirement path", "note": "GPT-3.5 Turbo deployments are legacy; new labs should target the gpt-4o family." },
+    { "token": "text-davinci-003", "replacement": "gpt-4o-mini", "deprecated": "retired 2024", "note": "Davinci completions models are fully retired on Azure OpenAI." }
+  ],
+  "eolRuntimes": [
+    { "token": "Node.js 16", "replacement": "Node.js 22 (current LTS)", "eol": "2023-09-11", "note": "Node 16 reached end-of-life 2023-09-11 (endoflife.date/nodejs); guides should state a supported version floor.", "source": "endoflife.date via changeintel harvest 2026-07-04" },
+    { "token": "Node.js 18", "replacement": "Node.js 22 (current LTS)", "eol": "2025-04-30", "note": "Node 18 reached end-of-life 2025-04-30 (endoflife.date/nodejs); guides should state a supported version floor.", "source": "endoflife.date via changeintel harvest 2026-07-04" }
+  ],
+  "renamedProducts": [
+    { "token": "Azure Active Directory", "replacement": "Microsoft Entra ID", "renamed": "2023-08", "note": "Portal blade renamed; guides directing learners to 'Azure Active Directory' no longer match the portal navigation." },
+    { "token": "Form Recognizer", "replacement": "Azure AI Document Intelligence", "renamed": "2023", "note": "Service renamed; portal search for the old name is unreliable for learners." },
+    { "token": "Azure AD", "replacement": "Microsoft Entra ID", "renamed": "2023-08", "note": "Abbreviated legacy name; guide text no longer matches current portal naming." }
+  ],
+  "defaultFlips": [
+    { "match": "public network access", "flip": "allowBlobPublicAccess defaults false on new storage accounts (Aug 2023)", "breaks": "Static-website / public-blob steps that never explicitly enable anonymous access → PublicAccessNotPermitted." },
+    { "match": "Azure Active Directory", "flip": "Portal blade renamed to Microsoft Entra ID (2023-08+)", "breaks": "Guide/screenshot navigation searching the old name; automation still passes so telemetry can't see it." }
+  ]
+}

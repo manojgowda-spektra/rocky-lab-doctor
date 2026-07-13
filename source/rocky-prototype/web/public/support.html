@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocky · Listener</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#080b11;--panel:rgba(255,255,255,.045);--panel2:rgba(255,255,255,.06);--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+    --ink:#eaf2f6;--dim:#8b98a6;--dim2:#5f6b78;--teal:#2ee6c8;--crit:#ff5c72;--high:#ff9f45;--med:#ffd93d;--low:#6ba6ff;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:radial-gradient(1100px 650px at 75% -8%,rgba(107,166,255,.07),transparent 60%),var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 22px 60px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  .logo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(150deg,rgba(107,166,255,.22),rgba(107,166,255,.05));border:1px solid var(--line2)}
+  h1{font-size:16px;margin:0;font-weight:650} .sub{font-size:11.5px;color:var(--dim)}
+  .spacer{flex:1}
+  .simbadge{font-size:10px;font-weight:800;letter-spacing:.7px;padding:4px 10px;border-radius:6px;background:rgba(107,166,255,.18);color:#a9cbff;border:1px solid rgba(107,166,255,.4)}
+  a.nav{color:var(--teal);font-size:12.5px;text-decoration:none} a.nav:hover{text-decoration:underline}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .v{font-size:26px;font-weight:800;color:var(--teal)} .stat .v.orange{color:var(--high)}
+  .stat .k{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:18px 0 8px}
+  .inc{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .ihead{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+  .ihead:hover{background:var(--panel2)}
+  .chip{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:6px;flex:none}
+  .chip.drift{background:var(--crit);color:#fff}.chip.env{background:var(--high);color:#2a1500}
+  .chip.false-fail{background:var(--crit);color:#fff}.chip.false-pass{background:#7c3aed;color:#fff}
+  .chip.clarity{background:var(--med);color:#241f00}.chip.flake{background:var(--low);color:#04101f}
+  .ititle{flex:1;font-weight:600;font-size:13px}
+  .icount{text-align:right;font-size:11px;color:var(--dim)} .icount b{color:var(--ink);font-size:16px}
+  .ibody{display:none;padding:0 14px 14px;border-top:1px solid var(--line)}
+  .ibody.open{display:block}
+  .fixline{font-size:12px;color:var(--dim);background:rgba(46,230,200,.06);border-left:2px solid var(--teal);padding:8px 10px;border-radius:0 8px 8px 0;margin:10px 0}
+  .tk{font-family:var(--mono);font-size:11px;color:#a9cbff;margin-right:8px;cursor:pointer}
+  .tk:hover{text-decoration:underline}
+  .packet{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;font-size:12px}
+  .packet .lbl{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);font-weight:650;margin:8px 0 4px}
+  .packet .evi{font-family:var(--mono);font-size:11px;color:#c7d3db;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:6px;padding:6px 9px;margin:4px 0}
+  .resp{color:#bbf7d0;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12px}
+  .foot{margin-top:22px;font-size:11px;color:var(--dim2);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="logo" href="/" title="Rocky home" style="text-decoration:none">🎧</a>
+    <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.6em">· Listener</span></h1><div class="sub">Support Intelligence — tickets → root causes → one incident, not N tickets</div></div>
+    <div class="spacer"></div>
+    <span class="simbadge">SIMULATED FLEET — digital twin</span>
+    <a class="nav" href="/labdoctor.html">🩺 Doctor</a>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <h2>Root-cause incidents (each absorbs its tickets)</h2>
+  <div id="incidents"></div>
+
+  <div class="foot">
+    Triage is deterministic: ticket text is only a <b>signal</b> — a lab defect is asserted only when the fleet diagnosis confirms a matching finding.
+    A healthy lab is never blamed. Packets are auto-assembled and redacted.<br>
+    This view runs on the <b>digital twin</b> (seeded, reproducible). Real-data cutover swaps the ticket loader only.
+  </div>
+</div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+
+async function load(){
+  const o=await fetch('/api/support/overview').then(x=>x.json());
+  const s=o.stats;
+  $('#stats').innerHTML=
+    '<div class="stat"><div class="v orange">'+s.tickets+'</div><div class="k">tickets (simulated)</div></div>'+
+    '<div class="stat"><div class="v">'+s.incidents+'</div><div class="k">root-cause incidents</div></div>'+
+    '<div class="stat"><div class="v">'+s.collapseRatio+':1</div><div class="k">collapse ratio</div></div>'+
+    '<div class="stat"><div class="v">'+Math.round(s.attachedToRootCause/s.tickets*100)+'%</div><div class="k">auto-attributed to a diagnosed cause</div></div>';
+  const host=$('#incidents'); host.innerHTML='';
+  o.incidents.forEach(inc=>{
+    const box=el('div','inc');
+    const head=el('div','ihead',
+      '<span class="chip '+esc(inc.class)+'">'+esc(inc.class)+'</span>'+
+      '<span class="ititle">'+esc(inc.title)+'<div style="font-size:10.5px;color:var(--dim);font-weight:400">'+esc(inc.labId)+' · '+inc.affectedLearners+' learners affected in fleet</div></span>'+
+      '<span class="icount"><b>'+inc.tickets.length+'</b><br>ticket'+(inc.tickets.length>1?'s':'')+'</span>');
+    const body=el('div','ibody',
+      '<div class="fixline"><b>Drafted fix (human-approved):</b> '+esc(inc.draftFix||'—')+'</div>'+
+      '<div style="font-size:11px;color:var(--dim)">tickets: '+inc.tickets.map(t=>'<span class="tk" data-t="'+esc(t)+'">'+esc(t)+'</span>').join('')+' <span style="color:var(--dim2)">(click one to build its support packet)</span></div>'+
+      '<div class="pk"></div>');
+    head.onclick=()=>body.classList.toggle('open');
+    body.querySelectorAll('.tk').forEach(k=>k.onclick=async(e)=>{
+      e.stopPropagation();
+      const p=await fetch('/api/support/packet?ticket='+encodeURIComponent(k.dataset.t)).then(x=>x.json());
+      const pk=body.querySelector('.pk');
+      pk.innerHTML='<div class="packet">'+
+        '<div class="lbl">Auto-assembled packet — '+esc(p.ticketId)+' · provenance: '+esc(p.provenance.dataSource)+'</div>'+
+        '<div>Lab <b>'+esc(p.labTitle)+'</b> · health '+esc(p.labHealth.score)+' ('+esc(p.labHealth.status)+') · triage: <b>'+esc(p.triage.disposition)+'</b> ('+Math.round(p.triage.confidence*100)+'%)</div>'+
+        '<div class="lbl">Why</div><div>'+esc(p.triage.reason)+'</div>'+
+        (p.finding?'<div class="lbl">Fleet evidence</div>'+p.finding.evidence.map(e2=>'<div class="evi">'+esc(e2)+'</div>').join(''):'')+
+        (p.learner?'<div class="lbl">This learner</div><div class="evi">failing: '+esc((p.learner.failingValidations||[]).join(', ')||'—')+(p.learner.deploymentErrors&&p.learner.deploymentErrors.length?'\n'+esc(p.learner.deploymentErrors[0]):'')+'</div>':'')+
+        '<div class="resp"><b>Suggested response:</b> '+esc(p.suggestedResponse)+'</div>'+
+        '</div>';
+    });
+    box.append(head,body); host.appendChild(box);
+  });
+}
+load();
+</script>
+</body>
+</html>

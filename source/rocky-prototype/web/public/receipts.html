@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocky · Receipts</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#080b11;--ink:#eaf2f6;--dim:#8b98a6;--teal:#2ee6c8;--high:#ff9f45;--med:#ffd93d;
+    --line:rgba(255,255,255,.09);--panel:rgba(255,255,255,.045);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(1100px 650px at 70% -10%,rgba(46,230,200,.08),transparent 60%),var(--bg);
+    color:var(--ink);font-family:var(--sans);display:grid;place-items:center;padding:30px}
+  .wrap{max-width:900px;text-align:center}
+  h1{font-size:22px;margin:0 0 6px;font-weight:700}
+  .sub{color:var(--dim);font-size:14px;margin-bottom:28px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+  @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 10px}
+  .stat .v{font-size:30px;font-weight:800;color:var(--teal)}
+  .stat .v.orange{color:var(--high)}
+  .stat .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-top:6px;line-height:1.5}
+  .lines{color:var(--dim);font-size:13.5px;line-height:2.1;margin-bottom:28px}
+  .lines b{color:var(--ink)}
+  .lines .real{color:var(--teal);font-weight:700}
+  .url{font-family:var(--mono);font-size:20px;color:#04120f;background:var(--teal);display:inline-block;
+    padding:12px 26px;border-radius:12px;font-weight:700;text-decoration:none}
+  .tag{margin-top:16px;color:var(--dim);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Every claim, receipted.</h1>
+  <div class="sub">One Rocky, several hats — Doctor, Fixer, Watcher, Guardian, Scholar, Listener, Companion. The engine asserts; the AI narrates.</div>
+
+  <div class="grid">
+    <div class="stat"><div class="v orange" id="findings">—</div><div class="k">real defects found in the production catalog</div></div>
+    <div class="stat"><div class="v" id="repos">—</div><div class="k">production lab repos scanned (<span id="clean">—</span> clean)</div></div>
+    <div class="stat"><div class="v" id="scanms">—</div><div class="k">live rescan, <span id="files">—</span> guide files</div></div>
+    <div class="stat"><div class="v">0<span style="font-size:16px">/42</span></div><div class="k">false positives in hand-audited sample</div></div>
+  </div>
+
+  <div class="lines">
+    <span class="real">REAL</span> — deprecated AI models learners are told to deploy · renamed products · broken images learners see<br>
+    <b>Detects what tickets can't:</b> validations that silently PASS learners whose work is wrong<br>
+    <b id="testline">104 deterministic tests · 50-check demo preflight</b> · runs with the AI switched off<br>
+    Every fix is a draft with evidence — a human approves. <b>We don't fake green.</b><br>
+    <span style="font-size:12px">5 real pull requests · 2 merged · 1 CI-blocked regression closed in 4s · CI gate armed on production content</span>
+  </div>
+
+  <a class="url" id="selfurl" href="/">open Rocky</a>
+  <div class="tag">Pick any finding. Open the file. Check us. <span id="prline"></span></div>
+  <div class="tag" style="margin-top:10px">
+    <a class="real" style="text-decoration:none" href="/">🏠 Home</a> ·
+    <a class="real" style="text-decoration:none" href="/labdoctor.html">🩺 Doctor</a> ·
+    <a class="real" style="text-decoration:none" href="/campaigns.html">🛠️ Fixer</a> ·
+    <a class="real" style="text-decoration:none" href="/monitor.html">📡 Watcher</a> ·
+    <a class="real" style="text-decoration:none" href="/amnesty.html">⚖️ Guardian</a> ·
+    <a class="real" style="text-decoration:none" href="/intent.html">📋 Scholar</a> ·
+    <a class="real" style="text-decoration:none" href="/support.html">🎧 Listener</a> ·
+    <a class="real" style="text-decoration:none" href="/rocky.html?demo=1">💬 Companion</a>
+  </div>
+</div>
+<script>
+fetch('/api/labhealth/real-scan').then(x=>x.json()).then(r=>{
+  if(!r||!r.available) return;
+  document.getElementById('findings').textContent=r.totals.findings;
+  document.getElementById('repos').textContent=r.repoCount;
+  document.getElementById('clean').textContent=r.repos.filter(x=>x.findingCount===0).length;
+  document.getElementById('files').textContent=r.totals.files;
+  const ms=r.repos.reduce((s,x)=>s+(x.ms||0),0);
+  document.getElementById('scanms').textContent=(ms/1000).toFixed(1)+'s';
+}).catch(()=>{});
+document.getElementById('selfurl').textContent=location.origin.replace(/^https?:\/\//,'');
+</script>
+</body>
+</html>

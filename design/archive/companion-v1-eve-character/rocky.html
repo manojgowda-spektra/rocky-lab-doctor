@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — living lab companion</title>
+<style>
+  :root{--ink:#e9eef9;--muted:#93a3c4;--accent:#6d7cff;--line:#ffffff1c}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font:15px/1.5 system-ui,"Segoe UI",Roboto,sans-serif;color:var(--ink);overflow:hidden;
+    background:radial-gradient(900px 600px at 74% 16%,#15407a4d,transparent 60%),
+      radial-gradient(800px 600px at 20% 90%,#5b2da84d,transparent 60%),
+      radial-gradient(1200px 900px at 50% 50%,#0c1530,#070a16 72%);}
+  .lab{position:fixed;left:24px;top:24px;width:330px;max-width:40vw;background:#0c121fcc;border:1px solid var(--line);
+    border-radius:16px;padding:15px 17px;backdrop-filter:blur(8px);z-index:3}
+  .lab h2{margin:0 0 2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .lab h1{margin:0 0 9px;font-size:15px}
+  .lab .step{font-size:12.5px;color:var(--muted);margin-bottom:9px}
+  .val{display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0;border-top:1px dashed #ffffff12}
+  .badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:999px}
+  .badge.pass{background:#04301d;color:#86efac;border:1px solid #14532d}
+  .badge.fail{background:#3a0d0d;color:#fca5a5;border:1px solid #7f1d1d}
+  .tag{position:fixed;right:18px;top:16px;color:var(--muted);font-size:12px;z-index:3}.tag b{color:var(--ink)}
+  canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+  .float{position:fixed;z-index:6;transform:translate(-50%,-50%);pointer-events:none;transition:opacity .22s}
+  #bubble{max-width:224px;background:#0d1426cc;backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px;padding:8px 11px;font-size:12.5px;line-height:1.4;
+    box-shadow:0 12px 34px #0009;opacity:0;transform:none}
+  #bubble.show{opacity:1}
+  #bubble .tail{position:absolute;bottom:-6px;width:12px;height:12px;background:#0d1426cc;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+  #bubble[data-side="left"] .tail{right:20px}
+  #bubble[data-side="right"] .tail{left:20px}
+  #bubble.thought{border-style:dashed}#bubble.alert{border-color:#7db8ff99}#bubble.celebrate{border-color:#5ef0a088}#bubble.guidance{border-color:#6d7cff88}
+  #prompt{background:#6d7cffee;color:#fff;border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;box-shadow:0 10px 30px #6d7cff55;opacity:0;white-space:nowrap}
+  #prompt.show{opacity:1}
+  #panel{position:fixed;z-index:8;width:256px;max-width:90vw;background:#0b1120f2;border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 26px 70px #000b;opacity:0;transform:scale(.85);transform-origin:bottom right;pointer-events:none;
+    transition:opacity .16s ease, transform .32s cubic-bezier(.16,1.2,.3,1)}
+  #panel.open{opacity:1;transform:scale(1);pointer-events:auto}
+  #panel .head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line);cursor:grab;font-size:12.5px}
+  #panel .head:active{cursor:grabbing}
+  #panel .dot{width:8px;height:8px;border-radius:50%;background:#5ef0a0;box-shadow:0 0 9px #5ef0a0}
+  #panel .title{font-weight:650;font-size:13px}#panel .title small{color:var(--muted);font-weight:400}
+  #panel .x{margin-left:auto;cursor:pointer;color:var(--muted);border:none;background:none;font-size:17px}
+  #log{height:130px;overflow:auto;padding:9px 11px;display:flex;flex-direction:column;gap:6px}
+  .msg{max-width:92%;padding:6px 9px;border-radius:10px;font-size:12.5px;white-space:pre-wrap;line-height:1.4}
+  .msg.you{align-self:flex-end;background:#26336e;border:1px solid #3a49a0}
+  .msg.rk{align-self:flex-start;background:#0e1730;border:1px solid var(--line)}.msg.rk b{color:#fff}
+  .compose{display:flex;gap:7px;padding:10px 12px;border-top:1px solid var(--line)}
+  .compose input{flex:1;background:#0c1426;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 10px;font-size:13.5px}
+  .compose input:focus{outline:none;border-color:var(--accent)}
+  .compose button{border:1px solid var(--accent);background:#6d7cff22;color:#cdd6ff;border-radius:9px;padding:0 12px;cursor:pointer}
+  .qbar{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 11px}
+  .q{cursor:pointer;border:1px solid var(--line);background:#ffffff0a;color:var(--ink);border-radius:999px;padding:4px 9px;font-size:11.5px}
+  .q:hover{border-color:var(--accent)}
+  #dnd{position:fixed;right:18px;bottom:16px;z-index:8;cursor:pointer;border:1px solid var(--line);background:#0c1426cc;color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12px}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:7;overflow:hidden}.conf{position:absolute;width:8px;height:13px;border-radius:2px;will-change:transform}
+  @media (prefers-reduced-motion: reduce){#panel{transition:opacity .12s ease}.conf{animation-duration:.01ms}}
+</style>
+</head>
+<body>
+  <div class="lab"><h2>Lab</h2><h1 id="labTitle">…</h1><div class="step" id="labStep"></div><div id="vals"></div></div>
+  <div class="tag">Rocky · <b id="modelTag">…</b> · <span id="presenceTag">arriving</span> · <span style="color:#f59e0b" title="Running on demo fixture data, not a live lab">demo data</span></div>
+  <canvas id="c"></canvas>
+  <div class="float" id="bubble" role="status" aria-live="polite" aria-atomic="true"><span id="bubbleText"></span><span class="tail"></span></div>
+  <div class="float" id="prompt"></div>
+  <div id="panel">
+    <div class="head" id="panelHead"><span class="dot"></span><span class="title">Rocky <small>· companion</small></span><button class="x" onclick="closePanel()">×</button></div>
+    <div id="log"></div>
+    <div class="qbar">
+      <span class="q" onclick="ask('Why does my deployment keep failing?')">Why failing?</span>
+      <span class="q" onclick="ask('Did I complete this step correctly?')">Check my work</span>
+      <span class="q" onclick="ask('I am stuck')">I'm stuck</span>
+      <span class="q" onclick="ask('Give me a hint')">Hint</span>
+    </div>
+    <div class="compose"><input id="input" placeholder="Ask Rocky…"/><button onclick="sendInput()">Send</button></div>
+  </div>
+  <div id="dnd" onclick="toggleDnd()">🔕 Focus mode: off</div>
+  <div id="sim" onclick="toggleSim()" style="position:fixed;right:18px;bottom:52px;z-index:8;cursor:pointer;border:1px solid var(--line);background:#0c1426cc;color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12px" title="When ON, Rocky uses a labeled simulated failing-lab scenario. When OFF (default), Rocky has no lab data and won't pretend it does.">🧪 Demo scenario: off</div>
+  <a id="ldlink" href="/labdoctor.html" title="Open the platform view — Lab Doctor's fleet-wide QA (the same engine that has Rocky's back)" style="position:fixed;right:18px;bottom:90px;z-index:8;text-decoration:none;border:1px solid var(--line);background:#0c1426cc;color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12px">🩺 Lab Doctor →</a>
+  <div id="confetti"></div>
+<script>
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);
+const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
+function hx(c){if(c[0]==='#'){const n=parseInt(c.slice(1),16);return[n>>16,(n>>8)&255,n&255];}const m=c.match(/\d+/g);return[+m[0],+m[1],+m[2]];}
+function shade(c,a){const p=hx(c),cl=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${cl(p[0])},${cl(p[1])},${cl(p[2])})`;}
+function lerpHex(a,b,m){const x=hx(a),y=hx(b);return`rgb(${Math.round(x[0]+(y[0]-x[0])*m)},${Math.round(x[1]+(y[1]-x[1])*m)},${Math.round(x[2]+(y[2]-x[2])*m)})`;}
+function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* emotions (friendly hero redesigned: warm-blue, kind confident eyes — not red/angry) */
+const E={ // EVE-style: tall rounded eyes; tilt +=inner-top toward centre (alert/friendly), -=outward (soft/worried)
+  neutral :{mode:'rect',w:16,h:34,tilt:6,yOff:0,asym:0,corner:8,glow:'#38e1ff',bob:{a:5,s:1},g:'rest'},
+  happy   :{mode:'arc', w:23,h:20,tilt:0,yOff:0,asym:0,corner:8,glow:'#43e8ff',bob:{a:6,s:1.1},g:'rest'},
+  curious :{mode:'rect',w:16,h:36,tilt:2,yOff:-5,asym:6,corner:8,glow:'#5fe6ff',bob:{a:6,s:1.3},g:'wave'},
+  thinking:{mode:'rect',w:15,h:28,tilt:4,yOff:-7,asym:4,corner:7,glow:'#a78bfa',bob:{a:4,s:.8},g:'think'},
+  excited :{mode:'rect',w:18,h:40,tilt:8,yOff:0,asym:0,corner:9,glow:'#7df9ff',bob:{a:11,s:1.9},g:'celebrate'},
+  shocked :{mode:'rect',w:26,h:30,tilt:0,yOff:0,asym:0,corner:13,glow:'#bfefff',bob:{a:3,s:1.2},g:'rest'},
+  concerned:{mode:'rect',w:16,h:28,tilt:-12,yOff:3,asym:0,corner:8,glow:'#fbbf24',bob:{a:4,s:.9},g:'think'},
+  hero    :{mode:'arc',w:24,h:20,tilt:0,yOff:-1,asym:0,corner:8,glow:'#2ee6c8',bob:{a:7,s:1.2},g:'palm'},
+  detective:{mode:'rect',w:15,h:30,tilt:8,yOff:-3,asym:5,corner:7,glow:'#a78bfa',bob:{a:5,s:1},g:'investigate'},
+  celebrate:{mode:'arc',w:24,h:22,tilt:0,yOff:0,asym:0,corner:8,glow:'#5ef0a0',bob:{a:13,s:2.1},g:'celebrate'},
+  sleeping:{mode:'line',w:22,h:4,tilt:0,yOff:4,asym:0,corner:2,glow:'#5b6b86',bob:{a:2,s:.5},g:'rest'},
+};
+let cur=JSON.parse(JSON.stringify(E.neutral)),tgt=E.neutral,tgtName='neutral';
+function setEmotion(n){if(E[n]){tgt=E[n];tgtName=n;setGesture(E[n].g);}}
+
+/* blade-arm gestures — values are ROTATIONS (deg) around each shoulder pivot.
+   left blade: + swings tip out-left / up ; right blade: - swings tip out-right / up */
+const GEST={
+  rest:       {l:12,  r:-12},
+  wave:       {l:12,  r:-54, wave:true},
+  think:      {l:12,  r:-34},
+  celebrate:  {l:54,  r:-54},
+  investigate:{l:12,  r:-30, mag:true},
+  palm:       {l:24,  r:-24, palm:true},
+  point:      {l:12,  r:-30, point:true},
+};
+let gestName='rest', hand={l:12, r:-12};
+function setGesture(n){if(GEST[n])gestName=n;}
+let pointTarget=null; // screen px for point gesture
+
+function drawBlade(px,py,rot,glow){ctx.save();ctx.translate(px,py);ctx.rotate(rot*Math.PI/180);ctx.shadowColor='#0006';ctx.shadowBlur=10;ctx.shadowOffsetY=5;
+  const g=ctx.createLinearGradient(-8,0,8,92);g.addColorStop(0,'#ffffff');g.addColorStop(.55,'#e8eef8');g.addColorStop(1,'#c2cee2');ctx.fillStyle=g;
+  ctx.beginPath();ctx.moveTo(0,-2);ctx.quadraticCurveTo(13,30,7,86);ctx.quadraticCurveTo(3,94,0,94);ctx.quadraticCurveTo(-3,94,-7,86);ctx.quadraticCurveTo(-13,30,0,-2);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;ctx.strokeStyle='#ffffff88';ctx.globalAlpha=.5;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-3,6);ctx.quadraticCurveTo(-8,44,-4,82);ctx.stroke();ctx.globalAlpha=1;ctx.restore();}
+function drawMag2(px,py,rot,glow){ctx.save();ctx.translate(px,py);ctx.rotate(rot*Math.PI/180);ctx.translate(0,96);ctx.rotate(-rot*Math.PI/180);ctx.strokeStyle=glow;ctx.lineWidth=3.2;ctx.shadowColor=glow;ctx.shadowBlur=10;
+  ctx.beginPath();ctx.arc(0,0,10,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(7,7);ctx.lineTo(15,15);ctx.stroke();ctx.restore();}
+function drawGlasses(cx,cy,glow){ctx.save();ctx.strokeStyle=glow;ctx.lineWidth=2.4;ctx.shadowColor=glow;ctx.shadowBlur=8;ctx.globalAlpha=.9;
+  rr(cx-30,cy-14,24,28,9);ctx.stroke();rr(cx+6,cy-14,24,28,9);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-6,cy-2);ctx.lineTo(cx+6,cy-2);ctx.stroke();ctx.restore();}
+
+function drawEye(cx,cy,p,gx,gy,bf,side,override){ctx.save();ctx.translate(cx+gx,cy+gy);ctx.rotate((p.tilt*side)*Math.PI/180);ctx.shadowColor=p.glow;ctx.shadowBlur=20;
+  const g=ctx.createLinearGradient(0,-p.h/2,0,p.h/2);g.addColorStop(0,'#eaffff');g.addColorStop(.42,p.glow);g.addColorStop(1,shade(p.glow,-30));ctx.fillStyle=g;ctx.strokeStyle=g;ctx.lineCap='round';
+  if(override==='x'){ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-7,-7);ctx.lineTo(7,7);ctx.moveTo(7,-7);ctx.lineTo(-7,7);ctx.stroke();ctx.restore();return;}
+  if(override==='spiral'){ctx.lineWidth=3;ctx.beginPath();for(let a=0;a<9;a+=.35){const rad=a*1.1;ctx.lineTo(Math.cos(a*1.6+perf*6)*rad,Math.sin(a*1.6+perf*6)*rad);}ctx.stroke();ctx.restore();return;}
+  if(p.mode==='arc'){ctx.lineWidth=Math.max(6,p.h*.5);ctx.beginPath();ctx.moveTo(-p.w/2,p.h*.22);ctx.quadraticCurveTo(0,-p.h*.6,p.w/2,p.h*.22);ctx.stroke();}
+  else if(p.mode==='line'){ctx.lineWidth=Math.max(3,p.h);ctx.beginPath();ctx.moveTo(-p.w/2,0);ctx.lineTo(p.w/2,0);ctx.stroke();}
+  else{const ry=Math.max(1.5,(p.h*bf)/2);ctx.beginPath();ctx.ellipse(0,0,p.w/2,ry,0,0,7);ctx.fill();
+    if(bf>.55){ctx.shadowBlur=0;ctx.fillStyle='#ffffffe0';ctx.beginPath();ctx.ellipse(-p.w*.16,-ry*.42,Math.max(1.6,p.w*.17),Math.max(1.6,ry*.24),0,0,7);ctx.fill();}}
+  ctx.restore();}
+
+function drawRocky(cx,cy,scale,glow,bf,gx,gy,bodyRot,eyeOv){ctx.save();ctx.translate(cx,cy);ctx.rotate(bodyRot||0);ctx.scale(scale,scale);ctx.translate(-cx,-cy);
+  const G=GEST[gestName]||GEST.rest;
+  // friendly hero aura (protective teal halo + gold ring)
+  if(tgtName==='hero'){ctx.save();const a=.5+.2*Math.sin(perf*3);
+    const ag=ctx.createRadialGradient(cx,cy,40,cx,cy,162);ag.addColorStop(0,'#2ee6c800');ag.addColorStop(.68,`rgba(46,230,200,${a*.38})`);ag.addColorStop(1,'#2ee6c800');
+    ctx.fillStyle=ag;ctx.beginPath();ctx.arc(cx,cy,162,0,7);ctx.fill();
+    ctx.strokeStyle=`rgba(255,211,107,${a})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,128,0,7);ctx.stroke();ctx.restore();}
+  // soft ground shadow
+  ctx.save();ctx.globalAlpha=.26;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(cx,cy+152,56,11,0,0,7);ctx.fill();ctx.restore();
+  // blade arms (behind body), gesture rotation from hand.l / hand.r
+  drawBlade(cx-52,cy+16,hand.l,glow);
+  drawBlade(cx+52,cy+16,hand.r,glow);
+  if(G.mag)drawMag2(cx+52,cy+16,hand.r,glow);
+  // body — teardrop egg
+  ctx.save();ctx.shadowColor='#0009';ctx.shadowBlur=28;ctx.shadowOffsetY=14;
+  const byc=cy+64,brx=50,bry=74;
+  const bg=ctx.createLinearGradient(cx-brx,byc-bry,cx+brx,byc+bry);bg.addColorStop(0,'#ffffff');bg.addColorStop(.5,'#eef2fa');bg.addColorStop(1,'#c4d0e2');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(cx-brx,byc-8);ctx.quadraticCurveTo(cx-brx,byc-bry,cx,byc-bry);ctx.quadraticCurveTo(cx+brx,byc-bry,cx+brx,byc-8);ctx.quadraticCurveTo(cx+brx-4,byc+bry-16,cx,byc+bry);ctx.quadraticCurveTo(cx-brx+4,byc+bry-16,cx-brx,byc-8);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(cx-16,byc-22,11,30,-.2,0,7);ctx.fill();ctx.restore();
+  // head — floating egg
+  const hyc=cy-70,hrx=58,hry=50;
+  ctx.save();ctx.shadowColor='#0009';ctx.shadowBlur=24;ctx.shadowOffsetY=9;
+  const hg=ctx.createLinearGradient(cx,hyc-hry,cx,hyc+hry);hg.addColorStop(0,'#ffffff');hg.addColorStop(.55,'#eaf0f8');hg.addColorStop(1,'#c8d3e4');
+  ctx.fillStyle=hg;ctx.beginPath();ctx.ellipse(cx,hyc,hrx,hry,0,0,7);ctx.fill();ctx.restore();
+  ctx.strokeStyle='#ffffff88';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,hyc-1,hrx-2,hry-2,0,Math.PI*1.05,Math.PI*1.95);ctx.stroke();
+  // face panel — dark glossy
+  ctx.save();ctx.shadowColor=glow;ctx.shadowBlur=22;const fw=96,fh=56,fyc=hyc+2;
+  const fg=ctx.createLinearGradient(cx,fyc-fh/2,cx,fyc+fh/2);fg.addColorStop(0,'#10192e');fg.addColorStop(1,'#05080f');
+  ctx.fillStyle=fg;rr(cx-fw/2,fyc-fh/2,fw,fh,fh/2);ctx.fill();ctx.restore();
+  ctx.save();ctx.globalAlpha=.10;ctx.fillStyle='#9fd8ff';rr(cx-fw/2+9,fyc-fh/2+5,fw-18,fh*0.38,13);ctx.fill();ctx.restore();
+  // eyes
+  const p={...cur,glow};const eCY=fyc+1,gap=19;
+  drawEye(cx-gap,eCY-cur.asym,p,gx,gy,cur.mode==='line'?1:blink,1,eyeOv);
+  drawEye(cx+gap,eCY+cur.asym,p,gx,gy,cur.mode==='line'?1:blink,-1,eyeOv);
+  if(tgtName==='detective')drawGlasses(cx,eCY,glow);
+  if(tgtName==='sleeping'){ctx.globalAlpha=.6+.4*Math.sin(perf*2);ctx.fillStyle='#9fb3d6';ctx.font='600 16px system-ui';ctx.fillText('z',cx+50,cy-102-(perf*8%22));ctx.font='600 22px system-ui';ctx.fillText('Z',cx+62,cy-116-((perf*8+10)%22));ctx.globalAlpha=1;}
+  ctx.restore();}
+
+/* presence */
+const SCALE=.4, HIT=52;
+let pos={x:innerWidth-118,y:innerHeight-150}, ptgt={x:innerWidth-118,y:innerHeight-150}, vel={x:0,y:0};
+let mode='enter',modeT=0,lastActivity=0,perf=0,blink=1,blinkPhase=null,nextBlink=2;
+let gazeX=0,gazeY=0,mouse={x:innerWidth/2,y:innerHeight/2,has:false},hovering=false,hoverDwell=0,panelOpen=false,dnd=false,portalT=0;
+let egg=null; // {type,t,dur,line}
+function anchors(){return[{x:W*.74,y:H*.52,w:.42},{x:W*.82,y:H*.3,w:.24},{x:W*.62,y:H*.72,w:.16},{x:W*.86,y:H*.64,w:.13},{x:W*.5,y:H*.42,w:.05}];}
+function pickAnchor(){const a=anchors();let r=Math.random(),s=0;for(const an of a){s+=an.w;if(r<=s)return an;}return a[0];}
+let purposeUntil=0;
+function goPurpose(target,emotion){mode='purpose';purposeUntil=perf+5.5;pointTarget=target;ptgt={x:Math.max(150,Math.min(W-150,target.x+170)),y:Math.max(120,Math.min(H-120,target.y))};setEmotion(emotion||'curious');setGesture('point');}
+
+/* bubbles + budget wallet */
+let wallet=6,walletT=0,bubbleUntil=0,bubbleW=220,bubbleH=44;
+const bubble=document.getElementById('bubble'),bubbleText=document.getElementById('bubbleText'),promptEl=document.getElementById('prompt'),presenceTag=document.getElementById('presenceTag');
+const COST={whisper:0,speech:0,thought:1,tip:1,guidance:2,alert:3,celebrate:4};
+function showBubble(text,type='speech',dur){type=type||'speech';if(dnd&&type!=='speech'&&type!=='guidance')return false;
+  const c=COST[type]??1;if(c>0){if(wallet<c)return false;wallet-=c;}
+  bubbleText.textContent=text;bubble.className='float show '+type;bubbleW=bubble.offsetWidth;bubbleH=bubble.offsetHeight;const words=text.split(/\s+/).length;bubbleUntil=perf+(dur||Math.max(3.2,Math.min(9,1+words*.4)));return true;}
+function hideBubble(){bubble.classList.remove('show');}
+const PROMPTS=['Need help?','Stuck somewhere?','Want me to investigate?','Need a hint?','Got a question?'];
+let bag=[],promptCur='';function nextPrompt(){if(!bag.length)bag=[...PROMPTS];return bag.splice(Math.floor(Math.random()*bag.length),1)[0];}
+
+/* lab + AI */
+let lab=null;
+async function loadLab(){try{lab=await(await fetch('/api/labstate')).json();
+  document.getElementById('labTitle').textContent=lab.lab.title;
+  document.getElementById('labStep').textContent='Step '+(lab.currentStep?.stepGuid||'')+' — '+(lab.currentStep?.title||'');
+  document.getElementById('modelTag').textContent=lab.model;
+  const v=document.getElementById('vals');v.innerHTML='';(lab.validations||[]).forEach(x=>{const pass=x.status==='passed';
+    v.insertAdjacentHTML('beforeend',`<div class="val"><span class="badge ${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</span><span>${x.description}</span></div>`);});
+}catch(e){}}
+function failing(){return lab&&(lab.findings||[]).length>0;}
+
+/* ---------- Knowledge Moments: short, accurate, context-aware insights ---------- */
+const KNOWLEDGE={
+  azure:[{t:'fact',x:"Azure went GA back in 2010 — ~15 years of cloud under the hood."},{t:'arch',x:"Most Azure services quietly lean on three pillars: identity, storage, and networking."}],
+  'ai-foundry':[{t:'fact',x:"Azure AI Foundry lets teams build, evaluate, and deploy AI without hand-managing the infra."},{t:'tip',x:"In AI Foundry, evaluate a model on YOUR data before deploying — it catches surprises early."}],
+  storage:[{t:'fact',x:"Storage accounts are among Azure's most-used resources — lots of services depend on them behind the scenes."},{t:'mistake',x:"Storage account names are global, lowercase, and unique — a classic first stumble."}],
+  vm:[{t:'fact',x:"A VM emulates a whole computer, so many isolated systems can share one physical host."},{t:'tip',x:"VM size availability varies by region — if a size is 'not available', the region is often why."}],
+  vnet:[{t:'fact',x:"A virtual network is your private slice of Azure's network — resources inside it talk securely."}],
+  appservice:[{t:'fact',x:"App Service runs your web app without you managing the servers underneath."}],
+  region:[{t:'tip',x:"Pick a region early and keep everything in it — cross-region mismatches cause sneaky failures."}],
+  powershell:[{t:'fact',x:"PowerShell is object-based, not text-based — that's why its automation is so powerful."}],
+  vscode:[{t:'fact',x:"VS Code's huge extension ecosystem is a big reason it became so popular."}],
+  cli:[{t:'tip',x:"`az` commands are scriptable and great for repeatable, version-controlled setups."}],
+  'managed-identity':[{t:'fact',x:"Managed identities let services authenticate to each other with no passwords to store."}],
+  sql:[{t:'tip',x:"Azure SQL scales compute and storage separately — handy for tuning cost."}],
+  keyvault:[{t:'arch',x:"Key Vault keeps secrets out of your code and centralizes access + auditing."}],
+  general:[{t:'fact',x:"Did you know? Large AI models can see trillions of tokens during training."},{t:'fact',x:"Cloud lore: a surprising share of outages trace back to DNS or expired certs."}],
+};
+const TOPIC_KEYS={azure:/azure/i,'ai-foundry':/foundry|ai studio/i,storage:/storage|blob/i,vm:/virtual machine|\bvm\b|\bvms\b/i,vnet:/vnet|virtual network|network/i,appservice:/app service|web app|webapp/i,region:/region|location|west us|east us/i,powershell:/powershell/i,vscode:/vs ?code/i,cli:/\bcli\b|\baz \b/i,'managed-identity':/managed identit/i,sql:/\bsql\b/i,keyvault:/key ?vault/i};
+function detectTopics(){const s=[lab&&lab.lab&&lab.lab.title,lab&&lab.lab&&lab.lab.objective,lab&&lab.currentStep&&lab.currentStep.title].concat((lab&&lab.validations||[]).map(v=>v.description)).join(' ').toLowerCase();
+  const out=[];for(const k in TOPIC_KEYS)if(TOPIC_KEYS[k].test(s))out.push(k);out.push('general');return out;}
+const KPREFIX={fact:'💡 Fun fact:',tip:'🔧 Tip:',mistake:'⚠️ Heads up:',best:'✅ Best practice:',arch:'🏗️ Behind the scenes:',latest:'📣 New:'};
+let knowSeen=new Set(),knowCool=30,knowCount=0,knowFetching=false,knowRecent=[];
+// Offline fallback only — primary path is the model-generated /api/insight.
+function fallbackInsight(){const topics=detectTopics(),pool=[];for(const t of topics)(KNOWLEDGE[t]||[]).forEach((k,i)=>{const id=t+i;if(!knowSeen.has(id))pool.push({id,x:k.x});});if(!pool.length)return null;const p=pool[Math.floor(Math.random()*pool.length)];knowSeen.add(p.id);return p.x;}
+function maybeKnowledge(dt){knowCool-=dt;if(knowCool>0||knowFetching)return;
+  // governance: only when calm & welcome — never during help, hover, play, sleep, purpose, or focus mode
+  if(dnd||panelOpen||hovering||egg||mode==='enter'||mode==='purpose')return;
+  if(['hero','concerned','sleeping','thinking','detective','shocked'].includes(tgtName))return;
+  if(perf-lastActivity<4||knowCount>=9){knowCool=12;return;}
+  if(wallet<1){knowCool=15;return;}
+  knowFetching=true;
+  fetch('/api/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'insight',recent:knowRecent,scenario:simulate})})
+   .then(r=>r.json()).then(o=>{knowFetching=false;const text=(o&&o.message)||fallbackInsight();
+     if(text&&showBubble(text,TONEBUBBLE[((o&&o.tone)||'').toString().toLowerCase()]||'thought',7)){knowRecent.push(text);if(knowRecent.length>10)knowRecent.shift();knowCount++;if(o&&o.emotion&&(tgtName==='neutral'||tgtName==='happy'))setEmotion(mapEmo(o.emotion));knowCool=80+Math.random()*50;}else knowCool=25;})
+   .catch(()=>{knowFetching=false;knowCool=30;});}
+
+/* panel */
+const panel=document.getElementById('panel'),logEl=document.getElementById('log'),input=document.getElementById('input');
+let panelPos=null;
+function placePanel(){let left,top;if(panelPos){left=panelPos.x;top=panelPos.y;}else{left=pos.x-272;top=pos.y-120;}
+  left=Math.max(10,Math.min(left,W-266));top=Math.max(14,Math.min(top,H-250));panel.style.left=left+'px';panel.style.top=top+'px';}
+function openPanel(){panelOpen=true;placePanel();panel.classList.add('open');setEmotion('happy');bump();setTimeout(()=>input.focus(),120);
+  if(!logEl.dataset.greeted){logEl.dataset.greeted=1;addMsg('rk',"Hey! What are you working on? I'll help where I can. 🙂");}}
+function closePanel(){panelOpen=false;dragging=false;panel.classList.remove('open');}
+function addMsg(who,t){const d=document.createElement('div');d.className='msg '+who;d.innerHTML=fmt(t);logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;return d;}
+function fmt(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');}
+/* ---- Adaptive Structured Voice: one AI response {emotion,tone,message} drives expression+gesture+bubble+words ---- */
+const EMAP={neutral:'neutral',happy:'happy',excited:'excited',curious:'curious',thinking:'thinking',concerned:'concerned',shocked:'shocked',surprised:'shocked',detective:'detective',investigative:'detective',celebrate:'celebrate',celebrating:'celebrate',proud:'happy',hero:'hero',guardian:'hero',sleeping:'sleeping'};
+const TONEBUBBLE={celebrating:'celebrate',serious:'alert',dramatic:'alert',warning:'alert',mysterious:'thought',curious:'thought',investigative:'guidance',detective:'guidance',mentor:'speech',professional:'speech',friendly:'speech',encouraging:'speech',calm:'speech',funny:'speech'};
+function mapEmo(e){return EMAP[(e||'').toString().toLowerCase()]||'happy';}
+function typeInto(el,text){el.textContent='';let i=0;(function step(){el.textContent=text.slice(0,i++);if(i<=text.length)setTimeout(step,Math.max(8,16-text.length/24));})();}
+function applySay(o,el){if(!o)return;setEmotion(mapEmo(o.emotion));const msg=(o.message||'').toString();
+  if(el){if(msg)typeInto(el,msg);}
+  else if(msg){showBubble(msg,TONEBUBBLE[(o.tone||'').toString().toLowerCase()]||'speech',Math.max(4,Math.min(9,1+msg.split(/\s+/).length*.42)));}
+  if(mapEmo(o.emotion)==='celebrate'||(o.tone||'').toString().toLowerCase()==='celebrating')confetti();}
+function sendInput(){const v=input.value.trim();if(v){input.value='';ask(v);}}
+input&&input.addEventListener('keydown',e=>{if(e.key==='Enter')sendInput();});
+async function ask(message){if(!panelOpen)openPanel();bump();addMsg('you',message);const el=addMsg('rk','…');
+  setEmotion(failing()&&/fail|stuck|wrong|error|why|deploy|permission/i.test(message)?'detective':'thinking');
+  try{const o=await(await fetch('/api/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,kind:'answer',scenario:simulate})})).json();
+    if(!o||!o.message){el.textContent='(hmm, I had trouble with that — mind trying again?)';setEmotion('concerned');return;}
+    if(o.trace)console.log('%c[Rocky trace]','color:#6d7cff;font-weight:bold',o.trace);applySay(o,el);loadLab();}
+  catch(e){el.textContent='(connection issue: '+e.message+')';setEmotion('concerned');}}
+function onAnswer(o){loadLab();const reportable=(o.findings||[]).some(f=>f.reportable);
+  if(reportable){if(!dnd)setEmotion('hero');showBubble("I've got you — let's sort this out together. 🛡️",'alert',5);}
+  else if(o.struggle>=1)setEmotion('concerned');else if((o.findings||[]).length)setEmotion('curious');else setEmotion('happy');}
+
+/* interaction: click (debounced) vs double-click */
+function dist(ax,ay,bx,by){return Math.hypot(ax-bx,ay-by);}
+function onRocky(x,y){return dist(x,y,pos.x,pos.y)<HIT*1.4;}
+addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.has=true;});
+let clicks=0,clickTimer=null;
+addEventListener('mousedown',e=>{if(e.target.closest('#panel')||e.target.closest('#dnd')||e.target.closest('.lab'))return;
+  if(!onRocky(e.clientX,e.clientY))return;if(egg)return;clicks++;
+  if(clicks===1){clickTimer=setTimeout(()=>{clicks=0;if(panelOpen)closePanel();else openPanel();},250);}
+  else{clearTimeout(clickTimer);clicks=0;playEgg();}});
+addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();else if((e.key==='r'||e.key==='R')&&document.activeElement!==input){panelOpen?closePanel():openPanel();}});
+function bump(){lastActivity=perf;}
+function toggleDnd(){dnd=!dnd;document.getElementById('dnd').textContent=dnd?'🔕 Focus mode: on':'🔕 Focus mode: off';}
+let simulate=false;
+function toggleSim(){simulate=!simulate;document.getElementById('sim').textContent=simulate?'🧪 Demo scenario: on':'🧪 Demo scenario: off';}
+// Deep-link from Lab Doctor's "see what the learner saw": land already in the broken-lab story.
+(function(){const q=new URLSearchParams(location.search);if(q.has('demo')||q.has('scenario')){simulate=true;const s=document.getElementById('sim');if(s)s.textContent='🧪 Demo scenario: on';}})();
+// panel drag
+let dragging=false,dragOff={x:0,y:0};
+document.getElementById('panelHead').addEventListener('mousedown',e=>{if(e.target.closest('.x'))return;dragging=true;const r=panel.getBoundingClientRect();dragOff={x:e.clientX-r.left,y:e.clientY-r.top};e.preventDefault();});
+addEventListener('mousemove',e=>{if(dragging){panelPos={x:e.clientX-dragOff.x,y:e.clientY-dragOff.y};placePanel();}});
+addEventListener('mouseup',()=>dragging=false);
+
+/* double-click easter eggs */
+const EGGS=[
+  {type:'dizzy',dur:2.2,line:'whoa… 😵‍💫'},
+  {type:'glitch',dur:1.4,line:'—bzzt— 🤖'},
+  {type:'fall',dur:2.0,line:'ow! 😆 just kidding'},
+  {type:'floataway',dur:2.6,line:'wheee! ✨'},
+  {type:'playdead',dur:2.4,line:'💀 …jk! 😆'},
+  {type:'spin',dur:1.6,line:'wheee! 🌀'},
+];
+function playEgg(){if(egg)return;egg={...EGGS[Math.floor(Math.random()*EGGS.length)],t:0};showBubble(egg.line,'whisper',2);
+  if(egg.type==='floataway'){ptgt={x:pos.x,y:-160};}}
+
+/* confetti */
+function confetti(){const c=document.getElementById('confetti'),cols=['#6d7cff','#a78bfa','#5ef0a0','#7df9ff','#fbbf24'];
+  for(let i=0;i<40;i++){const d=document.createElement('div');d.className='conf';d.style.left=(pos.x/W*100)+'%';d.style.top=(pos.y/H*100)+'%';d.style.background=cols[i%cols.length];
+    const dx=(Math.random()-.5)*420,dy=Math.random()*-260-60;d.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy+340}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:1600+Math.random()*700,easing:'cubic-bezier(.2,.7,.3,1)'});c.appendChild(d);setTimeout(()=>d.remove(),2300);}}
+
+/* awareness (honest, in-page): tab return + inactivity */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){bump();if(perf>6&&!dnd){setEmotion('happy');showBubble('Welcome back! 👋 Pick up where you left off?','speech',4);}}});
+
+/* main loop */
+let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;perf+=dt;
+  if(document.hidden){requestAnimationFrame(frame);return;} // skip work when tab hidden
+  if(cv.clientWidth!==W||cv.clientHeight!==H)resize();
+  ctx.clearRect(0,0,W,H);
+  walletT+=dt;if(walletT>=20){walletT=0;wallet=Math.min(6,wallet+1);}
+
+  // easter egg lifecycle
+  let eyeOv=null,bodyRot=0,extraAlpha=1;
+  if(egg){egg.t+=dt;const k=egg.t/egg.dur;
+    if(egg.type==='dizzy'){eyeOv='spiral';bodyRot=Math.sin(perf*10)*0.18;}
+    else if(egg.type==='glitch'){eyeOv=null;}
+    else if(egg.type==='fall'){bodyRot=Math.min(1.4,k*3)* (k<.7?1:Math.max(0,(1-(k-.7)/.3)));eyeOv=k<.7?'x':null;}
+    else if(egg.type==='floataway'){/* pos handled via ptgt; returns */}
+    else if(egg.type==='playdead'){bodyRot=Math.min(1.57,k*4)*(k<.85?1:Math.max(0,1-(k-.85)/.15));eyeOv='x';}
+    else if(egg.type==='spin'){bodyRot=k*Math.PI*4;}
+    if(egg.t>=egg.dur){if(egg.type==='floataway'){const side=Math.random()<.5?-1:1;pos={x:side<0?-120:W+120,y:H*.4};ptgt=pickAnchor();portalT=1;}egg=null;setEmotion(failing()?'hero':'happy');}
+  }
+
+  for(const k of['w','h','tilt','yOff','asym','corner'])cur[k]=damp(cur[k],tgt[k],7,dt);
+  cur.mode=tgt.mode;cur.glow=lerpHex(cur.glow,tgt.glow,1-Math.exp(-6*dt));
+  if(!reduce){nextBlink-=dt;if(nextBlink<=0&&blinkPhase===null){blinkPhase=.0001;nextBlink=1.8+Math.random()*3.2;}
+    if(blinkPhase!==null){blinkPhase+=dt/.13;if(blinkPhase>=1){blinkPhase=null;blink=1;}else blink=Math.abs(Math.cos(blinkPhase*Math.PI));}}
+
+  // hover
+  const d=dist(mouse.x,mouse.y,pos.x,pos.y);
+  if(mouse.has&&d<150&&!panelOpen&&!egg){hoverDwell+=dt;if(hoverDwell>.12&&!hovering){hovering=true;promptCur=nextPrompt();if(tgtName!=='hero')setEmotion('curious');}}
+  else if(hovering&&(d>=160||panelOpen||egg)){hovering=false;if(!panelOpen&&tgtName!=='hero'&&!failing())setEmotion('neutral');hoverDwell=0;}
+
+  // presence machine — rests bottom-right; moves ONLY with purpose (no wandering)
+  const idle=perf-lastActivity;modeT+=dt;
+  const rest={x:W-118,y:H-150};
+  if(mode==='enter'){portalT=Math.max(0,1-modeT/1.1);ptgt=rest;if(modeT>1.2){mode='rest';modeT=0;}}
+  else if(panelOpen||hovering||egg){mode='focus';}
+  else if(mode==='purpose'){if(perf>purposeUntil){mode='rest';pointTarget=null;ptgt=rest;setEmotion(failing()?'concerned':'neutral');}}
+  else{mode='rest';ptgt=rest;
+    if(idle>200&&tgtName!=='hero'&&tgtName!=='sleeping')setEmotion('sleeping');
+    else if(idle<6&&tgtName==='sleeping')setEmotion('neutral');}
+
+  // move (deliberate; FROZEN while the user interacts — Rocky never drifts away)
+  let aimX=(hovering||panelOpen)&&!egg?pos.x:ptgt.x, aimY=(hovering||panelOpen)&&!egg?pos.y:ptgt.y;
+  const spd=egg?6:(mode==='purpose'?3:2.6);
+  const nx=damp(pos.x,aimX,spd,dt),ny=damp(pos.y,aimY,spd,dt);
+  vel.x=nx-pos.x;vel.y=ny-pos.y;pos.x=nx;pos.y=ny;
+  if(portalT>0)portalT=Math.max(0,portalT-dt);
+
+  // blade arms → gesture ROTATIONS (+ subtle velocity lag for weightless secondary motion)
+  const G=GEST[gestName]||GEST.rest;
+  let rL=G.l, rR=G.r;
+  if(G.point&&pointTarget){rR=Math.max(-120,Math.min(120,Math.atan2(pointTarget.y-pos.y,pointTarget.x-pos.x)*180/Math.PI-90));}
+  if(G.wave)rR=G.r+Math.sin(perf*9)*16;
+  const lag=vel.x*0.5;
+  hand.l=damp(hand.l,rL-lag,9,dt);
+  hand.r=damp(hand.r,rR-lag,9,dt);
+
+  // gaze
+  const gtx=mouse.has?Math.max(-1,Math.min(1,(mouse.x-pos.x)/220)):Math.sin(perf*.6)*.5;
+  const gty=mouse.has?Math.max(-1,Math.min(1,(mouse.y-pos.y)/220)):Math.cos(perf*.5)*.4;
+  gazeX=damp(gazeX,gtx,8,dt);gazeY=damp(gazeY,gty,8,dt);
+
+  // portal ring
+  if(portalT>0){ctx.save();ctx.globalAlpha=portalT;ctx.strokeStyle='#a78bfa';ctx.lineWidth=4;ctx.shadowColor='#a78bfa';ctx.shadowBlur=28;const rad=70*(1-portalT)+18;ctx.beginPath();ctx.ellipse(pos.x,pos.y,rad*.7,rad,0,0,7);ctx.stroke();ctx.restore();}
+
+  // draw (glitch = RGB split)
+  const bob=reduce?0:Math.sin(perf*tgt.bob.s*2)*tgt.bob.a;
+  const drawAt=(ox,oy,al,col)=>{ctx.save();ctx.globalAlpha=al;drawRocky(pos.x+ox,pos.y+bob+oy,SCALE,col||cur.glow,blink,gazeX*7,gazeY*6,bodyRot,eyeOv);ctx.restore();};
+  const baseAlpha=mode==='offscreen'?Math.max(0,1-modeT/1.6):1;
+  if(egg&&egg.type==='glitch'){const j=()=> (Math.random()-.5)*6;drawAt(j()-3,j(),.5,'#ff5a7a');drawAt(j()+3,j(),.5,'#5af0ff');drawAt(j(),j(),.9);}
+  else drawAt(0,0,baseAlpha);
+
+  // overlays
+  if(bubble.classList.contains('show')){const bside=pos.x>W*0.5?'left':'right';let bl=bside==='left'?pos.x-34-bubbleW:pos.x+34;let bt=pos.y-62-bubbleH;
+    bl=Math.max(8,Math.min(bl,W-bubbleW-8));bt=Math.max(8,Math.min(bt,H-bubbleH-8));bubble.style.left=bl+'px';bubble.style.top=bt+'px';bubble.dataset.side=bside;}
+  if(perf>bubbleUntil)hideBubble();
+  if(hovering){promptEl.textContent=promptCur;promptEl.className='float show';promptEl.style.left=pos.x+'px';promptEl.style.top=(pos.y-58)+'px';}else promptEl.className='float';
+  // panel stays fixed once opened (placed on open + while dragging) — no per-frame drift
+  presenceTag.textContent=egg?'(playing)':panelOpen?'with you':hovering?'focused on you':mode;
+  maybeKnowledge(dt);
+  requestAnimationFrame(frame);
+}
+
+(async()=>{await loadLab();resize();setEmotion('neutral');lastActivity=0;requestAnimationFrame(frame);
+  setTimeout(()=>showBubble("Hey! I'm Rocky 👋 I'll be right here whenever you need a hand.",'speech',5),900);
+  setTimeout(async()=>{if(simulate&&failing()&&!dnd){goPurpose({x:200,y:210},'hero');
+    try{const o=await(await fetch('/api/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'proactive',scenario:true})})).json();
+      showBubble((o&&o.message)||"Hold on… I spotted a problem. Click me — I've got you. 🛡️",(o&&TONEBUBBLE[((o.tone)||'').toString().toLowerCase()])||'alert',7);}
+    catch{showBubble("Hold on… I spotted a problem. Click me — I've got you. 🛡️",'alert',7);}}},6500);
+})();
+</script>
+</body>
+</html>

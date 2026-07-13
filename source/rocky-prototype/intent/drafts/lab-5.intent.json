@@ -1,0 +1,627 @@
+{
+ "source": "C:\\Users\\ManojGowda\\OneDrive - Spektra Systems LLC\\Desktop\\Labs\\Fabric-Analytics-in-aday\\english\\labguide\\Lab-5.md",
+ "splitMode": "task-headings",
+ "extractedAt": "2026-07-05T02:38:19.493Z",
+ "review": "DRAFT — requires human review; mechanical audit checks quote-anchoring only",
+ "tasks": [
+  {
+   "title": "Task 1: Configure scheduled refresh for Supplier Dataflow",
+   "objective": "Configure an automatic scheduled refresh for the Supplier Dataflow in the Fabric workspace.",
+   "expectedOutcome": "The df_Supplier_Snowflake dataflow has a saved daily refresh schedule at 12:00 AM visible in its Schedule settings.",
+   "facts": [
+    {
+     "fact": "The workspace to use is FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>.",
+     "quote": "FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>",
+     "grounded": true
+    },
+    {
+     "fact": "The artifact to configure is named df_Supplier_Snowflake.",
+     "quote": "df_Supplier_Snowflake",
+     "grounded": true
+    },
+    {
+     "fact": "The learner should open the dataflow Settings option.",
+     "quote": "Choose the **Settings** option.",
+     "grounded": true
+    },
+    {
+     "fact": "The schedule is configured from the Schedule option.",
+     "quote": "Select the **Schedule** option",
+     "grounded": true
+    },
+    {
+     "fact": "A new schedule is activated by clicking Add Schedule.",
+     "quote": "click **Add Schedule**",
+     "grounded": true
+    },
+    {
+     "fact": "The Repeat property should be set to Daily.",
+     "quote": "For this scenario we can choose **Daily (1)**",
+     "grounded": true
+    },
+    {
+     "fact": "The Time property should be set to 12:00 AM.",
+     "quote": "For the **Time** property we can specify **12:00 AM** **(2)** since we want midnight",
+     "grounded": true
+    },
+    {
+     "fact": "The schedule must be saved.",
+     "quote": "Lastly, select **Save**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 2: Create Pipeline",
+   "objective": "Create a new Fabric pipeline in the specified workspace and familiarize yourself with the Pipeline page menus and available options.",
+   "expectedOutcome": "A pipeline named pl_Refresh_People_SharePoint exists in the Fabric workspace and the learner has opened the Activities, Run, and View menus on the Pipeline page.",
+   "facts": [
+    {
+     "fact": "Navigate to the Fabric workspace named FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>.",
+     "quote": "Let’s navigate back to the Fabric workspace, **FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>** by selecting the workspace in the left panel.",
+     "grounded": true
+    },
+    {
+     "fact": "Create a new item of type Pipeline from the top menu.",
+     "quote": "From the top menu select **+ New item (1) -> Pipeline (2)**.",
+     "grounded": true
+    },
+    {
+     "fact": "Name the pipeline pl_Refresh_People_SharePoint.",
+     "quote": "Name the pipeline as **pl_Refresh_People_SharePoint** and select **Create**.",
+     "grounded": true
+    },
+    {
+     "fact": "After creation, you are navigated to the Pipeline page.",
+     "quote": "You are navigated to the **Pipeline page**.",
+     "grounded": true
+    },
+    {
+     "fact": "Open the Activities menu from the top menu.",
+     "quote": "From the top menu select **Activities**.",
+     "grounded": true
+    },
+    {
+     "fact": "Use the ellipsis (…) on the right on the menu to view all other available Activities.",
+     "quote": "Select the **ellipsis (…)** on the right on the menu to view all the other available Activities.",
+     "grounded": true
+    },
+    {
+     "fact": "Click Run from the top menu to access pipeline execution options.",
+     "quote": "From the top menu click **Run**.",
+     "grounded": true
+    },
+    {
+     "fact": "Select View from the top menu to access JSON code and auto align options.",
+     "quote": "From the top menu select **View**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 3: Build simple Pipeline",
+   "objective": "Build and save a simple pipeline containing a Dataflow activity configured to refresh the df_People_SharePoint dataflow with retries.",
+   "expectedOutcome": "A saved pipeline has a Dataflow activity named dfactivity_People_SharePoint pointing to df_People_SharePoint in the learner’s Fabric workspace, activated with Retry set to 3 and Retry interval set to 600 seconds.",
+   "facts": [
+    {
+     "fact": "Add a Dataflow activity from Activities -> Dataflow.",
+     "quote": "From the top menu select **Activities -> Dataflow**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the Workspace to the learner's Fabric workspace named FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>.",
+     "quote": "Make sure **Workspace** is set to your Fabric workspace, **FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>**.",
+     "grounded": true
+    },
+    {
+     "fact": "Select df_People_SharePoint in the Dataflow dropdown.",
+     "quote": "From the **Dataflow dropdown** select **df_People_SharePoint**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the activity Name field to dfactivity_People_SharePoint.",
+     "quote": "In the **Name** field, enter **dfactivity_People_SharePoint**",
+     "grounded": true
+    },
+    {
+     "fact": "Set the Description field to 'Dataflow activity to refresh df_People_SharePoint dataflow'.",
+     "quote": "In the **Description** field, enter **Dataflow activity to refresh df_People_SharePoint dataflow**.",
+     "grounded": true
+    },
+    {
+     "fact": "Leave the activity status as Activated.",
+     "quote": "Leave it as **Activated**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set Retry to 3.",
+     "quote": "Set **Retry** to **3**",
+     "grounded": true
+    },
+    {
+     "fact": "Set Retry interval (sec) to 600.",
+     "quote": "Set **Retry interval (sec)** to **600**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 4: Create new Pipeline",
+   "objective": "Create a new pipeline in the workspace named pl_Refresh_People_SharePoint_Option2 to support the revised retry scheduling scenario.",
+   "expectedOutcome": "A new pipeline called pl_Refresh_People_SharePoint_Option2 is created in the FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/> workspace.",
+   "facts": [
+    {
+     "fact": "Navigate from the left panel to the workspace named FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>.",
+     "quote": "From the left panel, click **FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>**, to be navigated to the workspace home.",
+     "grounded": true
+    },
+    {
+     "fact": "Use the top menu option + New item (1).",
+     "quote": "From the top menu, click **+ New item (1)** and from the popout window **,** click **Pipeline (2)**.",
+     "grounded": true
+    },
+    {
+     "fact": "Select Pipeline (2) from the popout window.",
+     "quote": "From the top menu, click **+ New item (1)** and from the popout window **,** click **Pipeline (2)**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the new pipeline Name to pl_Refresh_People_SharePoint_Option2.",
+     "quote": "New pipeline dialog opens. **Name** the pipeline as **pl_Refresh_People_SharePoint_Option2 (3),** and select **Create (4)**.",
+     "grounded": true
+    },
+    {
+     "fact": "Finish creation by selecting Create (4).",
+     "quote": "New pipeline dialog opens. **Name** the pipeline as **pl_Refresh_People_SharePoint_Option2 (3),** and select **Create (4)**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 5,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 5: Create Until Activity",
+   "objective": "Add an Until activity in the pipeline to repeatedly refresh the dataflow until it succeeds or three attempts have been made.",
+   "expectedOutcome": "The pipeline includes an Until activity configured to iterate the dataflow refresh until success or until three tries are reached.",
+   "facts": [
+    {
+     "fact": "The learner starts on the Pipeline screen.",
+     "quote": "You will be navigated to the Pipeline screen.",
+     "grounded": true
+    },
+    {
+     "fact": "The Activities menu should be selected.",
+     "quote": "From the menu, select **Activities**.",
+     "grounded": true
+    },
+    {
+     "fact": "The ellipsis on the right should be clicked.",
+     "quote": "Click the **ellipsis(…)** on the right.",
+     "grounded": true
+    },
+    {
+     "fact": "The Until activity should be chosen from the activity list.",
+     "quote": "From the activity list, click **Until**.",
+     "grounded": true
+    },
+    {
+     "fact": "The iteration is intended to continue until the condition is satisfied.",
+     "quote": "**Until:** is an activity that is used to iterate until a condition is satisfied.",
+     "grounded": true
+    },
+    {
+     "fact": "In this scenario, the loop refreshes the dataflow until success or three attempts.",
+     "quote": "In our scenario, we are going to iterate and refresh the dataflow until it is successful, or we have tried three times.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 6,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 6: Create Variables",
+   "objective": "Create five pipeline variables with the specified names, types, and default values to support iteration and status tracking.",
+   "expectedOutcome": "The pipeline Variables pane contains varCounter, varTempCounter, varIsSuccess, varSuccess, and varWaitTime configured with the required types and default values.",
+   "facts": [
+    {
+     "fact": "A variable named varCounter is created.",
+     "quote": "Enter **varCounter** in the **Name text box**.",
+     "grounded": true
+    },
+    {
+     "fact": "varCounter is of type Integer.",
+     "quote": "From **Type** **dropdown** select **Integer**.",
+     "grounded": true
+    },
+    {
+     "fact": "varCounter has default value 0.",
+     "quote": "Enter **Default value** of **0**.",
+     "grounded": true
+    },
+    {
+     "fact": "A variable named varTempCounter is created.",
+     "quote": "Enter **varTempCounter** in the **Name text box**.",
+     "grounded": true
+    },
+    {
+     "fact": "A variable named varIsSuccess is of type String with default value No.",
+     "quote": "**varIsSuccess** of type **String** and default value **No**.",
+     "grounded": true
+    },
+    {
+     "fact": "A variable named varSuccess is of type String with default value Yes.",
+     "quote": "**varSuccess** of type **String** and default value **Yes**.",
+     "grounded": true
+    },
+    {
+     "fact": "A variable named varWaitTime is of type Integer with default value 60.",
+     "quote": "**varWaitTime** of type **Integer** and default value **60**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 7: Configure Until Activity",
+   "objective": "Configure the Until activity with the name, description, and a stopping expression that retries the dataflow until either the counter reaches 3 or the success variable matches Yes.",
+   "expectedOutcome": "The Until activity is configured as Iterator and contains the completed expression `@or(equals(variables('varCounter'),3),equals(variables('varIsSuccess'), variables('varSuccess')))` in its Settings.",
+   "facts": [
+    {
+     "fact": "Set the Until activity name to Iterator.",
+     "quote": "3. Enter **Name** as **Iterator**",
+     "grounded": true
+    },
+    {
+     "fact": "Set the description to indicate retrying up to 3 times.",
+     "quote": "4. Enter **Description** as “**Iterator to refresh dataflow. It will retry up to 3 times**”.",
+     "grounded": true
+    },
+    {
+     "fact": "The stopping logic should execute until varCounter is 3 or varIsSuccess is Yes.",
+     "quote": "We need to write an expression which would execute until either the value of **varCounter is 3** or value **varIsSuccess is Yes**.",
+     "grounded": true
+    },
+    {
+     "fact": "Use the logical or function in the expression builder.",
+     "quote": "10. From the **Logical Functions** section, select **or** function. Notice **@or()** is added to the dynamic expression text box.",
+     "grounded": true
+    },
+    {
+     "fact": "Build the first comparison as @or(equals(variables('varCounter'),3)).",
+     "quote": "16. Enter **3** as the second parameter of the equals function. Like the screenshot below, your expression will be **@or(equals(variables('varCounter'),3))**",
+     "grounded": true
+    },
+    {
+     "fact": "Use variables('varIsSuccess') as the first parameter of the second equals function.",
+     "quote": "20. With the help of IntelliSense select **variables('varIsSuccess')**",
+     "grounded": true
+    },
+    {
+     "fact": "Use variables('varSuccess') as the second parameter of the second equals function.",
+     "quote": "22. With the help of IntelliSense select **variables('varSuccess')**. Here we are comparing the value of varIsSuccess to the value of varSuccess. (varSuccess is defaulted to Yes.)",
+     "grounded": true
+    },
+    {
+     "fact": "The final expression should match the full or/equals formula shown in the task.",
+     "quote": "**@or(equals(variables('varCounter'),3),equals(variables('varIsSuccess'), variables('varSuccess')))**",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 8: Configure Dataflow Activity",
+   "objective": "Configure a Dataflow activity inside the iterator with the specified name, description, workspace, and target dataflow.",
+   "expectedOutcome": "A Dataflow activity is present in the design pane named dfactivity_People_SharePoint, described as refreshing df_People_SharePoint, and set to run the df_People_SharePoint dataflow in workspace FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>.",
+   "facts": [
+    {
+     "fact": "Add a Dataflow activity from Activities -> Dataflow.",
+     "quote": "From the top menu, select **Activities -> Dataflow**. Dataflow activity is added to the design pane.",
+     "grounded": true
+    },
+    {
+     "fact": "The activity name must be dfactivity_People_SharePoint.",
+     "quote": "In the **Name** field, enter **dfactivity_People_SharePoint**",
+     "grounded": true
+    },
+    {
+     "fact": "The description must be Dataflow activity to refresh df_People_SharePoint dataflow.",
+     "quote": "In the **Description** field, enter “**Dataflow activity to refresh df_People_SharePoint dataflow**”.",
+     "grounded": true
+    },
+    {
+     "fact": "Configure the activity from the Settings pane.",
+     "quote": "Select **Settings** from the bottom pane.",
+     "grounded": true
+    },
+    {
+     "fact": "The workspace must be set to FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>.",
+     "quote": "Make sure **Workspace** is set to your workspace, **FAIAD_<inject key=\"Deployment ID\" enableCopy=\"false\"/>**.",
+     "grounded": true
+    },
+    {
+     "fact": "Select df_People_SharePoint in the Dataflow dropdown.",
+     "quote": "From the **Dataflow dropdown** select **df_People_SharePoint**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 6,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 9: Configure 1<sup>st</sup> Set variable Activity",
+   "objective": "Configure a Set variable activity that runs after a successful Dataflow activity to set the pipeline variable varIsSuccess to Yes so the Until iterator can exit.",
+   "expectedOutcome": "A Set variable activity named set_varIsSuccess is connected to the success path of dfactivity_People_SharePoint Dataflow activity and sets pipeline variable varIsSuccess using the value of varSuccess.",
+   "facts": [
+    {
+     "fact": "The activity added is Set variable.",
+     "quote": "From the top menu, select **Activities -> Set variable**.",
+     "grounded": true
+    },
+    {
+     "fact": "The Set variable activity name is set_varIsSuccess.",
+     "quote": "In the **Name** field, enter **set_varIsSuccess**",
+     "grounded": true
+    },
+    {
+     "fact": "The description is Set variable varIsSuccess to Yes.",
+     "quote": "In the **Description** field, enter “**Set variable varIsSuccess to Yes”**.",
+     "grounded": true
+    },
+    {
+     "fact": "The success connector used is the green check mark from dfactivity_People_SharePoint Dataflow activity to set_varIsSuccess.",
+     "quote": "Click the **green check mark** from dfactivity_People_SharePoint Dataflow activity and drag to connect to the new **set_varIsSuccess** **Set variable activity**.",
+     "grounded": true
+    },
+    {
+     "fact": "Variable type must be Pipeline variable.",
+     "quote": "In the bottom pane, make sure **Variable type** is **Pipeline variable**.",
+     "grounded": true
+    },
+    {
+     "fact": "The variable selected by name is varIsSuccess.",
+     "quote": "In the **Name** field, select **varIsSuccess**.",
+     "grounded": true
+    },
+    {
+     "fact": "The value is populated using the variable expression @variables(‘varSuccess’).",
+     "quote": "Notice **@variables(‘varSuccess’)** is entered in the Add dynamic content below text area.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 10: Configure 2<sup>nd</sup> Set variable Activity",
+   "objective": "Configure a second Set variable activity that runs on Dataflow failure and increments the pipeline variable varTempCounter using a dynamic expression.",
+   "expectedOutcome": "A Set variable activity named set_varTempCounter is connected from the Dataflow activity’s failure path and is configured to set the pipeline variable varTempCounter to @add(variables('varCounter'),1).",
+   "facts": [
+    {
+     "fact": "Add a Set variable activity from the Activities menu.",
+     "quote": "From the top menu, select **Activities -> Set variable**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the activity name to set_varTempCounter.",
+     "quote": "In the **Name** field, enter **set_varTempCounter**",
+     "grounded": true
+    },
+    {
+     "fact": "Set the activity description to Increment variable varTempCounter.",
+     "quote": "In the **Description** field, enter “**Increment variable varTempCounter”**.",
+     "grounded": true
+    },
+    {
+     "fact": "Connect the Dataflow activity failure path to the new Set variable activity.",
+     "quote": "Click the **red x-mark** from Dataflow activity to the new Set variable activity.",
+     "grounded": true
+    },
+    {
+     "fact": "Configure Variable type as Pipeline variable.",
+     "quote": "In the bottom pane, make sure **Variable type** is **Pipeline variable**.",
+     "grounded": true
+    },
+    {
+     "fact": "Select varTempCounter as the variable name.",
+     "quote": "In the **Name** field, select **varTempCounter**.",
+     "grounded": true
+    },
+    {
+     "fact": "Enter the dynamic expression @add(variables('varCounter'),1) in the Value field.",
+     "quote": "Pipeline expression builder dialog opens. Enter **@add(variables('varCounter'),1)**",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 11: Configure 3<sup>rd</sup> Set variable Activity",
+   "objective": "Configure a new Set variable activity named set_varCounter to assign the pipeline variable varCounter from varTempCounter.",
+   "expectedOutcome": "A Set variable activity called set_varCounter is connected after set_varTempCounter and sets the pipeline variable varCounter to the dynamic expression @variables('varTempCounter').",
+   "facts": [
+    {
+     "fact": "The activity added is Set variable.",
+     "quote": "From the top menu, select **Activities -> Set variable**.",
+     "grounded": true
+    },
+    {
+     "fact": "The activity name is set_varCounter.",
+     "quote": "In the **Name** field, enter **set_varCounter**",
+     "grounded": true
+    },
+    {
+     "fact": "The description entered is “Increment variable varCounter”.",
+     "quote": "In the **Description** field, enter “**Increment variable varCounter”**.",
+     "grounded": true
+    },
+    {
+     "fact": "set_varTempCounter is connected to the new set_varCounter activity.",
+     "quote": "Click the **green check mark** from set_varTempCounter Set variable activity and drag to connect to the new **set_varCounter Set variable activity**.",
+     "grounded": true
+    },
+    {
+     "fact": "Variable type is Pipeline variable.",
+     "quote": "In the bottom pane, make sure **Variable type** is **Pipeline variable**.",
+     "grounded": true
+    },
+    {
+     "fact": "The variable selected in the Name field is varCounter.",
+     "quote": "In the **Name** field, select **varCounter**.",
+     "grounded": true
+    },
+    {
+     "fact": "The value expression entered is @variables('varTempCounter').",
+     "quote": "Enter **@variables('varTempCounter')**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 12: Configure Wait Activity",
+   "objective": "Configure a Wait activity in the pipeline to use a dynamic wait time based on varCounter and varWaitTime, then save the completed pipeline.",
+   "expectedOutcome": "A Wait activity named wait_onFailure is connected after set_varCounter, uses the specified dynamic expression for wait time in seconds, and the pipeline is saved.",
+   "facts": [
+    {
+     "fact": "A Wait activity is added from Activities -> ellipsis (…) -> Wait.",
+     "quote": "From the top menu, select **Activities -> ellipsis (…) -> Wait**.",
+     "grounded": true
+    },
+    {
+     "fact": "The Wait activity name is set to wait_onFailure.",
+     "quote": "In the **Name** field, enter **wait_onFailure**",
+     "grounded": true
+    },
+    {
+     "fact": "The Wait activity description is set to “Wait for 300 seconds on 2nd try and 900 seconds on 3rd try”.",
+     "quote": "In the **Description** field, enter “**Wait for 300 seconds on 2nd try and 900 seconds on 3rd try”**.",
+     "grounded": true
+    },
+    {
+     "fact": "The set_varCounter Set variable activity is connected to the wait_onFailure Wait activity.",
+     "quote": "Click the **green check mark** from set_varCounter Set variable activity and drag to connect to the new **wait_onFailure Wait activity**.",
+     "grounded": true
+    },
+    {
+     "fact": "The Wait time in seconds field uses Add dynamic content.",
+     "quote": "In the **Wait time in seconds** field, select the **text box** and select **Add dynamic content** link.",
+     "grounded": true
+    },
+    {
+     "fact": "The wait time expression entered is the provided nested if expression using varCounter and varWaitTime.",
+     "quote": "@if(\n       greater(variables('varCounter'), 1),\n       if(equals(variables('varCounter'), 2),\n           mul(variables('varWaitTime'),15 ),\n           mul(variables('varWaitTime'), 0)\n       ),\n       mul(variables('varWaitTime'),5 )\n   )",
+     "grounded": true
+    },
+    {
+     "fact": "The pipeline is saved using Home -> Save icon.",
+     "quote": "From the top menu, select **Home -> Save icon** to save the pipeline.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 13: Configure Schedule Refresh for Pipeline",
+   "objective": "Configure the pipeline to run on a daily schedule in Microsoft Fabric and save the scheduled refresh settings.",
+   "expectedOutcome": "The pipeline has a saved scheduled run configured to execute daily at 9 AM starting today, ending on a future date, in the selected time zone.",
+   "facts": [
+    {
+     "fact": "Open the schedule settings from the top menu.",
+     "quote": "From the top menu, select **Home -> Schedule**.",
+     "grounded": true
+    },
+    {
+     "fact": "Add a new scheduled run.",
+     "quote": "Select the **+ Add Schedule** button below **Scheduled run**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the repeat frequency to Daily.",
+     "quote": "Set **Repeat dropdown** to **Daily**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the scheduled time to 9 AM.",
+     "quote": "Set **Time** to **9 AM**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the start date and time to Today.",
+     "quote": "Set **Start date and time** to **Today**.",
+     "grounded": true
+    },
+    {
+     "fact": "Set the end date and time to a future date.",
+     "quote": "Set **End date and time** to a **future date**.",
+     "grounded": true
+    },
+    {
+     "fact": "Save the schedule configuration.",
+     "quote": "Select **Save**.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  }
+ ],
+ "summary": {
+  "tasks": 13,
+  "structuralFails": 0,
+  "facts": 91,
+  "grounded": 91,
+  "ungrounded": 0,
+  "faithfulnessPct": 100
+ }
+}

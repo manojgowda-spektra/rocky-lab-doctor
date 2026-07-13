@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocky · Watcher</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#080b11;--panel:rgba(255,255,255,.045);--panel2:rgba(255,255,255,.06);--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+    --ink:#eaf2f6;--dim:#8b98a6;--dim2:#5f6b78;--teal:#2ee6c8;--crit:#ff5c72;--high:#ff9f45;--med:#ffd93d;--low:#6ba6ff;--good:#2ee6c8;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:radial-gradient(1100px 650px at 75% -8%,rgba(255,159,69,.06),transparent 60%),var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 22px 60px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  .logo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(150deg,rgba(255,159,69,.22),rgba(255,159,69,.05));border:1px solid var(--line2)}
+  h1{font-size:16px;margin:0;font-weight:650} .sub{font-size:11.5px;color:var(--dim)}
+  .spacer{flex:1}
+  .simbadge{font-size:10px;font-weight:800;letter-spacing:.7px;padding:4px 10px;border-radius:6px;background:rgba(107,166,255,.18);color:#a9cbff;border:1px solid rgba(107,166,255,.4)}
+  a.nav{color:var(--teal);font-size:12.5px;text-decoration:none} a.nav:hover{text-decoration:underline}
+  .btn{cursor:pointer;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;font-family:inherit}
+  .btn.primary{background:var(--teal);color:#04120f;border-color:transparent}
+  .btn:hover{filter:brightness(1.1)}
+  .strip{display:flex;gap:8px;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;min-height:86px;overflow-x:auto}
+  .bar{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none;width:44px}
+  .bar .col{width:26px;border-radius:5px 5px 0 0;background:var(--good);transition:.3s}
+  .bar .col.warn{background:var(--high)} .bar .col.bad{background:var(--crit)}
+  .bar .k{font-size:9.5px;color:var(--dim2)}
+  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:16px 0 8px}
+  .alert{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-left-width:3px;border-radius:10px;padding:10px 13px;margin-bottom:8px;font-size:12.5px}
+  .alert.platform-incident{border-left-color:var(--crit);background:rgba(255,92,114,.06)}
+  .alert.regression{border-left-color:var(--high)}
+  .alert.new-finding{border-left-color:var(--med)}
+  .alert.recovery{border-left-color:var(--good)}
+  .alert.folded{opacity:.45}
+  .atype{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);flex:none;margin-top:2px}
+  .asweep{font-family:var(--mono);font-size:10px;color:var(--dim2);flex:none;margin-top:3px}
+  .adetail b{color:#fff}
+  .empty{color:var(--dim2);font-size:12.5px;padding:12px 4px}
+  .evlog{font-size:11px;color:var(--dim);margin-top:4px}
+  .ledgrid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:10px}
+  @media(max-width:900px){.ledgrid{grid-template-columns:1fr}}
+  .lpanel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:70px}
+  .lhead{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+  .lrow{display:flex;gap:8px;align-items:baseline;font-size:12px;padding:5px 0;border-top:1px solid var(--line)}
+  .lrow:first-of-type{border-top:none}
+  .lrow .who{color:#fff;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lrow .num{font-family:var(--mono);font-size:11px;color:var(--dim);flex:none}
+  .pill{font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 7px;border-radius:5px;flex:none}
+  .pill.cost{background:rgba(255,159,69,.16);color:var(--high)}
+  .pill.over{background:rgba(255,92,114,.16);color:var(--crit)}
+  .pill.ok{background:rgba(46,230,200,.14);color:var(--good)}
+  .pill.tC{background:rgba(255,92,114,.16);color:var(--crit)}
+  .pill.tB{background:rgba(255,217,61,.14);color:var(--med)}
+  .foot{margin-top:22px;font-size:11px;color:var(--dim2);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="logo" href="/" title="Rocky home" style="text-decoration:none">📡</a>
+    <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.6em">· Watcher</span></h1><div class="sub">alerts on change, silence on steady state — the time dimension</div></div>
+    <div class="spacer"></div>
+    <span class="simbadge">SIMULATED FLEET — scripted timeline</span>
+    <button class="btn primary" id="adv">▶ Advance one sweep</button>
+    <button class="btn" id="reset">↻ Reset timeline</button>
+    <a class="nav" href="/labdoctor.html">🩺 Doctor</a>
+    <a class="nav" href="/campaigns.html">🛠️ Fixer →</a>
+  </div>
+
+  <div class="strip" id="strip"><div class="empty">No sweeps yet — click <b>Advance one sweep</b>. Each bar is one sweep of the whole fleet (green = healthy labs, orange = watch, red = broken).</div></div>
+
+  <h2>Alert feed (newest first) — no change means no alerts</h2>
+  <div id="alerts"><div class="empty">Silence is a feature: the monitor only speaks when the fleet CHANGES.</div></div>
+
+  <h2>Reliability ledger — every case below is DERIVED from the sweeps above, never re-guessed</h2>
+  <div class="ledgrid">
+    <div class="lpanel"><div class="lhead">Fix queue · ranked by learner cost (learners × sweeps open)</div><div id="queue"><div class="empty">No open cases.</div></div></div>
+    <div class="lpanel"><div class="lhead">Error budget · 95% objective, diagnosis-confirmed sweeps only</div><div id="sli"><div class="empty">No incidents recorded.</div></div></div>
+    <div class="lpanel"><div class="lhead">Validator trust · only a check's OWN faults count against it</div><div id="trust"><div class="empty">All validators tier A — clean record.</div></div></div>
+  </div>
+
+  <div class="foot">
+    Scripted demo timeline on the digital twin: sweep 3 — a validation silently starts passing wrong work · sweep 4 — one region change
+    hits 4 labs (watch it fold into ONE platform incident) · sweep 6 — an author merges the drafted fix (recovery) · sweep 8 — quota exhausts.<br>
+    Detection logic is identical for production: the monitor consumes engine reports; only the data source changes.
+  </div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+async function refresh(){
+  const st=await fetch('/api/monitor/state').then(x=>x.json());
+  const strip=$('#strip');
+  if(st.history.length){
+    strip.innerHTML='';
+    st.history.forEach(h=>{
+      const broken=h.broken, warn=Object.values(st.fleet).length?0:0;
+      const healthy=h.labCount-broken;
+      const div=document.createElement('div'); div.className='bar';
+      const hb=Math.max(4,healthy*5), bb=Math.max(broken?4:0,broken*5);
+      div.innerHTML='<div style="display:flex;flex-direction:column-reverse;gap:1px">'+
+        '<div class="col" style="height:'+hb+'px" title="'+healthy+' healthy"></div>'+
+        (broken?'<div class="col bad" style="height:'+bb+'px" title="'+broken+' broken"></div>':'')+
+        '</div><div class="k">S'+h.sweepId+(h.alerts.length?' ⚠':'')+'</div>';
+      strip.appendChild(div);
+    });
+  }
+  const alerts=st.history.flatMap(h=>h.alerts).reverse();
+  const box=$('#alerts');
+  if(alerts.length){
+    box.innerHTML='';
+    alerts.forEach(a=>{
+      const d=document.createElement('div'); d.className='alert '+a.type+(a.foldedInto?' folded':'');
+      d.innerHTML='<span class="asweep">S'+a.sweepId+'</span><span class="atype">'+esc(a.type)+'</span>'+
+        '<span class="adetail">'+(a.labTitle?'<b>'+esc(a.labTitle)+'</b> — ':(a.labIds?'<b>'+a.labIds.length+' labs</b> — ':''))+esc(a.detail)+
+        (a.scoreBefore!=null?' <span style="color:var(--dim2)">(score '+a.scoreBefore+' → '+a.scoreAfter+')</span>':'')+
+        (a.foldedInto?' <span style="color:var(--dim2)">· folded into the platform incident</span>':'')+'</span>';
+      box.appendChild(d);
+    });
+  }
+  renderLedger(st.ledger);
+}
+function renderLedger(led){
+  if(!led)return;
+  const q=$('#queue');
+  if(led.queue.length){
+    q.innerHTML=led.queue.slice(0,8).map(c=>
+      '<div class="lrow"><span class="who" title="'+esc(c.title)+'">'+esc(c.labTitle)+' · '+esc(c.subtype||c.type)+'</span>'+
+      '<span class="num">open S'+c.openedSweep+' · '+c.ageSweeps+' sweep'+(c.ageSweeps===1?'':'s')+'</span>'+
+      '<span class="pill cost">'+c.costLearnerSweeps+' learner-sweeps</span></div>').join('');
+  } else q.innerHTML='<div class="empty">No open cases.</div>';
+  const s=$('#sli');
+  if(led.sli.perLab.length){
+    const f=led.sli.fleet;
+    s.innerHTML='<div class="lrow"><span class="who">Fleet</span><span class="num">'+f.incidentMinutes+' incident-min · '+f.labsOverBudget+' lab'+(f.labsOverBudget===1?'':'s')+' over budget</span></div>'+
+      led.sli.perLab.slice(0,6).map(l=>
+        '<div class="lrow"><span class="who">'+esc(l.labTitle)+'</span><span class="num">'+l.budget.usedSweeps+'/'+l.budget.allowedSweeps+' sweeps</span>'+
+        '<span class="pill '+(l.budget.burnRate>1?'over':'ok')+'">'+(l.budget.burnRate>1?'OVER ×'+l.budget.burnRate:'within')+'</span></div>').join('');
+  } else s.innerHTML='<div class="empty">No incidents recorded.</div>';
+  const t=$('#trust');
+  const vs=Object.values(led.trust).sort((a,b)=>b.cases-a.cases);
+  if(vs.length){
+    t.innerHTML=vs.slice(0,6).map(v=>
+      '<div class="lrow"><span class="who">'+esc(v.validator)+'</span>'+
+      '<span class="num">'+v.falseFail+'× false-fail · '+v.falsePass+'× false-pass</span>'+
+      '<span class="pill t'+v.tier+'">TIER '+v.tier+(v.tier==='C'?' · repeat offender':'')+'</span></div>').join('');
+  } else t.innerHTML='<div class="empty">All validators tier A — clean record.</div>';
+}
+$('#adv').onclick=async()=>{await fetch('/api/monitor/advance',{method:'POST'});refresh();};
+$('#reset').onclick=async()=>{await fetch('/api/monitor/reset',{method:'POST'});refresh();};
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+{
+ "generatedAt": "2026-07-04T15:26:44.440Z",
+ "impacts": [
+  {
+   "id": "eol:dotnet:5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "5",
+   "date": "2022-05-10",
+   "daysUntil": -1517,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 5",
+    "dotnet 5"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review",
+   "affectedRepos": [
+    "MCW-App-modernization"
+   ],
+   "affectedRepoCount": 1,
+   "referenceCount": 1,
+   "references": [
+    {
+     "repo": "MCW-App-modernization",
+     "file": "Hands-on lab/lab-files/src/README.md",
+     "line": 14,
+     "token": ".NET 5",
+     "evidence": "- ASP.NET 5 support for Linux and Mono"
+    }
+   ]
+  },
+  {
+   "id": "eol:nodejs:16",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "16",
+   "date": "2023-09-11",
+   "daysUntil": -1028,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 16",
+    "node 16",
+    "nodejs 16"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review",
+   "affectedRepos": [
+    "OpenAIWorkshop"
+   ],
+   "affectedRepoCount": 1,
+   "referenceCount": 3,
+   "references": [
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/agents/agent_framework/README.md",
+     "line": 21,
+     "token": "Node.js 16",
+     "evidence": "2. **Node.js 16+** (for React frontend) - Check with `node --version`"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/agents/agent_framework/README.md",
+     "line": 43,
+     "token": "Node.js 16",
+     "evidence": "The React frontend requires Node.js 16+ and npm:"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "docs/03_frontend_react.md",
+     "line": 22,
+     "token": "Node.js 16",
+     "evidence": "The React frontend requires Node.js 16+ and npm."
+    }
+   ]
+  },
+  {
+   "id": "eol:nodejs:18",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "18",
+   "date": "2025-04-30",
+   "daysUntil": -431,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 18",
+    "node 18",
+    "nodejs 18"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review",
+   "affectedRepos": [
+    "OpenAIWorkshop"
+   ],
+   "affectedRepoCount": 1,
+   "referenceCount": 2,
+   "references": [
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/workflow/fraud_detection_durable/README.md",
+     "line": 554,
+     "token": "Node.js 18",
+     "evidence": "- **Node.js 18+** — for React UI"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/workflow/fraud_detection_durable/ui/README.md",
+     "line": 26,
+     "token": "Node.js 18",
+     "evidence": "- Node.js 18+ or newer"
+    }
+   ]
+  },
+  {
+   "id": "eol:python:3.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.10",
+   "date": "2026-10-31",
+   "daysUntil": 118,
+   "status": "approaching",
+   "tokens": [
+    "Python 3.10"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review",
+   "affectedRepos": [
+    "OpenAIWorkshop"
+   ],
+   "affectedRepoCount": 1,
+   "referenceCount": 4,
+   "references": [
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/agents/agent_framework/README.md",
+     "line": 20,
+     "token": "Python 3.10",
+     "evidence": "1. **Python 3.10+** with dependencies installed via `uv sync` or `pip install -r requirements.txt`"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/evaluations/README.md",
+     "line": 236,
+     "token": "Python 3.10",
+     "evidence": "- Python 3.10+ with `uv` package manager"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "mcp/data/README_SETUP.md",
+     "line": 26,
+     "token": "Python 3.10",
+     "evidence": "- Python 3.10+ with required packages (see `../pyproject.toml`)"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "mcp/SETUP.md",
+     "line": 43,
+     "token": "Python 3.10",
+     "evidence": "- **Python 3.10+**"
+    }
+   ]
+  },
+  {
+   "id": "eol:windows-server:2016",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2016",
+   "date": "2027-01-12",
+   "daysUntil": 191,
+   "status": "approaching",
+   "tokens": [
+    "Windows Server 2016"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review",
+   "affectedRepos": [
+    "MCW-App-modernization"
+   ],
+   "affectedRepoCount": 1,
+   "referenceCount": 1,
+   "references": [
+    {
+     "repo": "MCW-App-modernization",
+     "file": "Hands-on lab/Manual-resource-setup.md",
+     "line": 109,
+     "token": "Windows Server 2016",
+     "evidence": "> **Note**: An older version of Windows Server is being used because SQL Server 2008 R2 is not supported on Windows Server 2016."
+    }
+   ]
+  },
+  {
+   "id": "eol:nodejs:22",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "22",
+   "date": "2027-04-30",
+   "daysUntil": 299,
+   "status": "approaching",
+   "tokens": [
+    "Node.js 22",
+    "node 22",
+    "nodejs 22"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review",
+   "affectedRepos": [
+    "OpenAIWorkshop"
+   ],
+   "affectedRepoCount": 1,
+   "referenceCount": 2,
+   "references": [
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/workflow/fraud_detection_durable/ui/README.md",
+     "line": 98,
+     "token": "Node.js 22",
+     "evidence": "- **Build stage**: Node.js 22 Alpine with all dependencies"
+    },
+    {
+     "repo": "OpenAIWorkshop",
+     "file": "agentic_ai/workflow/fraud_detection_durable/ui/README.md",
+     "line": 99,
+     "token": "Node.js 22",
+     "evidence": "- **Production stage**: Node.js 22 Alpine serving with `serve`"
+    }
+   ]
+  }
+ ]
+}

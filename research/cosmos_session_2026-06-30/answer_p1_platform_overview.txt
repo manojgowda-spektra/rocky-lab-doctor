@@ -1,0 +1,452 @@
+URL_START: https://cosmos.cloudlabs.ai/dashboard/organization
+URL_FINAL: https://cosmos.cloudlabs.ai/dashboard/organization/ai/chat/c2e63229-38cf-4ced-9fb0-2805ba444a71
+WAITED_MS: 22000
+
+=== CAPTURED ===
+CloudLabs is a platform for designing, provisioning, delivering, and operating hands-on cloud environments for learning and enablement. At a high level: you define a reusable template for an experience, package infrastructure + guide + validations, publish it, wrap it into a delivery format like an on-demand lab, workshop, hackathon, demo, or training event, then CloudLabs provisions per-learner environments and manages access, lifecycle, tracking, and cleanup.
+
+1) What the product does
+
+CloudLabs lets an organization run hands-on technical experiences without making every learner manually build cloud resources from scratch.
+
+Typical use cases:
+
+Labs: self-paced guided exercises
+Workshops: instructor-led or scheduled sessions with many attendees
+Hackathons: longer-running environments with broader access and team workflows
+POCs: controlled proof-of-concept sandboxes for customers or field teams
+Demos: curated, often simplified environments for showcasing scenarios
+Trainings: structured curriculum with guides, exercises, and completion checks
+
+Across all of these, the product solves the same core problems:
+
+Define the environment once
+Provision it consistently
+Give each learner isolated access
+Attach step-by-step instructions
+Validate learner progress
+Control cost, timing, and capacity
+Clean up afterward
+2) The offering types
+
+Think of these as different operational wrappers around the same core lab-delivery engine.
+
+Template
+
+The reusable blueprint. It contains the cloud resources, VM/browser experience, lab guide, validations, and settings.
+
+On-Demand Lab (ODL)
+
+A published, consumable lab definition that users can launch when needed. This is the most common self-service delivery model.
+
+Event / workshop / training
+
+A scheduled or managed delivery construct around labs for a cohort of users. It may include enrollment, timing, capacity, and instructor operations.
+
+Hackathon / POC / demo
+
+Variants of managed lab delivery with different duration, governance, and customization. Same foundation, different packaging and audience expectations.
+
+So the product is not “just labs”; it is a lab operations platform for multiple program types.
+
+3) Full lifecycle: authoring to learner to cleanup
+Phase 1: Design
+
+A content author or engineer decides:
+
+what the learner should achieve
+what cloud resources are needed
+whether they interact directly with Azure/AWS/GCP, through a remote VM, or both
+what instructions and checks are required
+
+Artifacts typically include:
+
+IaC: ARM, Terraform, CloudFormation, scripts
+VM/app configuration
+lab guide content
+validation logic
+metadata like title, duration, region, platform, permissions
+Phase 2: Authoring
+
+In CloudLabs, the experience is assembled into a template:
+
+infrastructure definition
+cloud platform mappings
+VM configuration if needed
+guide/modules/exercises/steps
+validation steps
+optional licenses, assets, credentials, and advanced settings
+
+This is the reusable source object for the experience.
+
+Phase 3: Publish
+
+The template is published so it becomes available for delivery. After publishing, it can be used to create:
+
+an ODL
+an instructor-led event
+another managed offering type
+
+Publishing is the point where authored content becomes operationally deployable.
+
+Phase 4: Configure delivery
+
+Operations teams configure how learners will consume it:
+
+availability window
+duration
+cloud subscription/capacity pool
+quotas and concurrency
+hot instances / pre-warmed capacity if supported
+voucher or registration model
+access restrictions/domains
+schedules and expiration
+
+At this stage the reusable template becomes an actual offering learners can access.
+
+Phase 5: Registration / assignment
+
+Learners get access through:
+
+direct registration
+invitation
+voucher
+event enrollment
+manual assignment by organizer
+
+That creates or associates an event user record, which represents a specific learner in a specific delivery context.
+
+Phase 6: Provisioning
+
+When the learner launches, CloudLabs provisions a lab instance for that learner:
+
+allocates a cloud subscription or sandbox context
+deploys cloud resources from the template
+prepares the remote VM/browser session if the lab uses one
+wires identity/access needed for the lab
+records deployment status and diagnostics
+
+This is the important separation:
+
+template/ODL/event = definition and delivery configuration
+lab instance = the actual per-learner environment
+Phase 7: Delivery to learner
+
+The learner receives a launch experience, commonly:
+
+browser-based remote desktop into a lab VM
+direct browser access to a cloud portal/app
+credentials/subscription context already prepared
+lab guide shown alongside or within the experience
+
+The learner then works through the guide, often module by module.
+
+Phase 8: Guidance and validation
+
+During usage:
+
+the lab guide tells the learner what to do
+validations check whether key actions were completed correctly
+instructors/support can inspect status and sometimes shadow sessions
+telemetry and deployment states help operations troubleshoot failures
+Phase 9: Completion / expiration
+
+When the learner finishes or time runs out:
+
+the lab may be marked completed/succeeded
+access can expire
+resources may be deallocated or deleted based on policy
+Phase 10: Cleanup
+
+CloudLabs cleans up:
+
+cloud resources in the learner’s environment
+VM sessions
+temporary credentials/access
+expired instances
+
+Cleanup is essential for cost control and tenant hygiene.
+
+4) How a lab environment is provisioned and delivered
+
+A learner environment usually has three main layers.
+
+A. The cloud environment
+
+This is the actual Azure/AWS/GCP infrastructure used in the exercise:
+
+resource groups, VMs, storage, databases, networks, etc.
+deployed from IaC and scripts
+isolated per learner or per team, depending on design
+
+CloudLabs typically provisions this into a managed subscription/account/project context allocated for the lab.
+
+B. The access surface
+
+How the learner reaches the environment:
+
+often a browser-based lab VM
+sometimes direct access to the cloud portal
+sometimes both: use the remote VM to open browser/tools/CLI against the cloud environment
+
+The VM gives CloudLabs a controlled, supportable workspace:
+
+preinstalled tools
+known browser state
+fewer local-machine issues
+easier instructor support/shadowing
+C. The control plane
+
+CloudLabs orchestrates everything around the learner:
+
+registration
+deployment workflow
+launch links
+status tracking
+validation
+time limits
+cleanup
+
+So from a learner perspective, they “launch a lab.” Under the hood, CloudLabs is:
+
+identifying the user and entitlement,
+allocating capacity,
+provisioning cloud resources,
+preparing the access workstation/VM if needed,
+attaching the guide and validations,
+exposing a launch URL.
+5) Core concepts and how they relate
+
+Here’s the clean mental model.
+
+Partner
+
+A partner is the top-level organization/tenant operating CloudLabs content.
+
+It owns:
+
+templates
+ODLs/events
+subscription groups/capacity
+courses/content catalog
+users and operations data
+
+If you’re thinking in SaaS tenancy terms, partner = customer organization/account boundary.
+
+Template
+
+A template is the reusable master blueprint for a lab experience.
+
+It includes:
+
+cloud deployment definition
+VM/browser setup
+lab guide
+validations
+settings and metadata
+
+It is author-facing and reusable. A single template can be used to create multiple delivery offerings.
+
+On-Demand Lab (ODL)
+
+An ODL is a published delivery object derived from a template for self-service or managed access.
+
+It defines how that template is consumed operationally:
+
+title
+duration
+availability
+registration model
+vouchers
+hot instances
+limits and settings
+
+Important: an ODL is not the deployed learner environment. It is the definition learners launch from.
+
+Event
+
+An event is a scheduled or organized delivery context for a group of learners.
+
+It may use one or more lab definitions and adds coordination:
+
+cohort timing
+invitations
+rosters
+instructor operations
+session controls
+
+Depending on implementation, an ODL may back an event, or an event may be a broader construct using lab assets and operational settings.
+
+Lab cluster
+
+A lab cluster is best understood as the underlying grouped delivery/provisioning unit used to host or organize lab capacity/environments.
+
+Conceptually it helps CloudLabs:
+
+manage scale
+place deployments
+organize capacity pools
+isolate workloads
+support multi-learner delivery
+
+As a new engineer, think of it as infrastructure grouping/orchestration rather than learner-facing content.
+
+Event user
+
+An event user is a learner/attendee within a specific lab or event context.
+
+This record tracks:
+
+identity/email
+registration state
+deployment state
+launch link
+entitlement to that specific experience
+
+A person can exist many times as event users across different events/labs.
+
+Lab guide
+
+The lab guide is the instructional content.
+
+It is structured into things like:
+
+modules
+exercises
+steps
+prompts/questions
+
+It explains what the learner does and in what order.
+
+Validation
+
+A validation is a machine-checkable rule or script that verifies learner progress or environment correctness.
+
+Examples:
+
+resource exists
+service is configured correctly
+app responds on expected URL
+command output matches expectation
+
+Validations improve completion tracking and reduce instructor workload.
+
+6) Relationship map
+
+The simplest relationship chain is:
+
+Partner
+owns
+
+→ Templates
+
+A Template
+is published into
+
+→ ODLs / events / other offerings
+
+An ODL or event
+has registered
+
+→ Event users
+
+Each Event user
+launches and gets
+
+→ A lab instance / deployment
+
+That lab instance contains:
+
+a cloud environment
+optionally a VM/browser workspace
+the lab guide
+associated validations
+
+And after use, CloudLabs:
+
+expires
+deallocates
+deletes
+reports status
+7) A concrete end-to-end example
+
+Say a team wants an Azure Kubernetes training lab.
+
+A product/content engineer creates a template:
+
+ARM/Terraform to deploy AKS and supporting resources
+a Windows or Linux lab VM with kubectl and VS Code
+a guide with exercises
+validation scripts checking cluster and app state
+
+They publish it.
+
+Operations creates an ODL from that template:
+
+4-hour duration
+voucher-based access
+allowed for 200 learners
+using a subscription group with enough capacity
+
+A learner redeems a voucher and becomes an event user for that ODL.
+
+On launch, CloudLabs:
+
+allocates a subscription
+deploys AKS resources
+provisions/prepares the learner VM
+generates the launch URL
+
+The learner opens the browser-based VM, follows the lab guide, and runs tasks.
+
+Validations confirm they deployed the sample app correctly.
+
+When time ends, CloudLabs marks the deployment completed/expired and cleans up the cloud resources.
+
+That is the full product loop.
+
+8) The key distinctions new engineers should keep straight
+
+These are the ones that matter most:
+
+Template vs ODL
+
+Template = reusable authored blueprint
+ODL = published consumable offering based on a template
+
+ODL/Event vs Lab instance
+
+ODL/event = definition and access model
+Lab instance = actual deployed environment for one learner
+
+User vs Event user
+
+user = person identity in general
+event user = that person’s participation in a specific offering
+
+Guide vs Validation
+
+guide = tells learner what to do
+validation = checks whether they did it
+
+VM vs Cloud subscription
+
+VM = learner workstation/access surface
+cloud subscription = where the actual cloud resources are deployed
+9) Product-engineering view of the system
+
+From an engineering perspective, CloudLabs is really several systems working together:
+
+Content system: templates, guides, validations, assets
+Provisioning orchestration: deploy cloud resources and learner workspaces
+Identity/enrollment system: event users, vouchers, invitations
+Runtime operations: launch, monitor, shadow, retry, support
+Cost/capacity controls: subscription pools, hot instances, duration, cleanup
+Reporting/state: deployment statuses, completion, failures
+
+That’s the product end to end.
+
+If you want, I can turn this into either:
+
+a one-page architecture cheat sheet, or
+a sequence diagram showing template → ODL/event → event user → deployment → launch → cleanup.

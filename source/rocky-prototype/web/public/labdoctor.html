@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocky · Doctor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#080b11; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.14);
+    --ink:#eaf2f6; --dim:#8b98a6; --dim2:#5f6b78;
+    --teal:#2ee6c8; --teal-dim:rgba(46,230,200,.14);
+    --crit:#ff5c72; --high:#ff9f45; --med:#ffd93d; --low:#6ba6ff; --good:#2ee6c8;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(1200px 700px at 78% -8%,rgba(46,230,200,.06),transparent 60%),var(--bg);
+    color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 22px 60px}
+  .top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:6px 2px 20px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;
+        background:linear-gradient(150deg,rgba(46,230,200,.2),rgba(46,230,200,.05));border:1px solid var(--line2)}
+  .brand h1{font-size:16px;margin:0;font-weight:650}
+  .brand p{margin:1px 0 0;font-size:11.5px;color:var(--dim)}
+  .spacer{flex:1}
+  .hbadge{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel)}
+  .hbadge b{color:var(--teal)}
+  .btn{cursor:pointer;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);
+       border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:550;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px}
+  .btn:hover{border-color:var(--teal)}
+  .btn.primary{background:var(--teal);color:#04120f;border-color:transparent;font-weight:650}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:6px 11px;font-size:11.5px}
+
+  .hero{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;
+        background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px}
+  .hstat .k{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);font-weight:600}
+  .hstat .v{font-size:14px;margin-top:3px}
+  .hero-line{color:var(--dim);font-size:13px}
+  .hero-line b{color:var(--ink);font-weight:600}
+  .ring{position:relative;width:84px;height:84px;flex:none}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .num{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  .ring .num b{font-size:24px;font-weight:700}
+  .ring .num span{font-size:9px;color:var(--dim);text-transform:uppercase}
+  .mini-ring{width:36px;height:36px;flex:none;position:relative}
+  .mini-ring .mn{position:absolute;inset:0;display:grid;place-content:center;font-size:12px;font-weight:700}
+
+  .flagline{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:var(--dim);display:flex;gap:10px;align-items:flex-start}
+  .flagline b{color:var(--ink)}
+  .flagline.pattern{border-color:rgba(255,92,114,.3);background:rgba(255,92,114,.05)}
+  .flagline.risk{border-color:rgba(255,159,69,.3);background:rgba(255,159,69,.05)}
+  .flagline .ic{flex:none}
+  .flagline .labs{color:var(--teal);cursor:pointer}
+  .flagline .labs:hover{text-decoration:underline}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  thead th{text-align:left;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);font-weight:650;padding:10px 14px;border-bottom:1px solid var(--line);user-select:none}
+  thead th[data-sort]{cursor:pointer}
+  thead th[data-sort]:hover{color:var(--ink)}
+  tbody tr{cursor:pointer;border-bottom:1px solid var(--line)}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:var(--panel2)}
+  tbody tr.sel{background:rgba(46,230,200,.06);box-shadow:inset 3px 0 0 var(--teal)}
+  td{padding:10px 14px;font-size:13px}
+  td.title{font-weight:600}
+  td.muted{color:var(--dim);font-size:12px}
+  .newpill{font-size:10px;font-weight:700;color:#a9cbff;background:rgba(107,166,255,.12);border:1px solid rgba(107,166,255,.32);border-radius:999px;padding:2px 8px}
+  .chip{font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+  .chip.crit{color:var(--crit);border-color:rgba(255,92,114,.4)} .chip.high{color:var(--high);border-color:rgba(255,159,69,.4)}
+  .chip.med{color:var(--med);border-color:rgba(255,217,61,.35)} .chip.low{color:var(--low);border-color:rgba(107,166,255,.35)}
+  .chip.ok{color:var(--good);border-color:rgba(46,230,200,.35)}
+
+  .detail{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-top:16px;overflow:hidden}
+  .empty{display:grid;place-content:center;text-align:center;height:220px;color:var(--dim2)}
+  .dhead{display:flex;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .dhead .title{font-size:16px;font-weight:650}
+  .dhead .sub{font-size:11.5px;color:var(--dim);margin-top:3px}
+  .statusPill{font-size:10.5px;font-weight:650;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+  .completion{height:5px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:8px;max-width:220px;overflow:hidden}
+  .completion i{display:block;height:100%;background:var(--teal)}
+
+  .impactline{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+  .impactline b{color:var(--teal)}
+
+  .findings{padding:14px 16px}
+  .finding{border:1px solid var(--line);border-radius:11px;margin-bottom:12px;overflow:hidden;background:rgba(0,0,0,.14)}
+  .finding .fhead{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+  .sev{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:6px;flex:none}
+  .sev.critical{color:#fff;background:var(--crit)} .sev.high{color:#2a1500;background:var(--high)}
+  .sev.medium{color:#241f00;background:var(--med)} .sev.low{color:#04101f;background:var(--low)}
+  .mode{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;flex:none}
+  .mode.observed{background:rgba(46,230,200,.14);color:#8ff0e0;border:1px solid rgba(46,230,200,.3)}
+  .mode.predicted{background:rgba(107,166,255,.14);color:#a9cbff;border:1px solid rgba(107,166,255,.35)}
+  .ftitle{font-weight:600;font-size:13px;flex:1;line-height:1.35}
+  .ftype{font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase}
+  .impact{font-size:11px;color:var(--dim);text-align:right;flex:none}
+  .impact b{color:var(--ink);font-size:13px}
+  .fbody{padding:0 14px 14px;display:none}
+  .fbody.open{display:block}
+  .finding.open .fhead{border-bottom:1px solid var(--line)}
+  .sect{margin-top:12px}
+  .sect .lbl{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);font-weight:650;margin-bottom:6px}
+  .evi{font-family:var(--mono);font-size:11px;color:#c7d3db;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:5px}
+  .diag{font-size:12.5px;color:#dbe6ec;background:var(--teal-dim);border-left:2px solid var(--teal);border-radius:0 7px 7px 0;padding:8px 11px}
+  .fixbox{border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+  .fixbar{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.03);font-size:11px}
+  .tgt{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px;background:rgba(107,166,255,.14);color:#a9cbff;border:1px solid rgba(107,166,255,.3)}
+  .tgt.validation{background:rgba(255,92,114,.13);color:#ffa8b4;border-color:rgba(255,92,114,.3)}
+  .tgt.guide{background:rgba(46,230,200,.13);color:#8ff0e0;border-color:rgba(46,230,200,.3)}
+  .diff{font-family:var(--mono);font-size:11px;line-height:1.5}
+  .diff .del,.diff .add{padding:6px 10px 6px 22px;position:relative;white-space:pre-wrap;word-break:break-word}
+  .diff .del{background:rgba(255,92,114,.08);color:#f2b8c0} .diff .add{background:rgba(46,230,200,.07);color:#b7f0e4}
+  .diff .del::before{content:"−";position:absolute;left:9px;color:var(--crit)} .diff .add::before{content:"+";position:absolute;left:9px;color:var(--good)}
+  .rationale{font-size:11.5px;color:var(--dim);padding:8px 11px;border-top:1px solid var(--line)}
+  .ffoot{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .guard{font-size:10.5px;color:var(--dim)}
+  .approved{color:var(--good);font-size:11.5px;font-weight:600}
+  .loadwrap{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:13px;padding:24px 20px}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(46,230,200,.25);border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .footnote{margin-top:22px;font-size:11px;color:var(--dim2);text-align:center;line-height:1.7}
+  .footnote code{font-family:var(--mono);color:var(--dim)}
+
+  /* Real Catalog Scan */
+  .rscan{border:1px solid rgba(46,230,200,.35);border-radius:14px;background:rgba(46,230,200,.04);padding:14px 18px;margin-bottom:16px}
+  .rscan .rhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .realbadge{font-size:10px;font-weight:800;letter-spacing:.8px;padding:3px 9px;border-radius:6px;background:var(--teal);color:#04120f}
+  .rscan .rtitle{font-weight:650;font-size:14px}
+  .rscan .rsub{color:var(--dim);font-size:12px;flex:1}
+  .rrepo{display:flex;align-items:center;gap:10px;padding:8px 6px;border-top:1px dashed rgba(255,255,255,.08);cursor:pointer;font-size:13px}
+  .rrepo:hover{background:rgba(255,255,255,.03)}
+  .rrepo .rname{font-weight:600;flex:1}
+  .rrepo .rmeta{color:var(--dim2);font-size:11.5px}
+  .rfind{padding:8px 10px;margin:6px 0 6px 14px;border-left:2px solid var(--line2);font-size:12px}
+  .rfind .rfile{font-family:var(--mono);font-size:11px;color:var(--teal)}
+  .rfind .rev{font-family:var(--mono);font-size:11px;color:#c7d3db;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:6px;padding:5px 8px;margin:5px 0;white-space:pre-wrap;word-break:break-word}
+  .rfind .rfixline{color:var(--dim);font-size:11.5px}
+  .rfind .rfixline b{color:#8ff0e0}
+
+  /* provenance strip — the honesty labels in one glance */
+  .provstrip{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:14px;padding:10px 14px;
+    border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:11px;color:var(--dim)}
+  .provstrip b{font-size:9.5px;font-weight:800;letter-spacing:.6px;padding:2px 7px;border-radius:5px;margin-right:6px}
+  .pv-real{background:var(--teal);color:#04120f}
+  .pv-fix{background:rgba(107,166,255,.25);color:#a9cbff;border:1px solid rgba(107,166,255,.4)}
+  .pv-mod{background:rgba(255,217,61,.18);color:var(--med);border:1px solid rgba(255,217,61,.35)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <a class="logo" href="/" title="Rocky home" style="text-decoration:none">🩺</a>
+      <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.55em;letter-spacing:.02em">· Doctor</span></h1><p>One companion, several hats — Doctor scans and diagnoses; every learner session is a live test</p></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="hbadge" id="modelBadge">engine: deterministic + <b>LLM</b></div>
+    <a class="btn ghost" href="/campaigns.html" title="Rocky as Fixer — real findings grouped by cause into a mergeable backlog">🛠️ Fixer</a>
+    <a class="btn ghost" href="/monitor.html" title="Rocky as Watcher — regression/recovery/platform-incident alerts over an evolving fleet (simulated)">📡 Watcher</a>
+    <a class="btn ghost" href="/amnesty.html" title="Rocky as Guardian — restores verdicts wronged by a regressed validator, under five gates (simulated mirror of the write endpoint)">⚖️ Guardian</a>
+    <a class="btn ghost" href="/intent.html" title="Rocky as Scholar — per-step objective/outcome extracted from real guides and quote-audited">📋 Scholar</a>
+    <a class="btn ghost" href="/support.html" title="Rocky as Listener — tickets collapsed to root-cause incidents (simulated fleet)">🎧 Listener</a>
+    <a class="btn ghost" href="/rocky.html?demo=1" title="Rocky's Companion hat — the same broken lab, from the learner's side">💬 Companion</a>
+    <a class="btn ghost" href="/receipts.html" title="Evidence pack — every number Rocky shows you, receipted">🧾 Receipts</a>
+  </div>
+
+  <div class="hero">
+    <div class="ring" id="catRing"></div>
+    <div class="hero-line" id="heroLine">Scanning the catalog…</div>
+    <div style="text-align:right">
+      <div class="hstat"><div class="k">Status</div><div class="v" id="brokenV">—</div></div>
+      <div class="hstat" style="margin-top:9px"><div class="k">Learners in impacted labs</div><div class="v" id="learnersV">—</div></div>
+    </div>
+  </div>
+
+  <div id="realScan"></div>
+  <div id="ecosystem"></div>
+
+  <div id="patterns"></div>
+  <div id="radar"></div>
+
+  <table id="labTable">
+    <thead><tr>
+      <th data-sort="title">Lab</th><th data-sort="score">Score</th><th data-sort="status">Status</th>
+      <th data-sort="learners">Learners</th><th data-sort="completion">Completion</th><th>Top finding</th>
+    </tr></thead>
+    <tbody id="labRows"></tbody>
+  </table>
+
+  <div class="detail" id="detail">
+    <div class="empty">Select a lab to see what Rocky found.</div>
+  </div>
+
+  <div class="footnote">
+    Rocky, as Doctor, compares each lab's <b>Cosmos-authored spec</b> against <b>fleet telemetry</b> — it classifies drift, validation bugs,
+    confusing steps, and transient flake, ranks by severity then learners affected, and drafts the fix.<br>
+    Every flag is evidence-backed. <code>Fixes are drafts — a human author always approves. Never silently applied.</code>
+  </div>
+
+  <div class="provstrip">
+    <span><b class="pv-real">REAL</b> Catalog scan — 8 production lab repos, deterministic checks, FP-audited (42 sampled · 0 false positives)</span>
+    <span><b class="pv-fix">FIXTURE</b> Fleet telemetry — seeded to verified CloudLabs API shapes; live wiring is integration, not research</span>
+    <span><b class="pv-mod">MODELED</b> Fix-impact preview — never executed; a human approves every fix</span>
+  </div>
+</div>
+
+<script>
+const SEV_W = { critical:42, high:26, medium:13, low:5, info:0 };
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const scoreColor = s => s==null?'var(--low)':s>=85?'var(--good)':s>=60?'var(--high)':'var(--crit)';
+const sevClass = s => s==='critical'?'crit':s==='high'?'high':s==='medium'?'med':'low';
+
+function ring(score,size,stroke,label){
+  const isNew=score==null, s=isNew?0:score, r=(size-stroke)/2, c=2*Math.PI*r, off=isNew?c:c*(1-s/100), col=scoreColor(s);
+  const box=el('div', size>50?'ring':'mini-ring');
+  box.innerHTML='<svg width="'+size+'" height="'+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="'+stroke+'"/>'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+stroke+'" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'"/></svg>'+
+    (size>50 ? '<div class="num"><b style="color:'+col+'">'+(isNew?'—':score)+'</b><span>'+(isNew?'new':(label||''))+'</span></div>'
+             : '<div class="mn" style="color:'+col+'">'+(isNew?'—':score)+'</div>');
+  return box;
+}
+
+let CATALOG=null, CACHE={}, CARDS={}, sortKey='score', sortDir=1;
+
+async function loadCatalog(){
+  const r = await fetch('/api/labhealth/catalog').then(x=>x.json());
+  CATALOG=r;
+  $('#catRing').replaceWith(Object.assign(ring(r.catalogHealth,84,9,'/100'),{id:'catRing'}));
+  $('#heroLine').innerHTML = r.broken>0
+    ? '<b>'+r.broken+' of '+r.labCount+' labs</b> are failing learners right now — detected from telemetry, before a single support ticket was filed.'
+    : 'All labs healthy across the fleet this window.';
+  $('#brokenV').innerHTML = '<b style="color:'+(r.broken?'var(--crit)':'var(--good)')+'">'+r.broken+'</b> broken · <b style="color:var(--high)">'+(r.watch||0)+'</b> watch';
+  $('#learnersV').innerHTML = '<b style="color:'+(r.learnersAffected?'var(--high)':'var(--good)')+'">'+(r.learnersAffected||0)+'</b>';
+  renderFlaglines(r.fleetPatterns||[], r.riskRadar||[]);
+  renderTable(r.labs);
+}
+
+function renderFlaglines(patterns, risks){
+  const box=$('#patterns'); box.innerHTML='';
+  patterns.forEach(p=>{
+    const b=el('div','flagline pattern');
+    b.innerHTML='<span class="ic">🛰️</span><span><b>Cross-lab pattern:</b> '+esc(p.headline)+' — '+
+      p.labs.map(l=>'<span class="labs" data-id="'+esc(l.labId)+'">'+esc(l.title)+'</span>').join(', ')+'</span>';
+    b.querySelectorAll('.labs').forEach(s=>s.onclick=()=>selectLab(s.dataset.id));
+    box.appendChild(b);
+  });
+  risks.forEach(r=>{
+    const b=el('div','flagline risk');
+    b.innerHTML='<span class="ic">🔍</span><span><b><span class="labs" data-id="'+esc(r.labId)+'">'+esc(r.title)+'</span></b> (currently healthy) — '+
+      r.flags.map(f=>esc(f.evidence)).join('; ')+'</span>';
+    b.querySelector('.labs').onclick=()=>selectLab(r.labId);
+    box.appendChild(b);
+  });
+}
+
+function renderTable(labs){
+  const sorted=[...labs].sort((a,b)=>{
+    let av=a[sortKey], bv=b[sortKey];
+    if(sortKey==='learners'){av=a.totalLearners;bv=b.totalLearners;}
+    if(sortKey==='completion'){av=a.completionRate;bv=b.completionRate;}
+    // 'new' labs have a null score: keep them LAST in the default worst-first view (they're unproven,
+    // not worst), and last when sorting best-first too.
+    if(av==null) av = sortKey==='score' ? (sortDir===1?101:-1) : av;
+    if(bv==null) bv = sortKey==='score' ? (sortDir===1?101:-1) : bv;
+    if(typeof av==='string') return sortDir*av.localeCompare(bv);
+    return sortDir*((av)-(bv));
+  });
+  const body=$('#labRows'); body.innerHTML=''; CARDS={};
+  sorted.forEach(l=>{
+    const tr=el('tr'); tr.dataset.id=l.labId;
+    const statusColor = l.status==='broken'?'var(--crit)':l.status==='watch'?'var(--high)':l.status==='new'?'var(--low)':'var(--good)';
+    const topChip = l.status==='new' ? '<span class="newpill">NEW · no telemetry</span>'
+      : (l.topFinding ? '<span class="chip '+sevClass(l.topFinding.severity)+'">'+esc(l.topFinding.type)+'</span>'+(l.findingCount>1?' <span class="chip">+'+(l.findingCount-1)+'</span>':'')
+                       : '<span class="chip ok">no issues</span>');
+    tr.innerHTML =
+      '<td class="title"></td>'+
+      '<td></td>'+
+      '<td><span style="color:'+statusColor+';font-weight:650;text-transform:uppercase;font-size:11px">'+esc(l.status)+'</span></td>'+
+      '<td class="muted">'+(l.status==='new'?'0':l.totalLearners)+'</td>'+
+      '<td class="muted">'+(l.status==='new'?'—':Math.round(l.completionRate*100)+'%')+'</td>'+
+      '<td>'+topChip+'</td>';
+    tr.children[0].textContent = l.title;
+    tr.children[1].appendChild(ring(l.score,36,4));
+    tr.onclick=()=>selectLab(l.labId);
+    CARDS[l.labId]=tr; body.appendChild(tr);
+  });
+  const want=new URLSearchParams(location.search); const wantLab=want.get('lab');
+  if(wantLab && CARDS[wantLab]) selectLab(wantLab, want.get('heal')==='1', want.get('probe')==='1');
+}
+
+document.querySelectorAll('#labTable thead th[data-sort]').forEach(th=>th.onclick=()=>{
+  const k=th.dataset.sort; if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir = k==='title'?1:-1;}
+  renderTable(CATALOG.labs);
+});
+
+async function selectLab(id, autoHeal, autoProbe){
+  document.querySelectorAll('#labRows tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.id===id));
+  const d=$('#detail');
+  if(!CACHE[id]){
+    d.innerHTML='<div class="loadwrap"><span class="spin"></span> Diagnosing — comparing the authored spec against fleet telemetry…</div>';
+    const rep = await fetch('/api/labhealth?lab='+encodeURIComponent(id)).then(x=>x.json());
+    rep._approved={}; CACHE[id]=rep;
+  }
+  renderDetail(CACHE[id]);
+  if(autoHeal) previewImpact(CACHE[id]);
+  if(autoProbe) runLint(CACHE[id]);
+}
+
+function statusColor(s){return s==='broken'?'var(--crit)':s==='watch'?'var(--high)':'var(--good)';}
+function statusBg(s){return s==='broken'?'rgba(255,92,114,.15)':s==='watch'?'rgba(255,159,69,.15)':'rgba(46,230,200,.15)';}
+
+function renderHeader(rep, view){
+  const col=statusColor(view.status);
+  const head=el('div','dhead'); head.id='dhead';
+  head.append(Object.assign(ring(view.score,64,7,'score'),{id:'detailRing'}));
+  head.append(el('div','',
+    '<div class="title">'+esc(rep.title)+'</div>'+
+    '<div class="sub">'+esc(rep.labId)+' · <b>'+rep.totalLearners+'</b> learners · authored '+esc(rep.lastAuthored||'—')+' · region <b>'+esc(rep.expectedRegion)+'</b></div>'+
+    '<div class="completion"><i id="compBar" style="width:'+Math.round(view.completionRate*100)+'%"></i></div>'));
+  const pill=el('div','statusPill'); pill.id='dpill'; pill.textContent=view.status;
+  pill.style.background=statusBg(view.status); pill.style.color=col; pill.style.border='1px solid '+col; pill.style.marginLeft='auto';
+  head.append(pill);
+  return head;
+}
+
+function renderDetail(rep){
+  const d=$('#detail'); d.innerHTML='';
+  d.append(renderHeader(rep, rep));
+
+  const strip=el('div','impactline'); strip.id='impactStrip'; d.append(strip);
+  updateImpactStrip(rep);
+
+  if(rep.status==='new'){
+    $('#impactStrip').textContent='No telemetry yet — nothing to observe; the pre-launch lint below checks the spec instead.';
+    const note=el('div','findings','<div style="color:var(--dim);padding:8px 4px">No learner telemetry yet — Rocky cannot observe this lab.'+
+      ' A deterministic pre-launch lint can check it for known-retired SKUs/commands before anyone runs it.'+
+      ' <button class="btn sm primary" id="lintBtn" style="margin-left:8px">Run pre-launch lint</button></div><div id="lintResults"></div>');
+    d.append(note);
+    $('#lintBtn').onclick=()=>runLint(rep);
+    runLint(rep); // a new lab's only signal is the lint — run it on open so the finding is on screen
+    return;
+  }
+
+  const list=el('div','findings'); list.id='findingList';
+  if(!rep.findings.length){ list.innerHTML='<div style="color:var(--dim);padding:16px 4px;text-align:center">No issues detected from telemetry — healthy across the fleet. ✔</div>'; }
+  rep.findings.forEach((f,i)=>list.append(findingCard(rep,f,i===0)));
+  d.append(list);
+}
+
+function actionable(rep){ return rep.findings.filter(f=>f.severity!=='low'&&f.severity!=='info'); }
+
+function updateImpactStrip(rep){
+  const p=$('#impactStrip'); if(!p) return;
+  if(rep._simulated){
+    const drop = rep._simulated.completionRate < rep.completionRate;
+    p.innerHTML='Modeled if approved: health <b>'+rep.score+' → '+rep._simulated.score+'</b>, completion <b>'+Math.round(rep.completionRate*100)+'% → '+Math.round(rep._simulated.completionRate*100)+'%</b>. <span style="color:var(--dim2)">Not executed — no real system was re-run. Pending author merge.'+
+      (drop?' Completion drops because the corrected check now rejects work the broken check was silently passing — the '+Math.round(rep.completionRate*100)+'% was never real.':'')+'</span>';
+    return;
+  }
+  const acts=actionable(rep);
+  if(!acts.length){ p.textContent='Nothing to fix here.'; return; }
+  p.innerHTML=acts.length+' drafted fix'+(acts.length>1?'es':'')+' below, ranked by severity, then learners affected. <button class="btn sm" id="previewBtn" style="margin-left:auto">Preview projected impact (not executed)</button>';
+  const b=$('#previewBtn'); if(b) b.onclick=()=>previewImpact(rep);
+}
+
+// Models the best-case ceiling if the drafted fixes are approved — a MODEL, not a test. Named and framed
+// honestly on purpose: no real system is re-run here. See docs/rocky_complexity_audit.md.
+async function previewImpact(rep){
+  const ids=actionable(rep).map(f=>f.id);
+  const p=$('#impactStrip'); p.innerHTML='<span class="spin"></span> Modeling the combined effect of the approved fixes…';
+  let sim; try{ sim=await fetch('/api/labhealth/preview-fix-impact',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({lab:rep.labId,approved:ids})}).then(x=>x.json()); }
+  catch(e){ p.textContent='Could not model the fix impact — try again.'; return; }
+  rep._simulated=sim.after;
+  updateImpactStrip(rep);
+  document.querySelectorAll('#findingList .finding').forEach((card,i)=>{
+    const f=rep.findings[i]; if(!f||f.severity==='low'||f.severity==='info') return;
+    const foot=card.querySelector('.ffoot'); if(foot) foot.innerHTML='<span class="approved">Included in the projected-impact model above.</span>';
+  });
+}
+
+// Pre-launch lint (deterministic-only; see labdoctor/intel.js). Only meaningful for zero-telemetry labs.
+async function runLint(rep){
+  const host=$('#lintResults'); if(!host) return;
+  host.innerHTML='<div style="padding:8px 4px;color:var(--dim)"><span class="spin"></span> Checking against known retired SKUs/commands…</div>';
+  let pr; try{ pr=await fetch('/api/labhealth/probe?lab='+encodeURIComponent(rep.labId)).then(x=>x.json()); }
+  catch(e){ host.innerHTML='<div style="padding:8px 4px;color:var(--dim)">Lint failed — retry.</div>'; return; }
+  if(!pr.findings.length){ host.innerHTML='<div style="padding:8px 4px;color:var(--dim)">No known retired SKUs or deprecated commands found in this lab\'s spec. 👍</div>'; return; }
+  host.innerHTML='';
+  pr.findings.forEach((f,i)=>host.append(findingCard(rep,f,i===0)));
+}
+
+function findingCard(rep,f,openByDefault){
+  const card=el('div','finding'); if(openByDefault) card.classList.add('open');
+  const predicted = f.mode==='predicted';
+  const conf = Math.round((f.llmConfidence!=null?f.llmConfidence:f.confidence)*100);
+  const fx=f.draftFix||{};
+  const mark = s => esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>'); // fix drafts carry **bold** markers — render them, don't print asterisks
+  const impact = f.source==='pre-launch-lint'
+    ? '<div class="impact"><b>deterministic</b><br>token match</div>'
+    : predicted
+      ? '<div class="impact"><b>'+conf+'%</b><br>confidence</div>'
+      : '<div class="impact"><b>'+f.affectedLearners+'</b><br>'+Math.round(f.affectedFraction*100)+'% of fleet</div>';
+  const beforeTxt = fx.before ? '<div class="del">'+mark(fx.before)+'</div>' : '';
+  card.innerHTML =
+    '<div class="fhead">'+
+      '<span class="sev '+f.severity+'">'+f.severity+'</span>'+
+      '<span class="mode '+(predicted?'predicted':'observed')+'">'+(predicted?'predicted':'observed')+'</span>'+
+      '<div class="ftitle">'+esc(f.title)+'<div class="ftype">'+esc(f.type)+'</div></div>'+
+      impact+
+    '</div>'+
+    '<div class="fbody'+(openByDefault?' open':'')+'">'+
+      '<div class="sect"><div class="lbl">Evidence</div>'+(f.evidence||[]).map(e=>'<div class="evi">'+esc(e)+'</div>').join('')+'</div>'+
+      (f.diagnosis?'<div class="sect"><div class="lbl">Diagnosis</div><div class="diag">'+esc(f.diagnosis)+'</div></div>':'')+
+      '<div class="sect"><div class="lbl">Drafted fix</div>'+
+        '<div class="fixbox"><div class="fixbar"><span class="tgt '+esc(fx.target)+'">'+esc(fx.target)+' · '+esc(fx.ref)+'</span>'+
+          '<span style="color:var(--dim)">'+esc(fx.summary||'')+'</span></div>'+
+          '<div class="diff">'+beforeTxt+'<div class="add">'+mark(fx.after)+'</div></div>'+
+          (fx.rationale?'<div class="rationale"><b>Why:</b> '+esc(fx.rationale)+'</div>':'')+'</div>'+
+        '<div class="ffoot"><span class="guard">🔒 Draft only — a human author approves; never auto-applied.</span></div>'+
+      '</div>'+
+    '</div>';
+  card.querySelector('.fhead').onclick=()=>{card.classList.toggle('open');card.querySelector('.fbody').classList.toggle('open');};
+  return card;
+}
+
+fetch('/api/labstate').then(x=>x.json()).then(s=>{ const name=({azure:'Azure OpenAI'})[s.model]||s.model; $('#modelBadge').innerHTML = s.model && s.model!=='off' ? 'engine: deterministic + <b>LLM ('+esc(name)+')</b>' : 'engine: <b>deterministic</b> (LLM off)'; }).catch(()=>{});
+
+// ---- Real Catalog Scan: deterministic findings from REAL production lab repos ----
+const TYPE_LABEL={RETIRED_SKU:'retired SKU',DEPRECATED_DEPENDENCY:'deprecated dependency',RENAMED_PRODUCT:'renamed product',BROKEN_ASSET_LINK:'broken image',EOL_RUNTIME:'EOL runtime',INJECT_TOKEN_LOSS:'inject-token loss',ASSET_CASE_MISMATCH:'path-case mismatch',LOCALE_POINTER_DRIFT:'stale locale release'};
+const TYPE_CLS={RETIRED_SKU:'crit',DEPRECATED_DEPENDENCY:'high',RENAMED_PRODUCT:'med',BROKEN_ASSET_LINK:'med',EOL_RUNTIME:'med',INJECT_TOKEN_LOSS:'crit',ASSET_CASE_MISMATCH:'med',LOCALE_POINTER_DRIFT:'high'};
+function renderRealScan(r){
+  const box=$('#realScan');
+  if(!r||!r.available){box.innerHTML='';return;}
+  const dt=new Date(r.scannedAt);
+  const chipsFor=o=>Object.entries(o||{}).map(([t,n])=>'<span class="chip '+(TYPE_CLS[t]||'low')+'">'+n+' '+esc(TYPE_LABEL[t]||t)+'</span>').join(' ');
+  let html='<div class="rscan"><div class="rhead"><span class="realbadge">REAL DATA</span>'+
+    '<span class="rtitle">Production catalog scan</span>'+
+    '<span class="rsub"><b>'+r.repoCount+'</b> real lab repos · <b>'+r.totals.files+'</b> guide files · <b style="color:var(--high)">'+r.totals.findings+'</b> findings · deterministic checks, zero AI guessing · scanned '+dt.toLocaleString()+'</span>'+
+    (r.canRescan?'<button class="btn sm primary" id="rescanBtn">↻ Rescan live</button>':'')+
+    '</div><div id="rrepos"></div></div>';
+  box.innerHTML=html;
+  const host=$('#rrepos');
+  r.repos.forEach((repo,ri)=>{
+    const row=el('div','rrepo');
+    row.innerHTML='<span class="rname">'+esc(repo.name)+'</span>'+
+      (repo.findingCount? chipsFor(repo.byType) : '<span class="chip ok">✔ clean</span>')+
+      '<span class="rmeta">'+repo.files+' files · '+repo.ms+'ms'+
+      (repo.git?' · <span title="scan provenance: branch@commit'+(repo.git.dirty?' (uncommitted local edits present)':'')+'">'+esc(repo.git.branch)+'@'+esc(repo.git.commit)+(repo.git.dirty?' ✎':'')+'</span>':'')+'</span>';
+    const detail=el('div'); detail.style.display='none';
+    if(repo.findingCount){
+      repo.findings.slice(0,25).forEach(f=>{
+        const d=el('div','rfind');
+        // token findings get a real red/green fix diff (same renderer language as the fixture labs);
+        // broken assets get evidence + action, since there is no mechanical text replacement.
+        const primary=(f.replacement||'').split('/')[0].trim();
+        const canDiff=f.replacement&&f.type!=='BROKEN_ASSET_LINK'&&new RegExp('\\b'+f.token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(f.evidence);
+        const fixed=canDiff?f.evidence.replace(new RegExp('\\b'+f.token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','ig'),primary):null;
+        d.innerHTML='<span class="sev '+esc(f.severity)+'">'+esc(f.severity)+'</span> <b>'+esc(TYPE_LABEL[f.type]||f.type)+'</b> — <span class="rfile">'+esc(f.file)+':'+f.line+'</span>'+
+          (canDiff
+            ? '<div class="diff" style="margin:5px 0"><div class="del">'+esc(f.evidence)+'</div><div class="add">'+esc(fixed)+'</div></div>'
+            : '<div class="rev">'+esc(f.evidence)+'</div>')+
+          (f.note?'<div class="rfixline">'+(f.replacement&&!canDiff?'→ <b>'+esc(f.replacement)+'</b> · ':'')+esc(f.note)+'</div>':'');
+        detail.appendChild(d);
+      });
+      if(repo.findingCount>25) detail.appendChild(el('div','rfixline','… and '+(repo.findingCount-25)+' more in this repo'));
+    }
+    row.onclick=()=>{detail.style.display=detail.style.display==='none'?'block':'none';};
+    host.appendChild(row); host.appendChild(detail);
+  });
+  const rb=$('#rescanBtn');
+  if(rb) rb.onclick=async(e)=>{e.stopPropagation();rb.textContent='scanning…';
+    const nr=await fetch('/api/labhealth/real-scan/run',{method:'POST'}).then(x=>x.json()).catch(()=>null);
+    if(nr&&nr.available){renderRealScan(nr);const btn=$('#rescanBtn');if(btn)btn.textContent='↻ Rescanned in '+(nr.rescanMs||'?')+'ms';}
+    else rb.textContent='↻ Rescan live';};
+}
+fetch('/api/labhealth/real-scan').then(x=>x.json()).then(renderRealScan).catch(()=>{});
+
+// ---- Ecosystem change intelligence: live-feed deadlines joined against the real catalog ----
+fetch('/api/labhealth/ecosystem').then(x=>x.json()).then(r=>{
+  const box=$('#ecosystem'); if(!r||!r.available||!(r.impacts||[]).length){box.innerHTML='';return;}
+  const when=(i)=> i.status==='already-eol' ? '<b style="color:var(--crit)">EOL passed '+esc(i.date)+'</b>'
+    : i.date ? '<b style="color:'+(i.daysUntil<=120?'var(--high)':'var(--med)')+'">'+esc(i.type)+' in '+i.daysUntil+' days</b> ('+esc(i.date)+')' : esc(i.type);
+  let html='<div class="rscan" style="border-color:rgba(255,159,69,.35);background:rgba(255,159,69,.04)"><div class="rhead">'+
+    '<span class="realbadge" style="background:var(--high);color:#2a1500">LIVE FEEDS</span>'+
+    '<span class="rtitle">Ecosystem change intelligence</span>'+
+    '<span class="rsub">'+r.impacts.length+' upstream changes touch this catalog · sources: endoflife.date + Azure Updates · harvested '+new Date(r.generatedAt).toLocaleDateString()+'</span></div><div id="ecoRows"></div></div>';
+  box.innerHTML=html;
+  const host=$('#ecoRows');
+  r.impacts.forEach(i=>{
+    const row=el('div','rrepo');
+    row.innerHTML='<span class="rname">'+esc(i.product+(i.cycle?' '+i.cycle:''))+' — '+when(i)+'</span>'+
+      '<span class="chip '+(i.status==='already-eol'?'crit':'high')+'">'+i.referenceCount+' reference'+(i.referenceCount>1?'s':'')+' · '+i.affectedRepoCount+' repo'+(i.affectedRepoCount>1?'s':'')+'</span>'+
+      '<span class="rmeta"><a href="'+esc(i.citation)+'" target="_blank" style="color:var(--dim)">source ↗</a></span>';
+    const detail=el('div'); detail.style.display='none';
+    (i.references||[]).slice(0,6).forEach(h=>{
+      const d=el('div','rfind');
+      d.innerHTML='<span class="rfile">'+esc(h.repo)+'/'+esc(h.file)+':'+h.line+'</span><div class="rev">'+esc(h.evidence)+'</div>';
+      detail.appendChild(d);
+    });
+    row.onclick=()=>{detail.style.display=detail.style.display==='none'?'block':'none';};
+    host.appendChild(row); host.appendChild(detail);
+  });
+}).catch(()=>{});
+loadCatalog();
+</script>
+</body>
+</html>

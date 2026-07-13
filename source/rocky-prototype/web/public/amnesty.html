@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocky · Guardian</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#080b11;--panel:rgba(255,255,255,.045);--panel2:rgba(255,255,255,.06);--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+    --ink:#eaf2f6;--dim:#8b98a6;--dim2:#5f6b78;--teal:#2ee6c8;--crit:#ff5c72;--high:#ff9f45;--med:#ffd93d;--low:#6ba6ff;--good:#2ee6c8;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:radial-gradient(1100px 650px at 78% -8%,rgba(255,159,69,.06),transparent 60%),var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 22px 70px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 16px}
+  .logo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(150deg,rgba(255,159,69,.22),rgba(255,159,69,.05));border:1px solid var(--line2)}
+  h1{font-size:16px;margin:0;font-weight:650} .sub{font-size:11.5px;color:var(--dim)}
+  .spacer{flex:1}
+  .simbadge{font-size:10px;font-weight:800;letter-spacing:.7px;padding:4px 10px;border-radius:6px;background:rgba(107,166,255,.18);color:#a9cbff;border:1px solid rgba(107,166,255,.4)}
+  a.nav{color:var(--teal);font-size:12.5px;text-decoration:none} a.nav:hover{text-decoration:underline}
+  .gate{background:rgba(255,159,69,.05);border:1px solid rgba(255,159,69,.28);border-radius:12px;padding:12px 16px;margin-bottom:16px}
+  .gate .gh{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--high);font-weight:700;margin-bottom:8px}
+  .gate ol{margin:0;padding-left:20px;font-size:12.5px;color:var(--dim);line-height:1.9}
+  .gate ol b{color:var(--ink)}
+  .story{display:flex;gap:0;margin-bottom:18px;flex-wrap:wrap}
+  .step{flex:1;min-width:150px;position:relative;padding:10px 14px;background:var(--panel);border:1px solid var(--line);border-right:none}
+  .step:last-child{border-right:1px solid var(--line);border-radius:0 10px 10px 0}
+  .step:first-child{border-radius:10px 0 0 10px}
+  .step .sn{font-family:var(--mono);font-size:10px;color:var(--dim2)}
+  .step .st{font-size:12px;font-weight:600;margin-top:2px}
+  .step.on{background:rgba(46,230,200,.08);border-color:rgba(46,230,200,.4)}
+  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:20px 0 8px;display:flex;gap:10px;align-items:center}
+  .pill{font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 7px;border-radius:5px}
+  .pill.ok{background:rgba(46,230,200,.14);color:var(--good)} .pill.no{background:rgba(255,92,114,.16);color:var(--crit)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim2);font-weight:700;padding:6px 10px;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .who{font-family:var(--mono);font-size:11px;color:#a9cbff}
+  .evi{font-family:var(--mono);font-size:11px;color:#c7d3db}
+  .reason{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 7px;border-radius:5px;background:rgba(255,92,114,.14);color:var(--crit)}
+  .reason.mismatch{background:rgba(255,159,69,.16);color:var(--high)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .execbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
+  .execbar input{background:rgba(0,0,0,.35);border:1px solid var(--line2);border-radius:8px;color:var(--ink);padding:8px 12px;font-family:var(--mono);font-size:12.5px;min-width:220px}
+  .btn{cursor:pointer;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);border-radius:9px;padding:9px 15px;font-size:12.5px;font-weight:600;font-family:inherit}
+  .btn.primary{background:var(--high);color:#2a1500;border-color:transparent}
+  .btn:hover{filter:brightness(1.08)} .btn:disabled{opacity:.4;cursor:not-allowed}
+  .gatemsg{font-size:12px;color:var(--crit);font-weight:600}
+  .gatenote{background:rgba(255,159,69,.06);border:1px dashed rgba(255,159,69,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--high);margin-bottom:16px}
+  .recon{display:flex;gap:20px;flex-wrap:wrap;font-size:13px}
+  .recon .m{display:flex;flex-direction:column} .recon .m b{font-family:var(--mono);font-size:20px;color:var(--good)} .recon .m.bad b{color:var(--crit)}
+  .recon .m span{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px}
+  .foot{margin-top:24px;font-size:11px;color:var(--dim2);text-align:center;line-height:1.8}
+  .empty{color:var(--dim2);font-size:12.5px;padding:12px 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="logo" href="/" title="Rocky home" style="text-decoration:none">⚖️</a>
+    <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.6em">· Guardian</span></h1><div class="sub">False-FAIL Amnesty — when a validator wrongs correct work, restore the verdict, under gates that make a wrong PASS impossible</div></div>
+    <div class="spacer"></div>
+    <span class="simbadge">SIMULATED — in-process mirror of the platform WRITE endpoint</span>
+    <a class="nav" href="/monitor.html">📡 Watcher</a>
+    <a class="nav" href="/labdoctor.html">🩺 Doctor</a>
+  </div>
+
+  <div class="gatenote" id="gatenote">Production execution is gated on the WRITE-endpoint semantics spike. Everything below runs against a simulated mirror only — never production.</div>
+
+  <div class="gate">
+    <div class="gh">The five gates — enforced in code (action/amnesty.js), not policy</div>
+    <ol>
+      <li><b>Fleet-confirmed</b> — an OPEN false-fail case must exist in the reliability ledger. No single-learner judgment ever triggers a write.</li>
+      <li><b>Regression-only</b> — the monitor must show a sweep where this validator was working. A born-broken check is never amnestied; nothing was taken away.</li>
+      <li><b>State-proven</b> — each learner's own observed state must match the expected state. Missing evidence or wrong work is excluded, with the reason shown.</li>
+      <li><b>Human-gated</b> — the draft never self-executes. Execution refuses without a named authorizer (try it below with the box empty).</li>
+      <li><b>Reversion-guarded</b> — after the fix ships, every amnestied verdict is re-checked. One contradiction halts the pipeline. Target: zero.</li>
+    </ol>
+  </div>
+
+  <div class="story" id="story"></div>
+
+  <div id="case"></div>
+
+  <h2>Eligible — state-proven victims of the regression <span class="pill ok" id="elCount">—</span></h2>
+  <div class="card"><div id="eligible"><div class="empty">Loading…</div></div></div>
+
+  <h2>Excluded — and exactly why (the gates doing their job) <span class="pill no" id="inCount">—</span></h2>
+  <div class="card"><div id="ineligible"><div class="empty">Loading…</div></div></div>
+
+  <h2>Execute — the human gate, live</h2>
+  <div class="execbar">
+    <input id="author" placeholder="authorized-by (e.g. your email)" autocomplete="off">
+    <button class="btn primary" id="execBtn">Authorize &amp; restore verdicts (simulated)</button>
+    <button class="btn" id="noAuthBtn" title="Proves the gate: this sends no authorizer and must be refused">Try without a name →</button>
+    <span class="gatemsg" id="gatemsg"></span>
+    <button class="btn" id="resetBtn" style="margin-left:auto">↻ Reset scenario</button>
+  </div>
+  <div id="result"></div>
+
+  <div class="foot">
+    The same <code>action/amnesty.js</code> code shown here is proven over a real HTTP round-trip in <code>test/amnesty.test.js</code> (4/4),
+    including the invariant that a restored verdict never masks the defect — diagnosis keeps the machine verdict, the monitor raises no fake recovery, the case stays open until the validator is actually fixed.<br>
+    This screen exists so amnesty is a demonstration, not a promise — against a simulated mirror, because we don't touch the production write endpoint before verifying how it behaves.
+  </div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const j=(o)=>esc(JSON.stringify(o));
+
+function render(v){
+  const executed=!!v.executed;
+  $('#story').innerHTML=[
+    ['1','Validator working (sweeps 1–2)',true],
+    ['2','Regression: fails correct work',true],
+    ['3','Ledger confirms a fleet case',!!v.caseId],
+    ['4','Amnesty drafts eligible verdicts',v.packet.eligible.length>0],
+    ['5',executed?'Verdicts restored + guarded':'Awaiting human authorization',executed],
+  ].map(([n,t,on])=>'<div class="step'+(on?' on':'')+'"><div class="sn">STEP '+n+'</div><div class="st">'+esc(t)+'</div></div>').join('');
+
+  const c=v.packet.cases[0]||{};
+  $('#case').innerHTML='<div class="card"><b>'+esc(v.labTitle)+'</b> · fleet case <span class="who">'+esc(v.caseId||'—')+'</span> · validator <span class="who">'+esc((c.validationIds||[]).join(','))+'</span>'+
+    ' · <span class="pill '+(c.regression?'ok':'no')+'">'+(c.regression?'REGRESSION — last clean at sweep '+c.lastCleanSweep:'not a regression')+'</span>'+
+    (c.repeatOffender?' <span class="pill no">REPEAT OFFENDER</span>':'')+'</div>';
+
+  $('#elCount').textContent=v.packet.eligible.length+' eligible';
+  $('#inCount').textContent=v.packet.ineligible.length+' excluded';
+
+  const el=v.packet.eligible;
+  $('#eligible').innerHTML=el.length?('<table><tr><th>Learner</th><th>Validator</th><th>Observed = expected (proof)</th><th>Verdict</th></tr>'+
+    el.map(p=>'<tr><td class="who">'+esc(p.eventUserId)+'</td><td class="who">'+esc(p.validationId)+'</td>'+
+      '<td class="evi">'+j(p.evidence.observed)+' = '+j(p.evidence.expected)+'</td>'+
+      '<td>'+(executed?'<span class="pill ok">RESTORED → passed</span>':esc(p.previousStatus)+' → <b>'+esc(p.proposedStatus)+'</b> (draft)')+'</td></tr>').join('')+'</table>')
+    :'<div class="empty">No eligible verdicts.</div>';
+
+  const inel=v.packet.ineligible;
+  $('#ineligible').innerHTML=inel.length?('<table><tr><th>Who / what</th><th>Reason</th><th>Detail</th></tr>'+
+    inel.map(x=>'<tr><td class="who">'+esc(x.eventUserId||x.validationId||x.caseId)+'</td>'+
+      '<td><span class="reason'+(x.reason==='state-mismatch'?' mismatch':'')+'">'+esc(x.reason)+'</span></td>'+
+      '<td style="color:var(--dim)">'+esc(x.detail)+'</td></tr>').join('')+'</table>')
+    :'<div class="empty">Nothing excluded.</div>';
+
+  if(executed){
+    const r=v.reconcile||{};
+    $('#result').innerHTML='<div class="card"><b>Executed by '+esc(v.executed.authorizedBy)+'</b> · '+v.executed.written+' verdict(s) written to the simulated mirror, '+v.executed.failed+' failed'+
+      '<h2 style="margin-top:14px">Reversion guard — simulated post-fix re-validation</h2>'+
+      '<div class="recon"><div class="m"><b>'+(r.confirmed||[]).length+'</b><span>confirmed passing</span></div>'+
+      '<div class="m'+((r.contradicted||[]).length?' bad':'')+'"><b>'+(r.contradicted||[]).length+'</b><span>contradicted</span></div>'+
+      '<div class="m"><b>'+(r.unknown||[]).length+'</b><span>seats expired</span></div>'+
+      '<div class="m"><b>'+(r.halt?'HALT':'CLEAR')+'</b><span>pipeline</span></div></div>'+
+      '<div style="font-size:11.5px;color:var(--dim);margin-top:10px">'+esc(r.metric||'')+'. Each verdict here is <b>re-derived from that learner’s own observed state vs the validator’s expected state</b> — independent of the status amnesty just wrote, so this guard <b>can</b> contradict (any pair whose state didn’t truly match would HALT it). Every write also preserved the machine verdict beneath it, so the false-fail case stays open until the validator is actually fixed.</div></div>';
+    $('#execBtn').disabled=true; $('#author').disabled=true;
+  } else $('#result').innerHTML='';
+}
+async function load(){ render(await fetch('/api/amnesty/scenario').then(x=>x.json())); }
+$('#execBtn').onclick=async()=>{
+  $('#gatemsg').textContent='';
+  const v=await fetch('/api/amnesty/execute',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({authorizedBy:$('#author').value.trim()})}).then(x=>x.json());
+  if(v.error){$('#gatemsg').textContent=v.error;return;}
+  render(v);
+};
+$('#noAuthBtn').onclick=async()=>{
+  const r=await fetch('/api/amnesty/execute',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({})});
+  const v=await r.json();
+  $('#gatemsg').textContent='HTTP '+r.status+' — '+(v.error||'refused');
+};
+$('#resetBtn').onclick=async()=>{await fetch('/api/amnesty/reset',{method:'POST'});$('#author').value='';$('#author').disabled=false;$('#execBtn').disabled=false;$('#gatemsg').textContent='';load();};
+load();
+</script>
+</body>
+</html>

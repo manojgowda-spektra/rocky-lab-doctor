@@ -1,0 +1,26 @@
+{
+ "ranAt": "2026-07-05T02:39:14.796Z",
+ "note": "mechanical faithfulness ≠ semantic accuracy — human review is the gate",
+ "guides": [
+  {
+   "file": "C:\\Users\\ManojGowda\\OneDrive - Spektra Systems LLC\\Desktop\\Labs\\RTIAD-Workshop-April-2026\\English\\Labguide\\Lab-2---April-2026.md",
+   "tasks": 5,
+   "structuralFails": 0,
+   "facts": 38,
+   "grounded": 38,
+   "ungrounded": 0,
+   "faithfulnessPct": 100,
+   "draft": "C:\\AI-Testing-Workspace\\Cloudlabs - Rocky\\source\\rocky-prototype\\intent\\drafts\\lab-2---april-2026.intent.json"
+  },
+  {
+   "file": "C:\\Users\\ManojGowda\\OneDrive - Spektra Systems LLC\\Desktop\\Labs\\Fabric-Analytics-in-aday\\english\\labguide\\Lab-5.md",
+   "tasks": 13,
+   "structuralFails": 0,
+   "facts": 91,
+   "grounded": 91,
+   "ungrounded": 0,
+   "faithfulnessPct": 100,
+   "draft": "C:\\AI-Testing-Workspace\\Cloudlabs - Rocky\\source\\rocky-prototype\\intent\\drafts\\lab-5.intent.json"
+  }
+ ]
+}

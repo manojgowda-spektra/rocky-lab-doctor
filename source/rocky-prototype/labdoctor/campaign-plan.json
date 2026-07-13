@@ -1,0 +1,394 @@
+{
+ "source": {
+  "scannedAt": "2026-07-04T15:37:58.964Z",
+  "root": "C:/Users/ManojGowda/OneDrive - Spektra Systems LLC/Desktop/Labs",
+  "provenance": "REAL repository scan (labdoctor/scan-real.js)"
+ },
+ "campaigns": [
+  {
+   "campaignId": "CAMP-01",
+   "type": "DEPRECATED_DEPENDENCY",
+   "cause": {
+    "kind": "upstream-change",
+    "token": "text-embedding-ada-002",
+    "replacement": "text-embedding-3-large / text-embedding-3-small",
+    "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family."
+   },
+   "title": "Replace \"text-embedding-ada-002\" with \"text-embedding-3-large / text-embedding-3-small\" fleet-wide",
+   "repos": [
+    {
+     "repo": "OpenAIWorkshop",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 7,
+     "files": 4,
+     "samples": [
+      {
+       "file": "ARCHITECTURE.md",
+       "line": 560,
+       "evidence": "- ✅ **1536-dimension embeddings**: text-embedding-ada-002 compatible"
+      },
+      {
+       "file": "infra/README.md",
+       "line": 270,
+       "evidence": "openai_embedding_deployment_name   = \"text-embedding-ada-002\""
+      },
+      {
+       "file": "mcp/SETUP.md",
+       "line": 45,
+       "evidence": "- **Azure OpenAI** - For embeddings (text-embedding-ada-002)"
+      }
+     ]
+    },
+    {
+     "repo": "ai-developer",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 6,
+     "files": 2,
+     "samples": [
+      {
+       "file": "Dotnet/challenges/Challenge-05.md",
+       "line": 112,
+       "evidence": "1. Using [Azure AI Studio](https://ai.azure.com/resource/deployments), deploy a *Standard* **text-embedding-ada-002** mo"
+      },
+      {
+       "file": "Dotnet/challenges/Challenge-05.md",
+       "line": 114,
+       "evidence": "![Embedding Model](./Resources/images/text-embedding-ada-002.png)"
+      },
+      {
+       "file": "Dotnet/challenges/Challenge-05.md",
+       "line": 119,
+       "evidence": "\"EMBEDDINGS_DEPLOYMODEL\": \"text-embedding-ada-002\""
+      }
+     ]
+    }
+   ],
+   "repoCount": 2,
+   "fileCount": 6,
+   "findings": 13
+  },
+  {
+   "campaignId": "CAMP-02",
+   "type": "BROKEN_ASSET_LINK",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "AI-Agents-using-Microsoft-Frameworks",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Fix broken asset links in AI-Agents-using-Microsoft-Frameworks",
+   "repos": [
+    {
+     "repo": "AI-Agents-using-Microsoft-Frameworks",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 53,
+     "files": 3,
+     "samples": [
+      {
+       "file": "Instructions/Labs/Lab04.md",
+       "line": 67,
+       "evidence": "![](./media/lab04/l4-step04-dataset-structure.png)"
+      },
+      {
+       "file": "Instructions/Labs/Lab04.md",
+       "line": 131,
+       "evidence": "![](./media/lab04/l4-step09-metrics.png)"
+      },
+      {
+       "file": "Instructions/Labs/Lab04.md",
+       "line": 163,
+       "evidence": "![](./media/lab04/l4-step12-comparison.png)"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 3,
+   "findings": 53
+  },
+  {
+   "campaignId": "CAMP-03",
+   "type": "BROKEN_ASSET_LINK",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "RTIAD-Workshop-April-2026",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Fix broken asset links in RTIAD-Workshop-April-2026",
+   "repos": [
+    {
+     "repo": "RTIAD-Workshop-April-2026",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 13,
+     "files": 10,
+     "samples": [
+      {
+       "file": "French/Labguide/Lab-2---April-2026.md",
+       "line": 1,
+       "evidence": "![](../media/Lab-2---April-2026/image3.png)"
+      },
+      {
+       "file": "French/Labguide/Lab-5---April-2026.md",
+       "line": 463,
+       "evidence": "\\![Fabrikam\\](../media/Lab-5---April-2026/Fabrikam.png?raw=true \"Fabrikam\")"
+      },
+      {
+       "file": "German/Labguide/Lab-5---April-2026.md",
+       "line": 443,
+       "evidence": "![Fabrikam](../media/Lab-5---April-2026/Fabrikam.png?raw=true \"Fabrikam\")"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 10,
+   "findings": 13
+  },
+  {
+   "campaignId": "CAMP-04",
+   "type": "RENAMED_PRODUCT",
+   "cause": {
+    "kind": "upstream-change",
+    "token": "Azure AD",
+    "replacement": "Microsoft Entra ID",
+    "note": "Abbreviated legacy name; guide text no longer matches current portal naming."
+   },
+   "title": "Replace \"Azure AD\" with \"Microsoft Entra ID\" fleet-wide",
+   "repos": [
+    {
+     "repo": "OpenAIWorkshop",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 12,
+     "files": 6,
+     "samples": [
+      {
+       "file": "ARCHITECTURE.md",
+       "line": 379,
+       "evidence": "- **Authentication:** Azure AD (AAD) with RBAC - no keys in code"
+      },
+      {
+       "file": "ARCHITECTURE.md",
+       "line": 688,
+       "evidence": "- **Azure AD**: Authentication and RBAC"
+      },
+      {
+       "file": "infra/GITHUB_ACTIONS_SETUP.md",
+       "line": 237,
+       "evidence": "| `AZURE_TENANT_ID` | Azure AD Tenant ID | `0fbe7234-...` |"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 6,
+   "findings": 12
+  },
+  {
+   "campaignId": "CAMP-05",
+   "type": "BROKEN_ASSET_LINK",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "MCW-App-modernization",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Fix broken asset links in MCW-App-modernization",
+   "repos": [
+    {
+     "repo": "MCW-App-modernization",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 4,
+     "files": 1,
+     "samples": [
+      {
+       "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+       "line": 129,
+       "evidence": "![Azure Migrate project settings page is shown. The project name is set to partsunlimitedweb. Create button is highlight"
+      },
+      {
+       "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+       "line": 593,
+       "evidence": "![The search box for resource is filled in with partsunlimited-web. The partsunlimited-web-20 Azure App Service is highl"
+      },
+      {
+       "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+       "line": 716,
+       "evidence": "![The search box for resources is filled in with partsunlimited-web. The partsunlimited-web-20 Azure App Service is high"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 1,
+   "findings": 4
+  },
+  {
+   "campaignId": "CAMP-06",
+   "type": "EOL_RUNTIME",
+   "cause": {
+    "kind": "upstream-change",
+    "token": "Node.js 16",
+    "replacement": "Node.js 22 (current LTS)",
+    "note": "Node 16 reached end-of-life 2023-09-11 (endoflife.date/nodejs); guides should state a supported version floor."
+   },
+   "title": "Replace \"Node.js 16\" with \"Node.js 22 (current LTS)\" fleet-wide",
+   "repos": [
+    {
+     "repo": "OpenAIWorkshop",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 3,
+     "files": 2,
+     "samples": [
+      {
+       "file": "agentic_ai/agents/agent_framework/README.md",
+       "line": 21,
+       "evidence": "2. **Node.js 16+** (for React frontend) - Check with `node --version`"
+      },
+      {
+       "file": "agentic_ai/agents/agent_framework/README.md",
+       "line": 43,
+       "evidence": "The React frontend requires Node.js 16+ and npm:"
+      },
+      {
+       "file": "docs/03_frontend_react.md",
+       "line": 22,
+       "evidence": "The React frontend requires Node.js 16+ and npm."
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 2,
+   "findings": 3
+  },
+  {
+   "campaignId": "CAMP-07",
+   "type": "DEPRECATED_DEPENDENCY",
+   "cause": {
+    "kind": "upstream-change",
+    "token": "gpt-35-turbo",
+    "replacement": "gpt-4o-mini",
+    "note": "GPT-3.5 Turbo deployments are legacy; new labs should target the gpt-4o family."
+   },
+   "title": "Replace \"gpt-35-turbo\" with \"gpt-4o-mini\" fleet-wide",
+   "repos": [
+    {
+     "repo": "ai-developer",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 2,
+     "files": 2,
+     "samples": [
+      {
+       "file": "Dotnet/challenges/Challenge-01.md",
+       "line": 59,
+       "evidence": "[QuickStart: Get started using GPT-35-Turbo with Azure AI Foundry Service](https://learn.microsoft.com/en-us/azure/ai-se"
+      },
+      {
+       "file": "Python/challenges/Challenge-01.md",
+       "line": 59,
+       "evidence": "[QuickStart: Get started using GPT-35-Turbo with Azure AI Foundry Service](https://learn.microsoft.com/en-us/azure/ai-se"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 2,
+   "findings": 2
+  },
+  {
+   "campaignId": "CAMP-08",
+   "type": "EOL_RUNTIME",
+   "cause": {
+    "kind": "upstream-change",
+    "token": "Node.js 18",
+    "replacement": "Node.js 22 (current LTS)",
+    "note": "Node 18 reached end-of-life 2025-04-30 (endoflife.date/nodejs); guides should state a supported version floor."
+   },
+   "title": "Replace \"Node.js 18\" with \"Node.js 22 (current LTS)\" fleet-wide",
+   "repos": [
+    {
+     "repo": "OpenAIWorkshop",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 2,
+     "files": 2,
+     "samples": [
+      {
+       "file": "agentic_ai/workflow/fraud_detection_durable/README.md",
+       "line": 554,
+       "evidence": "- **Node.js 18+** — for React UI"
+      },
+      {
+       "file": "agentic_ai/workflow/fraud_detection_durable/ui/README.md",
+       "line": 26,
+       "evidence": "- Node.js 18+ or newer"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 2,
+   "findings": 2
+  },
+  {
+   "campaignId": "CAMP-09",
+   "type": "BROKEN_ASSET_LINK",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "OpenAIWorkshop",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Fix broken asset links in OpenAIWorkshop",
+   "repos": [
+    {
+     "repo": "OpenAIWorkshop",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 1,
+     "files": 1,
+     "samples": [
+      {
+       "file": "agentic_ai/observability/README.md",
+       "line": 118,
+       "evidence": "![Agent Framework Dashboard](../docs/media/observability-dashboard.png)"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 1,
+   "findings": 1
+  },
+  {
+   "campaignId": "CAMP-10",
+   "type": "DEPRECATED_DEPENDENCY",
+   "cause": {
+    "kind": "upstream-change",
+    "token": "azurerm",
+    "replacement": "Az PowerShell module",
+    "note": "AzureRM PowerShell module retired; use Az."
+   },
+   "title": "Replace \"azurerm\" with \"Az PowerShell module\" fleet-wide",
+   "repos": [
+    {
+     "repo": "OpenAIWorkshop",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 1,
+     "files": 1,
+     "samples": [
+      {
+       "file": "infra/README.md",
+       "line": 680,
+       "evidence": "- [Terraform AzureRM Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 1,
+   "findings": 1
+  }
+ ],
+ "stats": {
+  "campaigns": 10,
+  "findings": 104,
+  "crossRepoCampaigns": 1,
+  "top3CoveragePct": 76
+ }
+}

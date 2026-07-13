@@ -1,0 +1,15 @@
+name: Lab Doctor — content freshness
+on:
+  pull_request:
+    # md = the content the gate protects; the rest = the gate itself. A PR that edits the scanner,
+    # registry, baseline, or this workflow must run the gate too — otherwise a broken scanner or a
+    # doctored baseline merges unvalidated.
+    paths: ['**.md', '.github/labdoctor/**', '.labdoctor-baseline.json', '.github/workflows/labdoctor.yml']
+  workflow_dispatch:
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan lab guides for content rot
+        run: node .github/labdoctor/labdoctor-scan.js --check .

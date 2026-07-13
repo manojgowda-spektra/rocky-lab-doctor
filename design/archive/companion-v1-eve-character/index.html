@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rocky — your living lab companion</title>
+<style>
+  :root{
+    --bg1:#0b1020; --bg2:#161f38; --panel:#0f172acc; --line:#2b3a55;
+    --txt:#e6edf6; --muted:#93a3bd; --accent:#38bdf8; --accent2:#a78bfa;
+    --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+    --glow:#38bdf8; --eye:#38bdf8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 system-ui,"Segoe UI",Roboto,sans-serif;color:var(--txt);
+    background:radial-gradient(1200px 800px at 75% -10%,#1d4ed826,transparent),
+               radial-gradient(900px 600px at -10% 110%,#7c3aed22,transparent),
+               linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh}
+  .wrap{display:grid;grid-template-columns:320px 1fr;gap:18px;max-width:1240px;margin:0 auto;padding:18px}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(6px)}
+  h1{font-size:16px;margin:0 0 4px} h2{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
+  .muted{color:var(--muted)} .small{font-size:12.5px}
+  .step{font-weight:600;margin:2px 0 8px}
+  .val{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;border-top:1px dashed #ffffff14}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap}
+  .badge.pass{background:#052e16;color:#86efac;border:1px solid #14532d}
+  .badge.fail{background:#3f0d0d;color:#fca5a5;border:1px solid #7f1d1d}
+  .btn{cursor:pointer;border:1px solid var(--line);background:#0b1220;color:var(--txt);padding:7px 11px;border-radius:10px;font-size:13px;transition:.15s}
+  .btn:hover{border-color:var(--accent);color:#fff}
+  .btn.warn{border-color:#7c2d12;color:#fdba74}.btn.report{border-color:#7f1d1d;color:#fca5a5}.btn.report:hover{background:#3f0d0d}
+  .btn.go{border-color:#14532d;color:#86efac}.btn.go:hover{background:#052e16}
+  .row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .dial .btn.active{border-color:var(--accent2);color:#fff;background:#2e1065}
+  /* mock portal (guided-pointing target) */
+  .portal{border:1px solid var(--line);border-radius:12px;padding:10px;background:#0b1220}
+  .field{display:flex;justify-content:space-between;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:8px;margin:6px 0;font-size:13px;position:relative}
+  .field.highlight{border-color:var(--warn);box-shadow:0 0 0 3px #f59e0b33;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 3px #f59e0b22}50%{box-shadow:0 0 0 6px #f59e0b44}}
+  .field .pointer{position:absolute;left:-30px;top:50%;transform:translateY(-50%);font-size:20px;display:none}
+  .field.highlight .pointer{display:block;animation:nudge 1s infinite}
+  @keyframes nudge{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(5px)}}
+  .pill-val{color:var(--muted)} .field.bad .pill-val{color:#fca5a5}
+  /* stage */
+  .stage{position:relative;height:330px;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+    background:radial-gradient(640px 320px at 50% 130%,#16203a,transparent)}
+  .ground{position:absolute;left:0;right:0;bottom:34px;height:1px;background:#ffffff12}
+  .emopill{position:absolute;top:10px;right:12px;font-size:11px;color:var(--muted);background:#0b1220aa;border:1px solid var(--line);padding:3px 9px;border-radius:999px}
+  .rocky{position:absolute;left:50%;bottom:40px;width:160px;transform:translateX(-50%);transition:left 2.6s cubic-bezier(.22,1,.36,1)}
+  .rk{animation:bob 3.4s ease-in-out infinite;transform-origin:center bottom}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  [data-emo="sleeping"] .rk,[data-emo="snoring"] .rk{animation:breathe 4.6s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:translateY(3px) scale(1)}50%{transform:translateY(-2px) scale(1.02)}}
+  [data-emo="excited"] .rk,[data-emo="celebrate"] .rk{animation:bounce 1s ease-in-out infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-16px)}60%{transform:translateY(-6px)}}
+  [data-emo="hero"] .rk{animation:heropop .6s ease-out, bob 2.2s ease-in-out .6s infinite}
+  @keyframes heropop{0%{transform:translateY(46px) scale(.6);opacity:.5}60%{transform:translateY(-14px) scale(1.14)}100%{transform:translateY(0) scale(1)}}
+  [data-emo="proud"] .rk{transform:scale(1.04)}
+  .glow{filter:drop-shadow(0 0 7px var(--glow));transition:filter .3s}
+  /* eyes: three variants toggled per emotion */
+  .eye-open,.eye-happy,.eye-closed{transition:.18s}
+  .eye-happy,.eye-closed{display:none}
+  .antled{animation:blink 2.8s infinite}.is-talking .antled{animation:blink .5s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+  .mouth>*{display:none}
+  .is-talking .mouth>*{animation:talk .28s infinite}
+  @keyframes talk{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.4)}}
+  .acc{display:none}
+  .acc-zzz text{fill:#cbd5e1;font-weight:800}
+  [data-emo="sleeping"] .acc-zzz,[data-emo="snoring"] .acc-zzz{display:block}
+  [data-emo="sleeping"] .z1,[data-emo="snoring"] .z1{animation:zzz 3s infinite}
+  [data-emo="sleeping"] .z2,[data-emo="snoring"] .z2{animation:zzz 3s infinite .9s}
+  [data-emo="sleeping"] .z3,[data-emo="snoring"] .z3{animation:zzz 3s infinite 1.8s}
+  @keyframes zzz{0%{opacity:0;transform:translate(0,0) scale(.7)}30%{opacity:1}100%{opacity:0;transform:translate(10px,-26px) scale(1.1)}}
+  [data-emo="snoring"] .acc-snore{display:block;animation:snore 3s infinite}
+  @keyframes snore{0%,100%{transform:scale(.2);opacity:.2}50%{transform:scale(1);opacity:.6}}
+  .cape{opacity:0;transition:.4s;transform-origin:top center}
+  [data-emo="hero"] .cape{opacity:1;animation:flutter 1.1s ease-in-out infinite}
+  @keyframes flutter{0%,100%{transform:skewX(0)}50%{transform:skewX(-7deg)}}
+  [data-emo="excited"] .acc-spark,[data-emo="proud"] .acc-spark,[data-emo="celebrate"] .acc-spark,[data-emo="hero"] .acc-spark{display:block;animation:spark .8s ease-out infinite alternate}
+  @keyframes spark{0%{opacity:.4;transform:scale(.7)}100%{opacity:1;transform:scale(1.2)}}
+  [data-emo="shocked"] .acc-excl,[data-emo="warning"] .acc-excl{display:block;animation:pop .4s ease-out}
+  [data-emo="curious"] .acc-quest,[data-emo="confused"] .acc-quest{display:block;animation:pop .4s ease-out}
+  [data-emo="investigating"] .acc-glass{display:block;animation:scan 2s ease-in-out infinite}
+  @keyframes scan{0%,100%{transform:translate(0,0) rotate(-8deg)}50%{transform:translate(14px,6px) rotate(8deg)}}
+  [data-emo="concerned"] .acc-sweat{display:block;animation:drip 2s infinite}
+  @keyframes drip{0%{opacity:0;transform:translateY(-4px)}40%{opacity:1}100%{opacity:0;transform:translateY(8px)}}
+  @keyframes pop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
+  .confetti{position:absolute;inset:0;pointer-events:none;display:none}
+  [data-emo="celebrate"] ~ .confetti,.celebrate .confetti{display:block}
+  .conf{position:absolute;top:-10px;width:8px;height:12px;opacity:.9;animation:fall 1.8s linear infinite}
+  @keyframes fall{0%{transform:translateY(-20px) rotate(0)}100%{transform:translateY(360px) rotate(360deg)}}
+  /* bubble */
+  .bubble{position:absolute;max-width:64%;left:50%;top:12px;transform:translateX(-50%);background:#0b1220ee;border:1px solid var(--line);
+    border-radius:14px;padding:10px 13px;font-size:13.5px;box-shadow:0 12px 34px #0009;opacity:0;transition:.25s;pointer-events:none}
+  .bubble.show{opacity:1}.bubble.joke{border-style:dashed;color:#cbd5e1}.bubble.alert{border-color:#f59e0b}
+  /* chat */
+  .chat{display:flex;flex-direction:column;height:300px;margin-top:14px}
+  .log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:9px;padding-right:6px}
+  .msg{max-width:88%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;font-size:13.5px}
+  .msg.you{align-self:flex-end;background:#1e3a8a55;border:1px solid #1d4ed8}
+  .msg.rocky{align-self:flex-start;background:#0b1220;border:1px solid var(--line)}
+  .msg.rocky b{color:#fff}
+  .composer{display:flex;gap:8px;margin-top:10px}
+  .composer input{flex:1;background:#0b1220;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 12px;font-size:14px}
+  .composer input:focus{outline:none;border-color:var(--accent)}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#052e16;border:1px solid #14532d;color:#bbf7d0;padding:10px 16px;border-radius:10px;opacity:0;transition:.3s;z-index:9;max-width:80%}
+  .toast.show{opacity:1}
+  pre.diag{white-space:pre-wrap;font-size:12px;background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:10px;color:#cbd5e1;margin:8px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- LEFT -->
+  <section class="panel">
+    <h1>Lab</h1>
+    <div id="labTitle" class="step muted">loading…</div>
+    <div id="labObjective" class="small muted"></div>
+
+    <h2>Validations</h2>
+    <div id="vals"></div>
+
+    <h2>Azure Portal (simulated)</h2>
+    <div class="portal">
+      <div class="field bad" id="fieldRegion"><span class="pointer">👉</span><span>Resource group region</span><span class="pill-val" id="regionVal">East US</span></div>
+      <div class="field"><span>VM size</span><span class="pill-val">Standard_D4s_v5</span></div>
+      <div class="row" style="margin-top:4px">
+        <button class="btn go" id="applyFixBtn" style="display:none" onclick="applyFix()">✓ Apply Rocky's fix (set West US 2)</button>
+      </div>
+    </div>
+
+    <h2>Simulate</h2>
+    <div class="row">
+      <button class="btn warn" onclick="injectLicense()">⚠ License issue</button>
+      <button class="btn" onclick="resetAll()">↻ Reset</button>
+    </div>
+    <div id="reportWrap" class="row" style="display:none">
+      <button class="btn report" onclick="escalate()">🛟 Escalate to technical team</button>
+    </div>
+    <div class="small muted" style="margin-top:12px">Model: <span id="model">…</span></div>
+  </section>
+
+  <!-- RIGHT -->
+  <section class="panel">
+    <div class="stage" id="stage">
+      <span class="emopill" id="emopill">😴 sleeping</span>
+      <div class="ground"></div>
+      <div class="bubble" id="bubble"></div>
+      <div class="rocky" id="rocky" data-emo="sleeping">
+        <svg viewBox="0 0 160 180" width="160" height="180" class="rk glow" aria-label="Rocky">
+          <path class="cape" d="M40 78 Q80 210 120 78 L120 128 Q80 172 40 128 Z" fill="#dc2626"/>
+          <line x1="80" y1="22" x2="80" y2="42" stroke="#64748b" stroke-width="3"/>
+          <circle class="antled" cx="80" cy="18" r="6" fill="var(--glow)"/>
+          <!-- head -->
+          <rect x="44" y="40" width="72" height="54" rx="16" fill="#e8eef7"/>
+          <rect x="50" y="46" width="60" height="42" rx="12" fill="#0a1020"/>
+          <!-- brows -->
+          <rect class="brow brL" x="58" y="52" width="14" height="3" rx="1.5" fill="#38bdf8" opacity="0"/>
+          <rect class="brow brR" x="88" y="52" width="14" height="3" rx="1.5" fill="#38bdf8" opacity="0"/>
+          <!-- eyes (left) -->
+          <g transform="translate(67,66)">
+            <circle class="eye-open eyeL" r="7" fill="var(--eye)"/>
+            <path class="eye-happy" d="M-7 2 Q0 -7 7 2" stroke="var(--eye)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <rect class="eye-closed" x="-7" y="-1.5" width="14" height="3" rx="1.5" fill="var(--eye)"/>
+          </g>
+          <!-- eyes (right) -->
+          <g transform="translate(93,66)">
+            <circle class="eye-open eyeR" r="7" fill="var(--eye)"/>
+            <path class="eye-happy" d="M-7 2 Q0 -7 7 2" stroke="var(--eye)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <rect class="eye-closed" x="-7" y="-1.5" width="14" height="3" rx="1.5" fill="var(--eye)"/>
+          </g>
+          <!-- mouth variants -->
+          <g class="mouth" transform="translate(80,80)">
+            <path class="m-smile" d="M-12 0 Q0 9 12 0" stroke="var(--eye)" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path class="m-grin" d="M-14 -1 Q0 16 14 -1 Z" fill="var(--eye)"/>
+            <circle class="m-o" r="5" fill="var(--eye)"/>
+            <rect class="m-flat" x="-11" y="-1.5" width="22" height="3" rx="1.5" fill="var(--eye)"/>
+            <path class="m-frown" d="M-12 4 Q0 -6 12 4" stroke="var(--eye)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+          <!-- body -->
+          <rect x="48" y="98" width="64" height="54" rx="14" fill="#cdd8e8"/>
+          <circle cx="80" cy="120" r="9" fill="#0a1020"/><circle class="antled" cx="80" cy="120" r="4" fill="#a78bfa"/>
+          <rect x="30" y="104" width="13" height="36" rx="6.5" fill="#9fb0c7"/>
+          <rect x="117" y="104" width="13" height="36" rx="6.5" fill="#9fb0c7"/>
+          <rect x="58" y="150" width="13" height="20" rx="6" fill="#9fb0c7"/>
+          <rect x="89" y="150" width="13" height="20" rx="6" fill="#9fb0c7"/>
+          <!-- accessories -->
+          <g class="acc acc-zzz"><text class="z1" x="112" y="48" font-size="13">z</text><text class="z2" x="118" y="42" font-size="16">Z</text><text class="z3" x="126" y="34" font-size="20">Z</text></g>
+          <circle class="acc acc-snore" cx="108" cy="78" r="6" fill="#bae6fd" opacity=".5"/>
+          <g class="acc acc-spark"><circle cx="40" cy="58" r="3.5" fill="#fde047"/><circle cx="120" cy="64" r="3.5" fill="#fde047"/><circle cx="126" cy="100" r="3" fill="#fde047"/></g>
+          <text class="acc acc-excl" x="120" y="46" font-size="26" font-weight="800" fill="#f59e0b">!</text>
+          <text class="acc acc-quest" x="118" y="46" font-size="24" font-weight="800" fill="#38bdf8">?</text>
+          <g class="acc acc-glass" transform="translate(112,70)"><circle r="9" fill="none" stroke="#fbbf24" stroke-width="3"/><line x1="7" y1="7" x2="16" y2="16" stroke="#fbbf24" stroke-width="3"/></g>
+          <path class="acc acc-sweat" d="M112 58 q4 8 0 12 q-4 -4 0 -12" fill="#7dd3fc"/>
+        </svg>
+      </div>
+      <div class="confetti" id="confetti"></div>
+    </div>
+
+    <div class="chat">
+      <div class="log" id="log"></div>
+      <div class="row dial" style="margin-top:8px">
+        <button class="btn" data-lvl="hint" onclick="setLevel('hint')">/hint</button>
+        <button class="btn" data-lvl="guided" onclick="setLevel('guided')">/guided</button>
+        <button class="btn" data-lvl="answer" onclick="setLevel('answer')">/answer</button>
+        <button class="btn" onclick="send('/check')">/check</button>
+        <button class="btn" onclick="send(\"I'm stuck\")">I'm stuck</button>
+      </div>
+      <div class="composer">
+        <input id="input" placeholder="Ask Rocky…  try: should I pick a smaller VM size?" autofocus />
+        <button class="btn" onclick="sendInput()">Send</button>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+const rocky=$('#rocky'), bubble=$('#bubble'), pill=$('#emopill'), logEl=$('#log');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lab=null, level='hint', talking=false, lastActivity=Date.now(), offered=false, resolved=false;
+let lastVals={};
+
+// emotion → glow/eye color + label + emoji. Face shapes handled by CSS [data-emo].
+const EMO={
+  happy:{g:'#38bdf8',e:'#38bdf8',l:'🙂 happy'}, excited:{g:'#38bdf8',e:'#7dd3fc',l:'🤩 excited'},
+  curious:{g:'#38bdf8',e:'#7dd3fc',l:'🤔 curious'}, thinking:{g:'#a78bfa',e:'#c4b5fd',l:'💭 thinking'},
+  confused:{g:'#f59e0b',e:'#fbbf24',l:'😕 confused'}, shocked:{g:'#ef4444',e:'#fca5a5',l:'😮 shocked'},
+  concerned:{g:'#f59e0b',e:'#fbbf24',l:'😟 concerned'}, proud:{g:'#22c55e',e:'#86efac',l:'😎 proud'},
+  sleeping:{g:'#475569',e:'#64748b',l:'😴 sleeping'}, snoring:{g:'#475569',e:'#64748b',l:'😴 snoring…'},
+  hero:{g:'#ef4444',e:'#fca5a5',l:'🦸 hero mode!'}, celebrate:{g:'#22c55e',e:'#86efac',l:'🎉 celebrating!'},
+  warning:{g:'#f59e0b',e:'#fbbf24',l:'⚠️ warning'}, investigating:{g:'#fbbf24',e:'#fde047',l:'🔍 investigating'},
+  idle:{g:'#38bdf8',e:'#38bdf8',l:'😌 idle'}
+};
+// which mouth/eye variant to show per emotion
+const FACE={
+  happy:['m-smile','open'], excited:['m-grin','open-wide'], curious:['m-smile','open'], thinking:['m-flat','up'],
+  confused:['m-frown','open'], shocked:['m-o','open-wide'], concerned:['m-frown','narrow'], proud:['m-grin','happy'],
+  sleeping:['m-flat','closed'], snoring:['m-o','closed'], hero:['m-grin','open'], celebrate:['m-grin','happy'],
+  warning:['m-flat','open'], investigating:['m-flat','open'], idle:['m-smile','open']
+};
+let revertT;
+function setEmotion(name,{hold=0}={}){
+  const e=EMO[name]||EMO.idle; rocky.dataset.emo=name;
+  document.documentElement.style.setProperty('--glow',e.g);
+  document.documentElement.style.setProperty('--eye',e.e);
+  pill.textContent=e.l;
+  // eyes
+  const [mouth,eyes]=FACE[name]||FACE.idle;
+  rocky.querySelectorAll('.eye-open,.eye-happy,.eye-closed').forEach(el=>el.style.display='none');
+  const showEye=(cls)=>rocky.querySelectorAll(cls).forEach(el=>el.style.display='block');
+  if(eyes==='happy') showEye('.eye-happy');
+  else if(eyes==='closed') showEye('.eye-closed');
+  else { showEye('.eye-open'); rocky.querySelectorAll('.eye-open').forEach(el=>{
+    el.style.transform = eyes==='open-wide'?'scale(1.3)':eyes==='narrow'?'scaleY(.5)':eyes==='up'?'translateY(-3px)':'none';});}
+  // mouth
+  rocky.querySelectorAll('.mouth>*').forEach(el=>el.style.display='none');
+  const m=rocky.querySelector('.'+mouth); if(m)m.style.display='block';
+  // brows for tense emotions
+  const tense=['concerned','warning','confused','hero'].includes(name);
+  rocky.querySelectorAll('.brow').forEach((b,i)=>{b.style.opacity=tense?1:0;b.style.transform=tense?`rotate(${i?'':'-'}14deg)`:'none';b.style.transformOrigin='center';});
+  clearTimeout(revertT);
+  if(hold){revertT=setTimeout(()=>{ if(!talking) setEmotion(resolved?'happy':(failing()?'concerned':'idle')); },hold);}
+}
+function failing(){return lab&&(lab.findings||[]).length>0;}
+
+function say(text,kind){bubble.className='bubble show '+(kind||'');bubble.textContent=text;clearTimeout(say._t);if(kind==='joke')say._t=setTimeout(()=>bubble.classList.remove('show'),6500);}
+function hideBubble(){bubble.classList.remove('show');}
+function addMsg(who,t){const d=document.createElement('div');d.className='msg '+who;d.innerHTML=fmt(t);logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;return d;}
+function fmt(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4200);}
+
+function confettiBurst(){const c=$('#confetti');c.innerHTML='';const cols=['#38bdf8','#a78bfa','#22c55e','#fde047','#fb7185'];
+  for(let i=0;i<36;i++){const d=document.createElement('div');d.className='conf';d.style.left=(Math.random()*100)+'%';d.style.background=cols[i%cols.length];d.style.animationDelay=(Math.random()*0.6)+'s';c.appendChild(d);}
+  rocky.classList.add('celebrate');setTimeout(()=>{c.innerHTML='';rocky.classList.remove('celebrate');},2200);}
+
+// ---- lab ----
+async function loadLab(prev){
+  lab=await (await fetch('/api/labstate')).json();
+  $('#labTitle').textContent=lab.lab.title;$('#labTitle').classList.remove('muted');
+  $('#labObjective').textContent=lab.lab.objective;$('#model').textContent=lab.model;
+  const v=$('#vals');v.innerHTML='';
+  (lab.validations||[]).forEach(x=>{const pass=x.status==='passed';
+    v.insertAdjacentHTML('beforeend',`<div class="val"><span class="badge ${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</span><span>${x.description}</span></div>`);});
+  // guided pointing: region field reflects state + Rocky points if region-mismatch
+  const region=(lab.validations||[]).find(x=>x.observed&&x.observed.region);
+  $('#regionVal').textContent=region?region.observed.region:'—';
+  const regionMiss=(lab.findings||[]).some(f=>f.type==='region-mismatch');
+  $('#fieldRegion').classList.toggle('highlight',regionMiss);
+  $('#fieldRegion').classList.toggle('bad',regionMiss);
+  $('#applyFixBtn').style.display=regionMiss?'inline-block':'none';
+  const reportable=(lab.findings||[]).some(f=>f.reportable);
+  $('#reportWrap').style.display=reportable?'flex':'none';
+  // milestone: a validation flipped fail→pass
+  if(prev){const nowPass=(lab.validations||[]).filter(x=>x.status==='passed').map(x=>x.validationId);
+    const gained=nowPass.filter(id=>prev.includes&&!prev.includes(id));
+    if(gained.length){celebrateMilestone(gained.length, (lab.findings||[]).length===0);}}
+  return (lab.validations||[]).filter(x=>x.status==='passed').map(x=>x.validationId);
+}
+function celebrateMilestone(n, allDone){
+  confettiBurst(); setEmotion(allDone?'proud':'celebrate',{hold:4000});
+  resolved=allDone;
+  say(allDone?"🎉 That's the whole step green — nailed it! You did the fixing, I just spotted it.":"✅ Nice — that check just went green. Keep going!", 'alert');
+}
+
+// ---- chat (SSE) ----
+async function send(message){
+  if(!message)return; bump(); offered=false;
+  addMsg('you',message); const el=addMsg('rocky','');
+  talking=true; rocky.classList.add('is-talking'); setEmotion('thinking'); hideBubble();
+  let full='', prevPass=(lab.validations||[]).filter(x=>x.status==='passed').map(x=>x.validationId);
+  try{
+    const res=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message})});
+    const rd=res.body.getReader(),dec=new TextDecoder();let buf='';
+    while(true){const {done,value}=await rd.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});const parts=buf.split('\n\n');buf=parts.pop();
+      for(const part of parts){const line=part.trim();if(!line.startsWith('data:'))continue;
+        const o=JSON.parse(line.slice(5).trim());
+        if(o.token){full+=o.token;el.innerHTML=fmt(full);logEl.scrollTop=logEl.scrollHeight;}
+        if(o.done)onDone(o,prevPass); if(o.error)el.innerHTML=fmt('(error: '+o.error+')');}}
+  }catch(e){el.innerHTML=fmt('(connection error: '+e.message+')');}
+  talking=false; rocky.classList.remove('is-talking');
+}
+function onDone(o,prevPass){
+  loadLab(prevPass);
+  level=o.level; document.querySelectorAll('.dial .btn[data-lvl]').forEach(b=>b.classList.toggle('active',b.dataset.lvl===level));
+  const reportable=(o.findings||[]).some(f=>f.reportable);
+  if(reportable){setEmotion('investigating',{hold:2600});setTimeout(()=>{setEmotion('hero');say("Hold on… this one likely needs the technical team. I can escalate it with full diagnostics.",'alert');},2400);}
+  else if(o.struggle>=1){setEmotion('concerned',{hold:0});}
+  else if((o.findings||[]).length){setEmotion('curious',{hold:4000});}
+  else {setEmotion('happy',{hold:3500});}
+}
+function sendInput(){const i=$('#input');const v=i.value.trim();if(v){i.value='';send(v);}}
+$('#input').addEventListener('keydown',e=>{if(e.key==='Enter')sendInput();});
+function setLevel(l){level=l;document.querySelectorAll('.dial .btn[data-lvl]').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));send('/'+l);}
+
+// ---- guided fix → verify → celebrate ----
+async function applyFix(){
+  bump(); setEmotion('excited',{hold:0}); say("Great — applying the fix: setting the region to West US 2 and redeploying…",'alert');
+  const prev=(lab.validations||[]).filter(x=>x.status==='passed').map(x=>x.validationId);
+  await fetch('/api/applyfix',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({})});
+  await loadLab(prev); // milestone celebration fires inside if checks turned green
+}
+
+// ---- issue detection → escalate with auto diagnostics ----
+async function injectLicense(){
+  bump(); await fetch('/api/inject',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type:'license'})});
+  setEmotion('shocked',{hold:1400}); say("😮 Whoa — a LICENSE / marketplace error just appeared!",'alert');
+  await loadLab();
+  setTimeout(()=>{setEmotion('investigating');say("Investigating the license issue…",'alert');
+    setTimeout(()=>send('my deployment just failed with a license / marketplace error'),1400);},1500);
+}
+async function escalate(){
+  setEmotion('investigating',{hold:1600}); say("Gathering logs and building a support-ready report…",'alert');
+  const r=await (await fetch('/api/report',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({reason:'learner-escalated'})})).json();
+  const s=r.summary;
+  addMsg('rocky',`I've escalated this to the technical team — you didn't have to explain a thing. **Ticket ${r.ticket}**`);
+  addMsg('rocky',`<pre class="diag">Lab: ${s.lab}\nStep: ${s.step}\nLikely root cause: ${s.likelyRootCause}\nFailing: ${(s.failingValidations||[]).join('; ')||'—'}\nErrors: ${(s.errors||[]).join('; ')||'—'}</pre>`);
+  setEmotion('proud',{hold:4000}); toast('🛟 Reported — ticket '+r.ticket+' (diagnostics attached)');
+}
+async function resetAll(){bump();await fetch('/api/reset',{method:'POST'});resolved=false;offered=false;logEl.innerHTML='';await loadLab();setEmotion('sleeping');}
+
+// ---- idle life: look around, yawn, sleep, snore, jokes, glide ----
+const JOKES=[
+ "It's always DNS. Even when it isn't, it's DNS. 🛰️","There are 10 kinds of people: those who get binary and those who don't.",
+ "I'd tell a UDP joke, but you might not get it. 📦","99 bugs in the code… patch one… 127 bugs in the code. 🐛",
+ "Why was the cloud sad? Too many unresolved dependencies. ☁️","It's not a bug — it's an undocumented feature. ✨",
+ "Real engineers count from zero. 0️⃣","You've got this — every expert was once a failed deployment. 💪",
+ "Why did the function break up? It didn't call back. 📞","To understand recursion, first understand recursion."];
+function bump(){lastActivity=Date.now();}
+function glide(){if(talking||reduce)return;const pos=Math.sin(Date.now()/9000)*22+50;rocky.style.left=pos+'%';}
+let idleStage=0;
+setInterval(()=>{ // ambient life loop
+  if(talking)return; const idle=Date.now()-lastActivity;
+  if(idle>34000){ setEmotion(Math.floor(idle/7000)%2?'snoring':'sleeping'); if(idle%9000<1100)say(idleStage++%2?'zzz… 💤':'…snore… 😴','joke'); }
+  else if(idle>10000){ if(!['hero','concerned','investigating'].includes(rocky.dataset.emo)){ const cyc=Math.floor(idle/4000)%3; setEmotion(cyc===0?'idle':cyc===1?'curious':'thinking'); }
+    if(idle%15000<1100)say(JOKES[Math.floor(idle/15000)%JOKES.length],'joke'); glide(); }
+},1000);
+// proactive: failing + user quiet → wake to help (non-intrusive, once)
+setInterval(()=>{ if(talking||offered||!lab||resolved)return; const idle=Date.now()-lastActivity;
+  if(failing()&&idle>16000){offered=true;setEmotion('hero');say("🦸 Hold on… I think I found something. Your deployment looks unhappy — want a hand? (ask me, or tap /check)",'alert');}
+},2000);
+
+// ---- boot ----
+(async()=>{ lastVals=await loadLab(); setEmotion('sleeping');
+  setTimeout(()=>{ if(failing()){setEmotion('hero');say("🦸 Rocky online! I read the lab guide and I noticed your last deployment failed. Ask me anything, or tap /check.",'alert');}
+    else{setEmotion('happy',{hold:4000});say("Hi! I'm Rocky — I've studied this lab and I'll be right here. 🤖",'joke');}},3200);
+})();
+</script>
+</body>
+</html>

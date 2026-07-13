@@ -1,0 +1,266 @@
+{
+ "source": "C:\\Users\\ManojGowda\\OneDrive - Spektra Systems LLC\\Desktop\\Labs\\RTIAD-Workshop-April-2026\\English\\Labguide\\Lab-2---April-2026.md",
+ "splitMode": "task-headings",
+ "extractedAt": "2026-07-05T02:37:55.704Z",
+ "review": "DRAFT — requires human review; mechanical audit checks quote-anchoring only",
+ "tasks": [
+  {
+   "title": "Task 1: Create an Eventstream Source",
+   "objective": "Create a Fabric Eventstream that uses Azure Event Hubs as its data source and open it to preview incoming data.",
+   "expectedOutcome": "An Eventstream named es_Fabrikam_InternetSales is connected to the Azure Event Hub source, becomes Active, and shows sample data in the preview window.",
+   "facts": [
+    {
+     "fact": "The source type selected for the stream is Azure Event Hubs.",
+     "quote": "for this class we will select the option **Azure Event Hubs**.",
+     "grounded": true
+    },
+    {
+     "fact": "A new connection is created for the Azure Event Hub source.",
+     "quote": "Click on the **New connection** text since you do not currently have a connection.",
+     "grounded": true
+    },
+    {
+     "fact": "The Event Hub namespace is set to rtiadhub<inject key=\"DeploymentID\" enableCopy=\"false\"/>.",
+     "quote": "rtiadhub<inject key=\"DeploymentID\" enableCopy=\"false\"/>",
+     "grounded": true
+    },
+    {
+     "fact": "The Event Hub is set to rti-iad-orders.",
+     "quote": "rti-iad-orders",
+     "grounded": true
+    },
+    {
+     "fact": "The Shared Access Key Name is set to rti-reader.",
+     "quote": "rti-reader",
+     "grounded": true
+    },
+    {
+     "fact": "The Skip Test Connection box is unchecked.",
+     "quote": "Uncheck the **Skip Test Connection** box.",
+     "grounded": true
+    },
+    {
+     "fact": "The Eventstream is renamed to es_Fabrikam_InternetSales.",
+     "quote": "let’s call our Eventstream **es_Fabrikam_InternetSales**.",
+     "grounded": true
+    },
+    {
+     "fact": "After creation, the Eventstream source should become Active and show sample data in preview.",
+     "quote": "It may take a few moments for your Source to be **Active**",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 2: Setup Eventstream Transformations",
+   "objective": "Set up two parallel filter transformations in the Eventstream and route their outputs to separate Eventhouse KQL tables for rapid and standard deliveries.",
+   "expectedOutcome": "The Eventstream contains a RapidDelivery filter for IsRapidDelivery = 1 and a StandardDelivery filter for IsRapidDelivery = 0, each connected to an Eventhouse destination writing to the corresponding KQL table.",
+   "facts": [
+    {
+     "fact": "A filter transformation is created with Name set to RapidDelivery.",
+     "quote": "Name: **RapidDelivery**",
+     "grounded": true
+    },
+    {
+     "fact": "The RapidDelivery filter uses the field IsRapidDelivery and keeps events where the value equals 1.",
+     "quote": "Field: **IsRapidDelivery**",
+     "grounded": true
+    },
+    {
+     "fact": "The RapidDelivery filter keeps events when the value equals 1.",
+     "quote": "Equals: **1**",
+     "grounded": true
+    },
+    {
+     "fact": "The RapidDelivery Eventhouse destination is named eh-RapidDelivery.",
+     "quote": "Destination name: **eh-RapidDelivery**",
+     "grounded": true
+    },
+    {
+     "fact": "The RapidDelivery destination writes to a KQL table named RapidDelivery.",
+     "quote": "TableName: **RapidDelivery**",
+     "grounded": true
+    },
+    {
+     "fact": "A second filter transformation is created with Name set to StandardDelivery.",
+     "quote": "Name: **StandardDelivery**",
+     "grounded": true
+    },
+    {
+     "fact": "The StandardDelivery filter keeps events when the value equals 0.",
+     "quote": "Equals: **0**",
+     "grounded": true
+    },
+    {
+     "fact": "The StandardDelivery destination writes to a KQL table named StandardDelivery.",
+     "quote": "TableName: **StandardDelivery**",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 3: Exploring the KQL Database",
+   "objective": "Explore the eh_Fabrikam KQL Database in the RTI_ODL_User<inject key=\"DeploymentID\" enableCopy=\"false\"></inject> workspace, refresh its metrics, and inspect the RapidDelivery table overview and details.",
+   "expectedOutcome": "The learner has opened the eh_Fabrikam KQL Database, refreshed and reviewed its database information, and viewed the RapidDelivery table overview showing metadata and streaming data details.",
+   "facts": [
+    {
+     "fact": "The workspace to return to is named RTI_ODL_User<inject key=\"DeploymentID\" enableCopy=\"false\"></inject>.",
+     "quote": "Make your way back to your workspace: **RTI_ODL_User<inject key=\"DeploymentID\" enableCopy=\"false\"></inject>**.",
+     "grounded": true
+    },
+    {
+     "fact": "The KQL Database item to open is eh_Fabrikam.",
+     "quote": "Open the **eh_Fabrikam** KQL Database item.",
+     "grounded": true
+    },
+    {
+     "fact": "The learner must click the refresh icon in the top-left corner of the screen.",
+     "quote": "Click on the **refresh icon** in the top-left corner of the screen as well there are other items to view:",
+     "grounded": true
+    },
+    {
+     "fact": "The database size should continue to grow over time.",
+     "quote": "The size of the database should continue to grow.",
+     "grounded": true
+    },
+    {
+     "fact": "The table to select in the KQL Database is named RapidDelivery.",
+     "quote": "click on the table within your KQL Database called **RapidDelivery.**",
+     "grounded": true
+    },
+    {
+     "fact": "The Data Preview section shows a preview of table ingestion results.",
+     "quote": "**Data Preview** – Shows a preview of the table ingestion results.",
+     "grounded": true
+    },
+    {
+     "fact": "The Table Details section shows compressed and original size, OneLake availability, and number of rows.",
+     "quote": "**Table Details** – Shows Compressed and Original size of table, OneLake availability, number of rows in the tables and various other details.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 4: Learning to write KQL",
+   "objective": "Learn the basics of writing and running KQL queries against the KQL Database by replacing template table names with RapidDelivery and using operators like take, count, project, project-away, and union.",
+   "expectedOutcome": "The learner successfully runs KQL queries on the RapidDelivery table and sees returned rows, record counts, and projected results in the default KQL Queryset.",
+   "facts": [
+    {
+     "fact": "The learner should use the ribbon option named Query with code.",
+     "quote": "Query with code.",
+     "grounded": true
+    },
+    {
+     "fact": "On Line 8, YOUR_TABLE_HERE should be replaced with RapidDelivery.",
+     "quote": "replace that with the table name, **RapidDelivery**.",
+     "grounded": true
+    },
+    {
+     "fact": "The learner should highlight Line 8 and 9 and click Run.",
+     "quote": "Highlight **Line 8 and 9** and click on the **Run** button in the top-left corner of the window",
+     "grounded": true
+    },
+    {
+     "fact": "The example query returns 100 rows.",
+     "quote": "For this example, 100 rows will be returned.",
+     "grounded": true
+    },
+    {
+     "fact": "On Line 12, YOUR_TABLE_HERE should be replaced with RapidDelivery.",
+     "quote": "replace that with the table name, **RapidDelivery**.",
+     "grounded": true
+    },
+    {
+     "fact": "A sample query projects specific columns from RapidDelivery after taking 5 rows.",
+     "quote": "| project CustomerKey, OrderDate, ProductKey, UnitPrice, OrderQuantity",
+     "grounded": true
+    },
+    {
+     "fact": "The project-away example excludes EventEnqueuedUtcTime, EventProcessedUtcTime, and PartitionId.",
+     "quote": "| project-away EventEnqueuedUtcTime, EventProcessedUtcTime, PartitionId",
+     "grounded": true
+    },
+    {
+     "fact": "The KQL Database currently contains two tables named RapidDelivery and StandardDelivery.",
+     "quote": "You currently have two tables in your KQL Database, RapidDelivery and StandardDelivery.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 8,
+    "ungrounded": 0
+   }
+  },
+  {
+   "title": "Task 5: Using T-SQL Queries Against a KQL Database",
+   "objective": "Use the KQL Queryset to translate a T-SQL aggregation query into KQL with explain, then run both the translated KQL and the original SQL against the KQL database.",
+   "expectedOutcome": "A query tab shows the SQL-to-KQL translation for the product quantity aggregation, and executing both the pasted KQL query and the original SQL query returns the expected results.",
+   "facts": [
+    {
+     "fact": "Open a new tab in the default queryset by clicking the plus symbol.",
+     "quote": "In the top menu, click on the **+** symbol to open a new tab.",
+     "grounded": true
+    },
+    {
+     "fact": "Begin the new query with the explain directive prefixed by comment markers.",
+     "quote": "Within the new query window, start the new query with **-- explain**.",
+     "grounded": true
+    },
+    {
+     "fact": "Use the provided SQL aggregation query on RapidDelivery grouped by ProductKey.",
+     "quote": "SELECT \n    ProductKey, SUM(OrderQuantity) AS TotalQuantity From RapidDelivery\nGROUP BY\n    ProductKey",
+     "grounded": true
+    },
+    {
+     "fact": "Run the full selection including the explain lines.",
+     "quote": "Select the entire query, including the -- explain and click Run.",
+     "grounded": true
+    },
+    {
+     "fact": "The explain output initially appears as a single record.",
+     "quote": "The output will be a single record.",
+     "grounded": true
+    },
+    {
+     "fact": "Copy the translated KQL from the output and run it in the query pane.",
+     "quote": "Copy the translated query from the output seen in the previous screenshot. Paste the query in your query pane. Highlight and run the query to retrieve the results.",
+     "grounded": true
+    },
+    {
+     "fact": "Run only the original SQL statement as an alternative query method.",
+     "quote": "Highlight the original SQL statement that was used to translate the KQL query and run only that.",
+     "grounded": true
+    }
+   ],
+   "audit": {
+    "ok": true,
+    "grounded": 7,
+    "ungrounded": 0
+   }
+  }
+ ],
+ "summary": {
+  "tasks": 5,
+  "structuralFails": 0,
+  "facts": 38,
+  "grounded": 38,
+  "ungrounded": 0,
+  "faithfulnessPct": 100
+ }
+}

@@ -1,0 +1,607 @@
+<title>Rocky v2 — Craft Addendum</title>
+<style>
+  :root{
+    /* ground + surfaces — Rocky's own canvas navy */
+    --ground:#070a16; --ground-2:#0a0e1c; --surface:#0e1426; --raised:#131c33; --sunk:#060912;
+    /* ink, neutrals biased cool toward the cyan accent */
+    --ink:#e9eef9; --ink-dim:#c4cfe6; --muted:#8a9bc0; --faint:#5a6a8c;
+    --line:#ffffff14; --line-2:#ffffff24; --line-warm:#7db8ff33;
+    /* accents — straight from the render */
+    --cyan:#38e1ff;       /* eye-glow, primary structural accent */
+    --teal:#2ee6c8;       /* guardian mode */
+    --indigo:#6d7cff;     /* UI accent, hand tethers */
+    --violet:#a78bfa;     /* rare / secondary motion */
+    --gold:#ffd36b;       /* valor rim-light */
+    /* semantic — distinct from accent */
+    --ship:#5ef0a0; --warn:#fbbf24; --block:#fc8181; --road:#c4a7f5;
+    --mono:"Cascadia Code",ui-monospace,"Consolas","SF Mono",monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,Roboto,sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --maxw:1140px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+  body{margin:0;color:var(--ink);font:15.5px/1.62 var(--sans);-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1000px 680px at 80% -8%,#15407a30,transparent 62%),
+      radial-gradient(820px 660px at 6% 108%,#5b2da826,transparent 60%),
+      var(--ground);}
+
+  ::selection{background:#38e1ff33;color:#fff}
+  a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono);font-size:.85em}
+  .num{font-variant-numeric:tabular-nums}
+  h1,h2,h3,h4{margin:0;text-wrap:balance;font-family:var(--disp)}
+
+  /* ---------- shell: sticky rail + main ---------- */
+  .shell{max-width:var(--maxw);margin:0 auto;padding:0 26px;
+    display:grid;grid-template-columns:212px 1fr;gap:52px;align-items:start}
+  nav.rail{position:sticky;top:20px;padding:22px 0;font-size:13px;display:flex;flex-direction:column;gap:1px;z-index:20}
+  nav.rail .lbl{font:600 10.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;padding-left:13px}
+  nav.rail a{color:var(--muted);padding:7px 13px;border-left:2px solid transparent;line-height:1.28;display:flex;gap:9px;align-items:baseline}
+  nav.rail a .rn{font:700 11px/1 var(--mono);color:var(--faint);min-width:14px}
+  nav.rail a:hover{color:var(--ink);text-decoration:none;background:#ffffff06}
+  nav.rail a.active{color:var(--cyan);border-left-color:var(--cyan)}
+  nav.rail a.active .rn{color:var(--cyan)}
+  main{min-width:0;padding-bottom:120px}
+  @media (max-width:900px){.shell{grid-template-columns:1fr;gap:0}nav.rail{position:static;flex-direction:row;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin-bottom:8px}nav.rail .lbl{display:none}nav.rail a{border-left:0;border-bottom:2px solid transparent}}
+
+  /* ---------- masthead ---------- */
+  header.top{border-bottom:1px solid var(--line);padding:64px 0 38px;position:relative}
+  .eyebrow{font:600 11.5px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--cyan)}
+  header.top h1{font-size:clamp(34px,5vw,56px);line-height:1.02;letter-spacing:-.022em;font-weight:700;margin:18px 0 0;max-width:18ch}
+  header.top h1 em{font-style:normal;color:var(--cyan)}
+  .deck{font-size:18px;color:var(--ink-dim);max-width:62ch;margin:18px 0 0;line-height:1.5}
+  .masthead-grid{display:grid;grid-template-columns:1fr 300px;gap:40px;align-items:center}
+  @media (max-width:760px){.masthead-grid{grid-template-columns:1fr}}
+  .stage{background:radial-gradient(420px 340px at 60% 40%,#12325f55,transparent 70%),var(--sunk);
+    border:1px solid var(--line-2);border-radius:18px;height:300px;position:relative;overflow:hidden}
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%}
+  .stage .cap{position:absolute;left:14px;bottom:11px;font:600 10.5px/1 var(--mono);letter-spacing:.08em;color:var(--faint);text-transform:uppercase}
+  .stage .cap b{color:var(--cyan);font-weight:700}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 0}
+  .pill{font:600 11.5px/1 var(--mono);letter-spacing:.03em;padding:7px 12px;border-radius:999px;border:1px solid var(--line-2);background:#ffffff07;color:var(--muted)}
+  .pill b{color:var(--ink);font-weight:700}
+  .pill.cy{border-color:#38e1ff4d;color:var(--cyan)}
+
+  /* ---------- sections ---------- */
+  section{padding:58px 0;border-bottom:1px solid var(--line);scroll-margin-top:18px}
+  section:last-of-type{border-bottom:0}
+  .sec-head{display:flex;align-items:baseline;gap:15px;margin-bottom:6px}
+  .sec-no{font:700 13px/1 var(--mono);color:var(--cyan);letter-spacing:.06em;padding-top:4px}
+  .sec-head h2{font-size:clamp(24px,3.1vw,33px);line-height:1.08;letter-spacing:-.018em;font-weight:700}
+  .sec-sub{color:var(--muted);max-width:70ch;margin:12px 0 0;font-size:15.5px}
+  .sec-sub strong{color:var(--ink-dim);font-weight:650}
+  h3.blk{font-size:16.5px;font-weight:680;letter-spacing:-.005em;margin:38px 0 0;display:flex;align-items:center;gap:11px;color:var(--ink)}
+  h3.blk::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--cyan);box-shadow:0 0 9px var(--cyan);flex:none}
+  h4.sub{font-size:13px;font-weight:680;letter-spacing:.04em;color:var(--ink-dim);margin:26px 0 0;text-transform:none}
+  p{margin:14px 0 0;max-width:72ch}
+  p.lead-p{margin-top:16px}
+  ul.flow{margin:14px 0 0;padding:0;list-style:none;max-width:74ch;display:flex;flex-direction:column;gap:9px}
+  ul.flow li{position:relative;padding-left:20px;color:var(--ink-dim)}
+  ul.flow li::before{content:"";position:absolute;left:3px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--indigo)}
+  ul.flow li b{color:var(--ink);font-weight:650}
+
+  /* ---------- code blocks ---------- */
+  .code{background:var(--sunk);border:1px solid var(--line-2);border-radius:12px;margin:18px 0 0;overflow:hidden}
+  .code .bar{display:flex;align-items:center;gap:8px;padding:8px 13px;border-bottom:1px solid var(--line);background:#0c111f}
+  .code .bar .fn{font:600 11px/1 var(--mono);color:var(--muted);letter-spacing:.02em}
+  .code .bar .tagk{margin-left:auto;font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:4px 7px}
+  .code pre{margin:0;padding:14px 15px;overflow-x:auto;font:13px/1.62 var(--mono);color:#cdd8ef}
+  .code pre .c{color:var(--faint)}      /* comment */
+  .code pre .k{color:var(--violet)}     /* keyword */
+  .code pre .s{color:var(--ship)}       /* string */
+  .code pre .n{color:var(--cyan)}       /* number */
+  .code pre .f{color:var(--gold)}       /* fn/prop */
+
+  /* ---------- tables ---------- */
+  .tbl-wrap{overflow-x:auto;margin:18px 0 0;border:1px solid var(--line-2);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+  thead th{text-align:left;font:600 10.5px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    padding:11px 13px;background:#0c111f;border-bottom:1px solid var(--line-2);white-space:nowrap;position:sticky;top:0}
+  tbody td{padding:10px 13px;border-bottom:1px solid var(--line);color:var(--ink-dim);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:#ffffff05}
+  td code,th code{color:var(--cyan);background:#38e1ff12;border-radius:4px;padding:1px 5px;white-space:nowrap}
+  td.nm{color:var(--ink);font-weight:600}
+  td .mut{color:var(--faint)}
+
+  /* ---------- gesture / egg cards ---------- */
+  .grid{display:grid;gap:14px;margin:20px 0 0}
+  .grid.g2{grid-template-columns:repeat(2,1fr)}
+  .grid.g3{grid-template-columns:repeat(3,1fr)}
+  @media (max-width:780px){.grid.g2,.grid.g3{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--surface),var(--ground-2));border:1px solid var(--line-2);border-radius:13px;padding:15px 16px;position:relative;overflow:hidden}
+  .card .ct{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+  .card .ct h4{font-size:14.5px;font-weight:680;letter-spacing:-.005em;color:var(--ink)}
+  .card .ct .ico{font-family:var(--mono);font-size:12px;color:var(--cyan);border:1px solid #38e1ff3a;border-radius:6px;padding:3px 6px;flex:none}
+  .card p{margin:8px 0 0;font-size:13px;color:var(--muted);max-width:none}
+  .card .kv{margin-top:11px;display:flex;flex-direction:column;gap:5px;font-size:12px}
+  .card .kv .row{display:flex;gap:8px}
+  .card .kv .row .k{color:var(--faint);min-width:74px;font:600 11px/1.4 var(--mono);letter-spacing:.03em;flex:none}
+  .card .kv .row .v{color:var(--ink-dim)}
+  .card .kv .row .v code{color:var(--cyan)}
+  .card .line{margin-top:11px;font-style:italic;color:var(--teal);font-size:12.5px;border-left:2px solid #2ee6c855;padding-left:10px}
+
+  /* ---------- chips / tier tags ---------- */
+  .chip{display:inline-flex;align-items:center;gap:5px;font:600 10.5px/1 var(--mono);letter-spacing:.05em;padding:4px 8px;border-radius:6px;white-space:nowrap}
+  .chip.t1{background:#5ef0a01a;color:var(--ship);border:1px solid #5ef0a040}
+  .chip.t2{background:#38e1ff18;color:var(--cyan);border:1px solid #38e1ff3a}
+  .chip.t3{background:#a78bfa1c;color:var(--road);border:1px solid #a78bfa42}
+  .chip.ship{background:#5ef0a01a;color:var(--ship);border:1px solid #5ef0a040}
+  .chip.warn{background:#fbbf241a;color:var(--warn);border:1px solid #fbbf2440}
+  .chip.block{background:#fc81811a;color:var(--block);border:1px solid #fc818140}
+  .chip.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+
+  /* ---------- callouts ---------- */
+  .note{margin:20px 0 0;border-radius:12px;padding:14px 16px 14px 17px;border:1px solid var(--line-2);background:var(--surface);position:relative;font-size:13.5px;color:var(--ink-dim)}
+  .note::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--cyan)}
+  .note.do::before{background:var(--ship)}.note.dont::before{background:var(--block)}.note.road::before{background:var(--road)}
+  .note .nt{font:600 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);display:block;margin-bottom:7px}
+  .note.do .nt{color:var(--ship)}.note.dont .nt{color:var(--block)}.note.road .nt{color:var(--road)}
+  .note b{color:var(--ink);font-weight:650}
+  .note code{color:var(--cyan)}
+
+  /* swatch row */
+  .swatches{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}
+  .sw{display:flex;align-items:center;gap:9px;border:1px solid var(--line-2);border-radius:10px;padding:8px 12px 8px 9px;background:var(--surface)}
+  .sw .chip-c{width:30px;height:30px;border-radius:7px;flex:none;border:1px solid #ffffff22}
+  .sw .meta{display:flex;flex-direction:column;line-height:1.25}
+  .sw .meta .nm{font-size:12.5px;font-weight:650;color:var(--ink)}
+  .sw .meta .hex{font:600 11px/1 var(--mono);color:var(--muted);letter-spacing:.02em;margin-top:2px}
+
+  /* before/after diff */
+  .diff{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:18px 0 0;border:1px solid var(--line-2);border-radius:12px;overflow:hidden}
+  @media (max-width:700px){.diff{grid-template-columns:1fr}}
+  .diff>div{padding:14px 15px}
+  .diff .was{background:#1a0d0f;border-right:1px solid var(--line-2)}
+  .diff .now{background:#08160f}
+  @media (max-width:700px){.diff .was{border-right:0;border-bottom:1px solid var(--line-2)}}
+  .diff .h{font:600 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;margin-bottom:9px}
+  .diff .was .h{color:var(--block)}.diff .now .h{color:var(--ship)}
+  .diff pre{margin:0;font:12px/1.55 var(--mono);color:#cdd8ef;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+
+  hr.soft{border:0;border-top:1px solid var(--line);margin:30px 0 0}
+  .footnote{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint);line-height:1.7}
+  .footnote a{color:var(--muted)}
+  .footnote .srcs{margin-top:8px}
+</style>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <span class="lbl">Addendum</span>
+    <a href="#hands"><span class="rn">01</span><span>Hands rig &amp; gestures</span></a>
+    <a href="#guardian"><span class="rn">02</span><span>Guardian hero</span></a>
+    <a href="#eggs"><span class="rn">03</span><span>Double-click eggs</span></a>
+    <a href="#awareness"><span class="rn">04</span><span>In-browser awareness</span></a>
+  </nav>
+
+  <main>
+    <header class="top">
+      <div class="masthead-grid">
+        <div>
+          <span class="eyebrow">Rocky v2 · Character TD &amp; Interaction</span>
+          <h1>Craft Addendum: hands, the <em>guardian</em> read, play, and honest awareness</h1>
+          <p class="deck">One build-ready spec merging four briefs into the existing eyes-as-emotion / 60fps / bubble + panel build. Every value here drops into the live rig in <code>rocky.html</code> — same coordinate frame (body 150&times;190 at <code>SCALE 0.5</code>, eyes at <code>cy&minus;26</code>), same <code>damp()</code> smoothing, same one-at-a-time attention budget.</p>
+          <div class="badges">
+            <span class="pill cy">60 fps canvas</span>
+            <span class="pill">body-local offsets · px / deg / ms</span>
+            <span class="pill">spring <b>320</b> / <b>30</b></span>
+            <span class="pill"><b>prefers-reduced-motion</b> paths</span>
+          </div>
+        </div>
+        <div class="stage">
+          <canvas id="demo" aria-label="Live rest pose: Rocky with floating hands at rest"></canvas>
+          <span class="cap">live rig · <b>rest pose</b></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================================= 01 -->
+    <section id="hands">
+      <div class="sec-head"><span class="sec-no">01</span><h2>Floating-hands rig &amp; gesture library</h2></div>
+      <p class="sec-sub"><strong>Detached EVE-style mitts</strong> that trail the body via per-hand springs — never a limb. The live build already carries seven gesture slots wired to <code>setEmotion()</code>; this locks their geometry, timing, easing, and secondary motion so hands and eyes stay one creature. Lineage: EVE / BD-1 / Cozmo detached hands; Thomas &amp; Johnston overlapping action; Dragan &amp; Srinivasa legible deixis.</p>
+
+      <h3 class="blk">Hand geometry &amp; rest pose</h3>
+      <p>Body-local, measured <b>before</b> the <code>SCALE 0.5</code> multiply (the loop applies scale once at draw). Left hand mirrors the right via <code>scale(-1,1)</code>. The palm is a rounded capsule; fingers are three spoke-strokes plus an opposable thumb; the tether is a quadratic indigo curve that fades on retract — it is connective tissue, not an arm.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Part</th><th>Geometry</th><th>Rest value</th><th>Range</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">Palm</td><td><code>roundRect(-11,-13,22,26,9)</code></td><td>capsule + cyan glow stroke <code>α0.5</code></td><td class="mut">fixed</td></tr>
+            <tr><td class="nm">Fingers (3)</td><td>spoke strokes <code>lineWidth 5</code>, <code>±14° fan</code></td><td>len <code>9</code> (rest)</td><td>9 rest → <code>15</code> splayed</td></tr>
+            <tr><td class="nm">Thumb</td><td>opposable stroke</td><td>tuck <code>+70° / len 5</code></td><td>extend <code>−20° / len 11</code></td></tr>
+            <tr><td class="nm">Tether</td><td>quadratic curve, indigo <code>#6d7cff</code></td><td><code>α</code> by lift, fades on retract</td><td class="mut">decorative</td></tr>
+            <tr><td class="nm">Shoulder anchor</td><td>body-local origin the spring chases</td><td><code>(+58, −6)</code></td><td class="mut">per side</td></tr>
+            <tr><td class="nm">Wrist (rest)</td><td>resolved hand center</td><td><code>(+86, +34)</code>, rot <code>+12°</code></td><td class="mut">see gestures</td></tr>
+            <tr><td class="nm">Idle float</td><td>ambient breath, π phase-split</td><td><code>±2.5px @ 0.6 Hz</code></td><td class="mut">both hands</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="blk">Gesture library — 7 poses</h3>
+      <p>All wrist targets are right-hand, body-local <code>{x, y, r}</code>; left mirrors. <span class="mut">point-at-target</span> is the one data-driven pose: aim <code>atan2(dy,dx)</code> down the index finger, clamp reach to a <code>70px</code> radius. Each pose fires the matching <code>setEmotion()</code> so the eyes move with it, and obeys the single-attention budget — only one loud gesture at a time.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Gesture</th><th>Wrist R <code>{x,y,r}</code></th><th>Fingers / thumb</th><th>Ease-in</th><th>Ease-out</th><th>Curve</th><th>Hold / loop</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">rest</td><td class="num"><code>86, 34, +12°</code></td><td>len 9 · tuck</td><td class="num">—</td><td class="num">—</td><td>idle float</td><td>±2.5px loop</td></tr>
+            <tr><td class="nm">wave</td><td class="num"><code>92, −16, +20°</code></td><td>splay 13 · extend</td><td class="num">260ms</td><td class="num">300ms</td><td>easeOutBack-lite</td><td><code>r += sin(t·9)·16°</code></td></tr>
+            <tr><td class="nm">point-at-target</td><td class="num">data-driven <code>·70px</code></td><td>index 15 · others tuck</td><td class="num">240ms</td><td class="num">360ms</td><td>easeOutCubic</td><td>hold on target</td></tr>
+            <tr><td class="nm">think</td><td class="num"><code>24, 6, −32°</code></td><td>len 8 · curl</td><td class="num">360ms</td><td class="num">420ms</td><td>easeInOutSine</td><td>near chin, still</td></tr>
+            <tr><td class="nm">celebrate</td><td class="num"><code>72, −46, +28°</code></td><td>splay 15 · extend</td><td class="num">300ms</td><td class="num">340ms</td><td>spring 320/30</td><td>2&times; up-pump</td></tr>
+            <tr><td class="nm">investigate</td><td class="num"><code>48, 0, +6°</code></td><td>grip · +magnifier</td><td class="num">320ms</td><td class="num">380ms</td><td>easeOutCubic</td><td>slow scan ±8px</td></tr>
+            <tr><td class="nm">open-palm</td><td class="num"><code>80, 6, −6°</code></td><td>flat splay · extend</td><td class="num">420ms</td><td class="num">480ms</td><td>easeOutQuint</td><td>offer, hold</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mut" style="font-size:13px">Named curves: <code>easeOutCubic = cubic-bezier(0.22,1,0.36,1)</code> · <code>easeOutQuint = cubic-bezier(0.16,1,0.3,1)</code> · <code>easeInOutSine = cubic-bezier(0.45,0.05,0.55,0.95)</code> · <code>easeOutBack-lite = cubic-bezier(0.34,1.4,0.64,1)</code>. These match the panel-open spring already in the build.</p>
+
+      <h3 class="blk">Secondary motion — the spring that makes it alive</h3>
+      <p>Each hand runs a semi-implicit spring trailing the body's smoothed position. This is the overlapping-action / drag layer — hands arrive a beat late and overshoot ~3% before settling, exactly like the panel spring. The build already does a velocity-lag approximation (<code>lagX = −vel.x·6</code>); upgrade it to a true spring per hand.</p>
+      <div class="code">
+        <div class="bar"><span class="fn">handSpring() — per hand, per frame</span><span class="tagk">drop-in</span></div>
+<pre><span class="c">// constants — same family as panel-open (settles ~320ms, ~3% overshoot)</span>
+<span class="k">const</span> STIFF = <span class="n">220</span>, DAMP = <span class="n">26</span>, MASS = <span class="n">1</span>;
+<span class="c">// target = gesture wrist + velocity-skew + counter-rotation on turns</span>
+<span class="k">const</span> <span class="f">skewX</span> = clamp(-bodyV.x * <span class="n">0.06</span>, -<span class="n">16</span>, <span class="n">16</span>);  <span class="c">// drag opposite travel</span>
+<span class="k">const</span> <span class="f">skewY</span> = clamp(-bodyV.y * <span class="n">0.06</span>, -<span class="n">16</span>, <span class="n">16</span>);
+<span class="k">const</span> <span class="f">counterR</span> = clamp(-bodyV.x * <span class="n">0.5</span>, -<span class="n">12</span>, <span class="n">12</span>); <span class="c">// wrist tilts against turn</span>
+<span class="k">const</span> tx = wrist.x + skewX, ty = wrist.y + skewY;
+<span class="c">// semi-implicit Euler — stable at 60fps</span>
+<span class="k">const</span> ax = (STIFF*(tx - h.x) - DAMP*h.vx) / MASS;
+<span class="k">const</span> ay = (STIFF*(ty - h.y) - DAMP*h.vy) / MASS;
+h.vx += ax*dt; h.vy += ay*dt;
+h.x  += h.vx*dt; h.y += h.vy*dt;
+h.r   = <span class="f">damp</span>(h.r, wrist.r + counterR, <span class="n">9</span>, dt);</pre>
+      </div>
+      <ul class="flow">
+        <li><b>Phase offset.</b> Drive the two hands' idle float and any loop <code>π</code> radians apart so they never pump in lockstep — reads organic, not mechanical.</li>
+        <li><b>Draw order.</b> Hands render <b>behind</b> the body at rest; promote to <b>in front</b> when lifted above <code>y &lt; −30</code> (celebrate, wave, point), so the lifted hand reads clearly over the visor.</li>
+        <li><b>Reduced-motion path.</b> Under <code>prefers-reduced-motion: reduce</code>, drop the spring and skew — snap hands to the static gesture wrist with a <code>≤120ms</code> opacity/position fade. No overshoot, no idle float.</li>
+      </ul>
+
+      <div class="note"><span class="nt">Consistency check</span> All seven names already exist in the build's <code>GEST</code> table and <code>E</code> emotion map (<code>g:'rest'|'wave'|'think'|'celebrate'|'investigate'|'palm'</code>). This addendum only renames the data-driven slot to <b>point-at-target</b>, adds the true per-hand spring, and pins finger/thumb states + per-gesture timing — no new wiring required.</div>
+    </section>
+
+    <!-- ========================================================= 02 -->
+    <section id="guardian">
+      <div class="sec-head"><span class="sec-no">02</span><h2>Guardian hero — from villain cues to protector</h2></div>
+      <p class="sec-sub">The original <code>hero</code> preset stacked four antagonist cues at once: <strong>red glow, narrowed eyes, inner-raised angry tilt, sharp corners</strong>. We invert each. Round + tall eyes, near-neutral outer tilt, soft corners, and a cool teal&rarr;blue glow read <strong>trustworthy and protective</strong>, not menacing. The live build already moved hero to a blue arc-eye; this finalizes the exact values, aura, hand pose, entrance, and copy.</p>
+
+      <h3 class="blk">The single-line eye fix</h3>
+      <div class="diff">
+        <div class="was"><span class="h">✕ Villain — original</span><pre>hero:{mode:'rect', w:40, h:26,
+  tilt:-12, yOff:0, asym:0,
+  corner:9, glow:'#ff6a5a',
+  bob:{a:9,s:1.4},
+  label:'hero mode'}</pre></div>
+        <div class="now"><span class="h">✓ Guardian — ship this</span><pre>hero:{mode:'rect', w:36, h:44,
+  tilt:4, yOff:-3, asym:0,
+  corner:15, glow:'#2ee6c8',
+  bob:{a:6,s:0.9}, g:'palm',
+  label:'guardian mode'}</pre></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Was</th><th>Now</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">h (height)</td><td class="num"><code>26</code></td><td class="num"><code>44</code></td><td>Taller-than-wide → open &amp; round; reverses the squint. Round/large = trustworthy, low-dominance.</td></tr>
+            <tr><td class="nm">w (width)</td><td class="num"><code>40</code></td><td class="num"><code>36</code></td><td>Narrower so eyes read tall/open, not wide/glaring.</td></tr>
+            <tr><td class="nm">tilt</td><td class="num"><code>−12</code></td><td class="num"><code>+4</code></td><td><b>Key fix.</b> Negative raised the inner corners into an angry "V"; a small positive lifts outer corners into a kind set. Never a hard V.</td></tr>
+            <tr><td class="nm">yOff</td><td class="num"><code>0</code></td><td class="num"><code>−3</code></td><td>Subtle upward gaze — hopeful, looking to the horizon, not down-glaring.</td></tr>
+            <tr><td class="nm">corner</td><td class="num"><code>9</code></td><td class="num"><code>15</code></td><td>Rounder = warmth, safety, non-threatening. Sharp = angular villain shape-language.</td></tr>
+            <tr><td class="nm">glow</td><td><code>#ff6a5a</code></td><td><code>#2ee6c8</code></td><td>Red = threat/alarm (the biggest offender) → guardian teal = safe, healing, protective.</td></tr>
+            <tr><td class="nm">bob</td><td class="num"><code>a9 s1.4</code></td><td class="num"><code>a6 s0.9</code></td><td>Slower, smaller breath = steady &amp; reassuring, not jittery/agitated.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mut" style="font-size:13px">Keep <code>asym:0</code> — symmetry reads stable and honest. Apply in all three surfaces: <code>flagship.html</code>, <code>index.html</code>, <code>rocky.html</code>.</p>
+
+      <h3 class="blk">Palette — trustworthy + protective, never red</h3>
+      <div class="swatches">
+        <div class="sw"><span class="chip-c" style="background:#2ee6c8"></span><span class="meta"><span class="nm">Guardian Teal</span><span class="hex">#2ee6c8 · primary glow</span></span></div>
+        <div class="sw"><span class="chip-c" style="background:#38e1ff"></span><span class="meta"><span class="nm">Trust Cyan</span><span class="hex">#38e1ff · alt = "Rocky amplified"</span></span></div>
+        <div class="sw"><span class="chip-c" style="background:linear-gradient(135deg,#5fffe0,#2ee6c8 50%,#1aa0ff)"></span><span class="meta"><span class="nm">Aura gradient</span><span class="hex">#5fffe0 → #2ee6c8 → #1aa0ff</span></span></div>
+        <div class="sw"><span class="chip-c" style="background:#ffd36b"></span><span class="meta"><span class="nm">Valor accent</span><span class="hex">#ffd36b · thin rim only</span></span></div>
+        <div class="sw"><span class="chip-c" style="background:#ff6a5a;opacity:.55"></span><span class="meta"><span class="nm">Avoid entirely</span><span class="hex">#ff…5a — alarm/threat</span></span></div>
+      </div>
+      <p>Aura halo bleeds teal core into a trustworthy blue rim (analogous, reads unified and soft). Use the warm gold only as a <b>thin</b> rim-light or shield glint — the classic guardian palette is blue (trust) + gold (valor), but gold stays an accent or it turns flashy.</p>
+
+      <h3 class="blk">Aura / halo / shield — drawn before the eyes when <code>tgtName==='hero'</code></h3>
+      <div class="code">
+        <div class="bar"><span class="fn">guardian aura — in drawRocky(), before eye fill</span><span class="tagk">canvas</span></div>
+<pre><span class="k">if</span> (tgtName === <span class="s">'hero'</span>) {
+  <span class="k">const</span> a = <span class="n">0.18</span> + <span class="n">0.10</span>*Math.sin(perf*<span class="n">2.85</span>);     <span class="c">// gentle pulse, ~2.2s period</span>
+  <span class="k">const</span> rp = <span class="n">1</span> + <span class="n">0.05</span>*Math.sin(perf*<span class="n">2.85</span>);          <span class="c">// radius 0.95×–1.05×</span>
+  <span class="k">const</span> ag = ctx.<span class="f">createRadialGradient</span>(cx,cy,<span class="n">40</span>,cx,cy,<span class="n">150</span>*rp);
+  ag.<span class="f">addColorStop</span>(<span class="n">0</span>, <span class="s">'#5fffe000'</span>);
+  ag.<span class="f">addColorStop</span>(<span class="n">0.55</span>,<span class="s">`rgba(46,230,200,${a})`</span>);     <span class="c">// teal core</span>
+  ag.<span class="f">addColorStop</span>(<span class="n">1</span>, <span class="s">'#1aa0ff00'</span>);                  <span class="c">// blue rim fade</span>
+  ctx.fillStyle = ag; ctx.<span class="f">beginPath</span>();
+  ctx.<span class="f">arc</span>(cx,cy,<span class="n">150</span>*rp,<span class="n">0</span>,<span class="n">7</span>); ctx.<span class="f">fill</span>();
+  <span class="c">// open shield arc — ~200° sweep, rounded, never a polygon</span>
+  ctx.strokeStyle = <span class="s">'rgba(46,230,200,0.40)'</span>;
+  ctx.lineWidth = <span class="n">3</span>; ctx.lineCap = <span class="s">'round'</span>;
+  ctx.<span class="f">beginPath</span>(); ctx.<span class="f">arc</span>(cx, cy+<span class="n">10</span>, <span class="n">128</span>, <span class="n">0.35</span>*Math.PI, <span class="n">0.65</span>*Math.PI*<span class="n">2</span>);
+  ctx.<span class="f">stroke</span>();
+  <span class="c">// thin gold valor rim (accent only)</span>
+  ctx.strokeStyle = <span class="s">`rgba(255,211,107,${a*1.6})`</span>;
+  ctx.lineWidth = <span class="n">2</span>; ctx.<span class="f">beginPath</span>(); ctx.<span class="f">arc</span>(cx,cy,<span class="n">118</span>,<span class="n">0</span>,<span class="n">7</span>); ctx.<span class="f">stroke</span>();
+}</pre>
+      </div>
+      <ul class="flow">
+        <li><b>All cues rounded.</b> Halo ring, open shield arc, 2–3 slow-rising <code>#5fffe0</code> bubble particles. No spikes, triangles, or chevrons — those are villain shape-language.</li>
+        <li><b>Hand pose: open palm up.</b> Hero uses <code>g:'palm'</code> — one open palm tilted slightly toward the user ("I've got you" / offering), palm-<b>up</b> never palm-down (palm-down = authority/control). Arm relaxed, not raised overhead.</li>
+        <li><b>Eyes-only fallback.</b> Where no hand layer is active, express the open-palm read through the steady upward gaze + halo reaching slightly toward the viewer.</li>
+      </ul>
+
+      <h3 class="blk">Entrance &amp; copy — reassuring, not "boss incoming"</h3>
+      <div class="grid g2">
+        <div class="card">
+          <div class="ct"><span class="ico">in</span><h4>Entrance motion</h4></div>
+          <div class="kv">
+            <div class="row"><span class="k">Halo bloom</span><span class="v">scale <code>0.6→1.0</code>, α <code>0→0.24</code>, <code>420ms</code></span></div>
+            <div class="row"><span class="k">Curve</span><span class="v"><code>cubic-bezier(.22,1,.36,1)</code> soft ease-out</span></div>
+            <div class="row"><span class="k">Eye morph</span><span class="v"><code>damp()</code> λ ≈ <code>6–7</code> — gentle, not a snap</span></div>
+            <div class="row"><span class="k">Total</span><span class="v"><code>450–600ms</code>, settles &amp; breathes</span></div>
+            <div class="row"><span class="k">Never</span><span class="v">zoom-in, screen-shake, hard flash, red pulse</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="ico">say</span><h4>Bubble copy</h4></div>
+          <p style="margin-top:6px">Warm + steady + collaborative ("we / with you"), calm declaratives, ≤1 "!" per line, zero menace or trash-talk.</p>
+          <div class="line">"I've got this — and I've got you."</div>
+          <div class="line">"Right here with you. One step at a time."</div>
+          <div class="line">"You're safe to experiment — I'll catch anything that breaks."</div>
+          <div class="line">"Guardian mode on. Nothing gets past me while you build."</div>
+        </div>
+      </div>
+      <div class="note dont"><span class="nt">Avoid</span> The combat/authority register — "Hero mode engaged," "I'll crush this." Confidence comes from <b>competence offered</b>, not dominance asserted.</div>
+    </section>
+
+    <!-- ========================================================= 03 -->
+    <section id="eggs">
+      <div class="sec-head"><span class="sec-no">03</span><h2>Double-click easter-egg catalog</h2></div>
+      <p class="sec-sub">Single-click stays sacred — it opens the panel. <strong>Double-click is the play gesture.</strong> Eight canvas-feasible reactions across three tiers, built from three shared primitives: a <strong>freeze-frame helper</strong>, a <strong>damped-spring / overshoot easing</strong>, and a <strong>particle-burst emitter</strong>. Grounded in Vlambeer screenshake juice, Disney's 12 principles, eyes-as-emotion acting, and the Clippy anti-annoyance lesson.</p>
+
+      <h3 class="blk">Global guardrails — apply to all</h3>
+      <ul class="flow">
+        <li><b>Never during real help.</b> Hard-suppress every reaction while the panel is open, a request is in flight, or text is streaming. Play is for idle moments only.</li>
+        <li><b>Cooldown + cap.</b> <code>8–10s</code> minimum between reactions; max <code>~4 per 10-min</code> window. After 2 rapid double-clicks, one "okay, okay" annoyed-eye beat, then ignore further double-clicks for <code>15s</code>.</li>
+        <li><b>Weighted-random, no immediate repeats.</b> Never the same reaction twice in a row; keep Tier-3 genuinely rare so they stay special.</li>
+        <li><b>Always self-recover.</b> Each reaction returns Rocky to neutral idle within its stated duration — never stays broken, off-screen, or upside-down. Clamp all knockback/float to canvas bounds.</li>
+        <li><b>Reduced-motion.</b> Under <code>prefers-reduced-motion: reduce</code>, swap shake / spins / large translations for a static eye-state + the line in a bubble. Satisfies WCAG 2.3.3, keeps the personality.</li>
+      </ul>
+
+      <h4 class="sub">TIER 1 — core · high-frequency · low-risk · <span class="chip t1 dot">ship first</span></h4>
+      <div class="grid g3">
+        <div class="card">
+          <div class="ct"><span class="ico">★</span><h4>Boop / Pretend Hit</h4></div>
+          <p>The workhorse. Anticipation squint → <b>freeze-frame 60ms</b> at impact → squash to 80%h/120%w, knockback 8–12px away from cursor, 3–4px screenshake decaying 150ms, 4–6 spark particles. Damped overshoot back.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">wide "!" → cross-eyed 200ms → neutral</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>600ms</code> · <span class="chip t1">common</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">eye-flash + line, no shake</span></div>
+          </div>
+          <div class="line">"Ow. I felt that in my firmware."</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="ico">◑</span><h4>Dizzy Eyes</h4></div>
+          <p>Body ±6° rubber-hose wobble, no translation (vestibular-safe). Swirl particles orbit the head; eyes become slow spinning spirals drifting out of sync — pure eyes-as-emotion.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">spiral override → blink re-focus</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>1.2s</code> · <span class="chip t1">common</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">static spiral eyes + line</span></div>
+          </div>
+          <div class="line">"Whoa — do that again and I'll need a reboot."</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="ico">◠</span><h4>Bounce-Off</h4></div>
+          <p>Hard squash (anticipation) → spring up ~30px with vertical stretch → apex freeze → 2–3 damped bounces, squash-on-landing each, faint dust puff per landing.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">tall on up-stretch, wide on landing</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>900ms</code> · <span class="chip t1">common</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">small scale-pulse + line</span></div>
+          </div>
+          <div class="line">"Boing. I'm basically a stress ball with opinions."</div>
+        </div>
+      </div>
+
+      <h4 class="sub">TIER 2 — characterful · medium-frequency · <span class="chip t2 dot">ship second</span></h4>
+      <div class="grid g3">
+        <div class="card">
+          <div class="ct"><span class="ico">⤵</span><h4>Fall Over</h4></div>
+          <p>Anticipation lean opposite, then tip + rotate 80–90° to lie on side (eased, settle-bounce on "ground"), beat, wobble back upright with overshoot. Ragdoll-lite.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">half-lidded dazed → blink → normal</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>1.6s</code> · <span class="chip t2">uncommon</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">static lie-down pose + line</span></div>
+          </div>
+          <div class="line">"I'm fine. This is a load-bearing nap."</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="ico">▤</span><h4>Glitch &amp; Respawn</h4></div>
+          <p>RGB-split (2–3 colored copies offset 2–4px) + scanline jitter + 2–3px stutter for 250ms → dissolve to pixel squares → blink out 120ms → re-materialize with scale-in pop + particle implosion. Already prototyped in the build.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">flicker <code>X X / O o / - -</code> → settle</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>1.1s</code> · <span class="chip t2">uncommon</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">soft fade out/in, no jitter</span></div>
+          </div>
+          <div class="line">"Whoops — clipped through reality for a sec."</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="ico">✸</span><h4>Sneeze / Hiccup</h4></div>
+          <p>Big anticipation wind-up (inhale: stretch up + lean back, eyes scrunch) → sharp forward snap + 5–6px screenshake + forward particle puff → tiny recoil. Pure anticipation→action→follow-through.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">scrunch shut → wide "achoo" → watery blink</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>700ms</code> · <span class="chip t2">common-ish</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">eye-scrunch + line</span></div>
+          </div>
+          <div class="line">"Achoo. Allergic to inactivity."</div>
+        </div>
+      </div>
+
+      <h4 class="sub">TIER 3 — rare "jackpot" gags · keep special · <span class="chip t3 dot">gate behind rarity weights</span></h4>
+      <div class="grid g2">
+        <div class="card">
+          <div class="ct"><span class="ico">✕✕</span><h4>Play Dead / Faint</h4></div>
+          <p>Theatrical anticipation gasp (stretch up, eyes huge) → slow faint, floppy follow-through, lie still → comedic dead-still hold <b>~1.5s</b> → one eye pops open ("am I watched?") → spring upright. Long timing is the joke.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v"><code>X X</code> hold → one eye <code>O</code> peek → normal</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>~3s</code> · <span class="chip t3">rare ~1 in 12–15</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v">static <code>X X</code> + line, short hold</span></div>
+          </div>
+          <div class="line">"You've slain me. … Plot twist: I get better."</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="ico">↑</span><h4>Float Away &amp; Return</h4></div>
+          <p>Anti-grav: slow drift up ~60–100px with lateral sway + bubble/thruster trail (ties to the existing floating-bubbles motif), tips weightless, looks down at user, descends to <b>home</b> with eased settle + soft landing squash.</p>
+          <div class="kv">
+            <div class="row"><span class="k">Eyes</span><span class="v">delighted-wide ascending, calm on return</span></div>
+            <div class="row"><span class="k">Duration</span><span class="v"><code>2.5s</code> · <span class="chip t3">rare ~1 in 12</span></span></div>
+            <div class="row"><span class="k">Reduced</span><span class="v"><b>must</b> swap to tiny hover + line (biggest vestibular risk)</span></div>
+          </div>
+          <div class="line">"Brb, checking the cloud. … Literally."</div>
+        </div>
+      </div>
+
+      <div class="note do"><span class="nt">Ship order</span> Tier 1 (Boop, Dizzy, Bounce) delivers ~80% of the delight at near-zero risk and is cheapest — transforms + small particle bursts + eye-state swaps. Then Tier 2, then gate Tier 3 behind rarity weights. The build's current <code>EGGS</code> array already carries <b>dizzy / glitch / fall / floataway</b> — this extends it to eight and adds the freeze-frame, spring, and emitter primitives.</div>
+    </section>
+
+    <!-- ========================================================= 04 -->
+    <section id="awareness">
+      <div class="sec-head"><span class="sec-no">04</span><h2>Honest in-browser awareness</h2></div>
+      <p class="sec-sub"><strong>The honest verdict up front:</strong> an in-page companion can observe the user's interaction with <strong>Rocky's own page/tab and the DOM it can legally see — and nothing else.</strong> Not other tabs, windows, the desktop, other apps, or a cross-origin iframe. The sandbox + same-origin policy are a hard wall. Each richer tier costs a permission prompt, an install, or a deployment — and real privacy debt.</p>
+
+      <h3 class="blk">Tiered capability map</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Tier</th><th>Reach</th><th>Gate</th><th>What Rocky learns</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">T0 — In-page</td><td>Rocky's own tab + same-origin DOM</td><td>None (or one optional permission)</td><td>Here / idle / scrolling / errored / repeating / stuck — within this page</td><td><span class="chip ship">ships now</span></td></tr>
+            <tr><td class="nm">T1 — Extension</td><td>All tabs/URLs, cross-origin content</td><td>Install + host permissions</td><td>Which sites visited, other-tab content, browser-wide idle</td><td><span class="chip warn">roadmap</span></td></tr>
+            <tr><td class="nm">T2 — Desktop + CV</td><td>Whole screen, all apps, OS</td><td>App install + per-session screen consent</td><td>Focused app, on-screen text/errors via vision, window titles</td><td><span class="chip warn">roadmap</span></td></tr>
+            <tr><td class="nm">T3 — Platform</td><td>The lab VM / cloud backend</td><td>Server-side, no client consent UI</td><td>Commands run, validation state, deploy logs</td><td><span class="chip ship">wired (contextProvider.js)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><span class="nt">Key insight</span> <b>T0 is the only tier that ships with the current single-file app</b> — everything richer is a different product surface. But <code>contextProvider.js</code> is effectively a <b>T3</b> source already (lab progress / validation-results / activity-log from the CloudLabs API). T3 is Rocky's <b>most powerful and least privacy-fraught</b> channel. <b>Recommendation: fuse T0 affect with T3 ground truth.</b></div>
+
+      <h3 class="blk">T0 — the real Web API list (available today, no install)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Capability</th><th>Web API</th><th>Detects</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">Presence</td><td><code>Page Visibility API</code></td><td><code>visibilitychange</code>, <code>document.hidden</code> — tab switch / minimize / return</td><td>canonical left/returned signal</td></tr>
+            <tr><td class="nm">Window focus</td><td><code>focus</code> / <code>blur</code></td><td>another window took focus while tab still visible</td><td class="mut">blur ≠ hidden</td></tr>
+            <tr><td class="nm">Inactivity</td><td><b>DIY heuristic</b> (recommended)</td><td>reset timer on <code>pointermove / keydown / scroll / wheel / touchstart</code></td><td>portable, no prompt, page-scoped only</td></tr>
+            <tr><td class="nm">Device idle</td><td><code>IdleDetector</code></td><td><code>userState</code> / <code>screenState</code>, 60s min</td><td><span class="chip block">Chromium-only · prompted · Moz/WebKit object</span></td></tr>
+            <tr><td class="nm">On-page actions</td><td>DOM listeners</td><td><code>click / input / change / submit / keydown</code> — which controls, cadence</td><td>document-level, capture phase</td></tr>
+            <tr><td class="nm">Error appeared</td><td><code>MutationObserver</code></td><td>nodes matching <code>.error</code>, <code>[role=alert]</code>, red toasts, validation-failed</td><td>also detects step-completed UI</td></tr>
+            <tr><td class="nm">In-view</td><td><code>IntersectionObserver</code></td><td>is a step / error region actually scrolled into view</td><td class="mut">—</td></tr>
+            <tr><td class="nm">JS errors</td><td><code>window.onerror</code> · <code>unhandledrejection</code></td><td>exceptions thrown by the lab page (same-origin)</td><td>"the page broke"</td></tr>
+            <tr><td class="nm">Jank / fails</td><td><code>PerformanceObserver</code></td><td>long tasks, slow loads, failed resource fetches</td><td>"the click didn't work"</td></tr>
+            <tr><td class="nm">Troubleshooting</td><td><code>copy</code> / <code>paste</code> events</td><td>copying an error, pasting a command</td><td>strong "I'm debugging" tell</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note dont"><span class="nt">Hard T0 limits — be honest with users</span> <b>Cannot</b> read cross-origin iframes (if the cloud console is embedded from another origin, Rocky is blind to it — only <code>postMessage</code>, if the other origin cooperates). <b>Cannot</b> see other tabs / windows / apps / desktop. <b>Cannot</b> read clipboard contents without a prompt (only the copy/paste <i>event</i>). Saying "I saw your error" in a cross-origin console would be a lie the sandbox makes impossible anyway.</div>
+
+      <h3 class="blk">In-page proactive-detection ruleset — ship now, T0 + T3</h3>
+      <div class="code">
+        <div class="bar"><span class="fn">awareness state machine — evaluate on 1s tick + on events</span><span class="tagk">T0 / T3</span></div>
+<pre><span class="c">SIGNALS (rolling state)</span>
+  lastActivityTs     <span class="c">← reset on pointermove/keydown/scroll/click/input</span>
+  hiddenSince        <span class="c">← set on visibilitychange→hidden, clear on visible</span>
+  domErrorSeen       <span class="c">← MutationObserver / window.onerror / unhandledrejection</span>
+  clickHistory[]     <span class="c">← {selector, ts} ring buffer (last ~20)</span>
+  scrollReversals    <span class="c">← direction flips in last 5s</span>
+  lastStepValidated  <span class="c">← from T3 contextProvider (validation-results)</span>
+  copyEventOnError   <span class="c">← copy fired while an error node is visible</span>
+
+<span class="c">RULES</span>
+<span class="n">1</span>  INACTIVITY     <span class="k">if</span> now-lastActivityTs &gt; <span class="n">90s</span> &amp;&amp; visible &amp;&amp; !cooldown
+                  → soft "still there?" bubble; escalate gently at <span class="n">4–5min</span>
+<span class="n">2</span>  RETURNED       <span class="k">on</span> →visible: &lt;20s say nothing · 20s–5min light re-orient
+                  · &gt;5min recap + current validation state (pull T3)
+<span class="n">3</span>  ERROR          <span class="k">on</span> domErrorSeen: debounce <span class="n">2s</span>, offer help referencing the
+                  error text Rocky can actually read. Never claim cross-origin.
+<span class="n">4</span>  STUCK          <span class="k">if</span> now-lastStepValidated &gt; <span class="n">4min</span> (T3 truth) &amp;&amp; activity present
+                  &amp;&amp; (scrollReversals high OR repeated same-selector clicks)
+                  → "step N being stubborn — want a hint?"  <span class="c">// strongest signal</span>
+<span class="n">5</span>  THRASH         <span class="k">if</span> same selector ≥<span class="n">3</span>× in <span class="n">15s</span> OR form re-submitted ≥<span class="n">2</span>× → error
+                  → "that keeps bouncing back — let's check X."
+<span class="n">6</span>  DEBUG TELL     <span class="k">if</span> copyEventOnError → offer to explain the copied error category
+
+<span class="c">GLOBAL GUARDRAILS</span>
+  per-rule cooldown <span class="n">60–120s</span> + global max N nudges/session (attentive, not naggy)
+  pause 60fps loop + timers on hidden (battery; rAF throttled while hidden anyway)
+  every line dismissible; degrade silently if a signal source is unavailable</pre>
+      </div>
+      <div class="note dont"><span class="nt">Stays roadmap — real trust escalations, not just engineering</span> <b>T1 extension:</b> "read your browsing history / data on all sites" warning, store review, per-browser. <b>T2 screen capture / CV:</b> <code>getDisplayMedia()</code> forbids silent capture, can't persist the grant, re-consented every session by spec; native agents add max install friction. <b>Avoid <code>IdleDetector</code> as a dependency</b> — Chromium-only, prompted, Mozilla + WebKit call it surveillance-grade; use the DIY heuristic, reach for it only as opt-in progressive enhancement. Don't chase awareness via T1/T2 that you can get more cleanly from the <b>T3 telemetry Rocky already has wired</b>.</div>
+    </section>
+
+    <div class="footnote">
+      <b>Build surfaces.</b> Live rig &amp; presence machine: <code>source\rocky-prototype\web\public\rocky.html</code> · hero preset to update in all three: <code>flagship.html</code>, <code>index.html</code>, <code>rocky.html</code> · T3 telemetry seam: <code>source\rocky-prototype\src\contextProvider.js</code> · companion specs: <code>design\rocky-hand-rig.html</code>, <code>docs\rocky_living_presence_interaction_spec.html</code>.
+      <div class="srcs"><b>Lineage &amp; sources.</b> Hands: EVE / BD-1 / Cozmo detached hands; Thomas &amp; Johnston <i>The Illusion of Life</i> (overlapping action, drag, slow-in/out); Breazeal <i>Designing Sociable Robots</i>; Dragan &amp; Srinivasa legible motion. Guardian: shape-language &amp; color-psychology of trust (round/blue) vs threat (sharp/red); open-palm body language; ease-out for reassurance. Eggs: Vlambeer "Art of Screenshake," GMTK game-feel/juice, Disney 12 principles, WALL-E/EVE eyes-as-emotion, the Clippy anti-annoyance lesson, WCAG 2.3.3 + prefers-reduced-motion. Awareness: MDN Page Visibility / Idle Detection / same-origin policy, W3C Screen Capture, WICG idle-detection spec, chrome.idle.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+// Live rest-pose preview — runs the actual rig math (damp + body-local hand offsets), scaled down.
+(function(){
+  const cv=document.getElementById('demo'); if(!cv) return;
+  const ctx=cv.getContext('2d'); let W=0,H=0,DPR=1,perf=0;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function resize(){DPR=Math.min(devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+  new ResizeObserver(resize).observe(cv); resize();
+  function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+  function shade(c,a){const n=parseInt(c.slice(1),16),cl=v=>Math.max(0,Math.min(255,Math.round(v+a)));return`rgb(${cl(n>>16)},${cl((n>>8)&255)},${cl(n&255)})`;}
+  const GLOW='#38e1ff';
+  function drawHand(x,y,rot){ctx.save();ctx.translate(x,y);ctx.rotate(rot*Math.PI/180);
+    const g=ctx.createLinearGradient(0,-12,0,12);g.addColorStop(0,'#fbfdff');g.addColorStop(1,'#c2cee2');ctx.fillStyle=g;
+    rr(-11,-13,22,26,9);ctx.fill();
+    ctx.strokeStyle=GLOW;ctx.globalAlpha=.5;ctx.lineWidth=2;rr(-11,-13,22,26,9);ctx.stroke();ctx.globalAlpha=1;
+    // 3 spoke fingers
+    ctx.strokeStyle='#d5deee';ctx.lineWidth=5;ctx.lineCap='round';
+    for(let i=-1;i<=1;i++){ctx.save();ctx.rotate(i*14*Math.PI/180);ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-12-9);ctx.stroke();ctx.restore();}
+    ctx.restore();}
+  function drawEye(cx,cy,side){const w=34,h=40,corner=13;ctx.save();ctx.translate(cx,cy);ctx.shadowColor=GLOW;ctx.shadowBlur=18;
+    const g=ctx.createLinearGradient(0,-h/2,0,h/2);g.addColorStop(0,'#fff');g.addColorStop(.35,GLOW);g.addColorStop(1,shade(GLOW,-22));ctx.fillStyle=g;
+    rr(-w/2,-h/2,w,h,corner);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#ffffffdd';ctx.beginPath();ctx.arc(-w*.16,-h*.18,w*.10,0,7);ctx.fill();ctx.restore();}
+  let last=performance.now();
+  function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;perf+=dt;
+    ctx.clearRect(0,0,W,H);
+    const cx=W*0.52, cy=H*0.50, S=0.62;
+    const bob=reduce?0:Math.sin(perf*2)*4;
+    ctx.save();ctx.translate(cx,cy+bob);ctx.scale(S,S);ctx.translate(-cx,-cy);
+    // idle hand float, π phase-split, body-local offsets (scaled context)
+    const fl=reduce?0:Math.sin(perf*0.6*2*Math.PI/6)*2.5, fr=reduce?0:Math.sin(perf*0.6*2*Math.PI/6+Math.PI)*2.5;
+    drawHand(cx-86, cy+34+fl, -12);
+    drawHand(cx+86, cy+34+fr, 12);
+    // body
+    ctx.shadowColor='#0009';ctx.shadowBlur=30;ctx.shadowOffsetY=14;const bw=150,bh=190;
+    const bg=ctx.createLinearGradient(cx,cy-bh/2,cx,cy+bh/2);bg.addColorStop(0,'#fbfdff');bg.addColorStop(.5,'#e7eefb');bg.addColorStop(1,'#bcc9e0');
+    ctx.fillStyle=bg;ctx.beginPath();ctx.ellipse(cx,cy,bw/2,bh/2,0,0,7);ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+    // visor
+    const vw=118,vh=86;ctx.save();ctx.shadowColor=GLOW;ctx.shadowBlur=22;const vg=ctx.createLinearGradient(cx,cy-vh/2-18,cx,cy+vh/2-18);vg.addColorStop(0,'#0c1426');vg.addColorStop(1,'#060a16');
+    ctx.fillStyle=vg;rr(cx-vw/2,cy-vh/2-18,vw,vh,30);ctx.fill();ctx.restore();
+    const eCY=cy-26, gap=30;
+    drawEye(cx-gap,eCY,1); drawEye(cx+gap,eCY,-1);
+    ctx.restore();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// Scroll-spy for the rail
+(function(){
+  const links=[...document.querySelectorAll('nav.rail a')];
+  const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=map.get(e.target.id);if(a)a.classList.add('active');}});},{rootMargin:'-20% 0px -70% 0px'});
+  document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+})();
+</script>

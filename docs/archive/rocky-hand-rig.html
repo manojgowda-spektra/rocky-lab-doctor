@@ -1,0 +1,721 @@
+<title>Rocky — Expressive Hand Rig v2</title>
+<style>
+  :root{
+    --ground:#0a0e1a; --surface:#101729; --surface-2:#0c1426; --raised:#16203a;
+    --ink:#e9eef9; --muted:#8295b8; --faint:#566687;
+    --line:#ffffff14; --line-strong:#ffffff26;
+    --accent:#6d7cff;        /* indigo — Rocky's UI accent */
+    --cyan:#38e1ff;          /* eye-glow / rig geometry */
+    --violet:#a78bfa;        /* think / rare */
+    --green:#5ef0a0;         /* celebrate */
+    --amber:#fbbf24;         /* concern / point */
+    --mono:ui-monospace,"Cascadia Code","SF Mono","Consolas",monospace;
+    --sans:"Segoe UI",system-ui,Roboto,sans-serif;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+  body{margin:0;font:16px/1.65 var(--sans);color:var(--ink);
+    background:
+      radial-gradient(1100px 700px at 78% -5%,#15407a33,transparent 60%),
+      radial-gradient(900px 700px at 8% 105%,#5b2da82e,transparent 60%),
+      var(--ground);
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+
+  /* ---------- type scale ---------- */
+  h1{font-size:clamp(34px,5.2vw,58px);line-height:1.02;letter-spacing:-.02em;margin:0;font-weight:760;text-wrap:balance}
+  h2{font-size:clamp(23px,3vw,30px);line-height:1.1;letter-spacing:-.015em;margin:0;font-weight:700;text-wrap:balance}
+  h3{font-size:18px;margin:0;font-weight:680;letter-spacing:-.005em}
+  p{margin:0;max-width:68ch}
+  .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--cyan)}
+  .lead{font-size:18.5px;color:#c5d0e8;max-width:64ch}
+  code,kbd{font-family:var(--mono);font-size:.86em}
+  .num{font-variant-numeric:tabular-nums}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- header ---------- */
+  header.hero{padding:72px 0 36px;border-bottom:1px solid var(--line)}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 0}
+  .pill{font:600 12px/1 var(--mono);letter-spacing:.04em;padding:7px 11px;border-radius:999px;
+    border:1px solid var(--line-strong);background:#ffffff08;color:var(--muted)}
+  .pill b{color:var(--ink);font-weight:700}
+
+  /* ---------- layout w/ sticky rail ---------- */
+  .shell{display:grid;grid-template-columns:200px 1fr;gap:48px;align-items:start;
+    max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  nav.toc{position:sticky;top:24px;font-size:13.5px;display:flex;flex-direction:column;gap:2px;
+    padding:18px 0;border-left:0}
+  nav.toc .lbl{font:600 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;padding-left:12px}
+  nav.toc a{color:var(--muted);padding:6px 12px;border-left:2px solid transparent;line-height:1.3}
+  nav.toc a:hover{color:var(--ink);text-decoration:none}
+  nav.toc a.active{color:var(--cyan);border-left-color:var(--cyan)}
+  main{min-width:0;padding-bottom:90px}
+  section{padding:54px 0;border-bottom:1px solid var(--line)}
+  section:last-child{border-bottom:0}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .sec-no{font:700 13px/1 var(--mono);color:var(--accent);letter-spacing:.1em}
+  .body-flow > * + *{margin-top:18px}
+
+  /* ---------- demo stage ---------- */
+  .stage-wrap{margin-top:30px;border:1px solid var(--line-strong);border-radius:18px;overflow:hidden;
+    background:linear-gradient(180deg,#0c1428,#080c18);box-shadow:0 30px 80px #0008}
+  .stage-top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);
+    background:#0a101e;flex-wrap:wrap}
+  .stage-top .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .stage-top .t{font:600 13px var(--mono);color:var(--muted);letter-spacing:.04em}
+  .stage-top .t b{color:var(--ink)}
+  .stage-top .hint{margin-left:auto;font:500 12px var(--mono);color:var(--muted)}
+  #stage{display:block;width:100%;height:430px;cursor:crosshair}
+  .gbar{display:flex;gap:7px;flex-wrap:wrap;padding:13px 16px;border-top:1px solid var(--line);background:#0a101e}
+  .gbtn{cursor:pointer;font:600 12.5px/1 var(--mono);letter-spacing:.02em;color:#cdd6ff;
+    border:1px solid var(--line-strong);background:#ffffff0a;border-radius:9px;padding:9px 12px;transition:all .15s}
+  .gbtn:hover{border-color:var(--accent);background:#6d7cff1f;color:#fff}
+  .gbtn.on{border-color:var(--cyan);background:#38e1ff1f;color:#fff;box-shadow:0 0 0 1px #38e1ff44}
+  .gbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+  /* ---------- cards / callouts ---------- */
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .card h3{margin-bottom:7px}
+  .card p{font-size:14.5px;color:var(--muted);max-width:none}
+  .card .tag{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);display:block;margin-bottom:9px}
+  .note{border-left:3px solid var(--accent);background:#6d7cff10;border-radius:0 10px 10px 0;padding:14px 18px;font-size:14.5px;color:#c5d0e8}
+  .note b{color:var(--ink)}
+
+  /* ---------- tables ---------- */
+  .tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-top:6px}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  caption{text-align:left;font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);padding:14px 18px 0}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+  thead th{font:600 11.5px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    border-bottom:1px solid var(--line-strong);position:sticky;top:0;background:var(--surface)}
+  tbody tr:last-child td{border-bottom:0}
+  tbody td:first-child{font-weight:650;color:var(--ink)}
+  td.mono,th.mono{font-family:var(--mono)}
+  .gname{display:inline-flex;align-items:center;gap:8px}
+  .swatch{width:9px;height:9px;border-radius:2px;display:inline-block;flex:none}
+
+  /* ---------- code ---------- */
+  pre{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;overflow-x:auto;
+    font-family:var(--mono);font-size:13px;line-height:1.6;color:#cdd6ee;margin:0}
+  pre .c{color:#5f7196;font-style:italic}
+  pre .k{color:var(--violet)}
+  pre .f{color:var(--cyan)}
+  pre .n{color:#ffd479}
+  pre .s{color:var(--green)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font:500 13px var(--mono);color:var(--muted);margin-top:14px}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  footer{padding:40px 0 64px;color:var(--muted);font-size:13.5px}
+  footer .wrap{display:flex;flex-direction:column;gap:6px}
+
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr;gap:0}
+    nav.toc{position:static;flex-direction:row;flex-wrap:wrap;border-left:0;padding:14px 0;gap:4px}
+    nav.toc .lbl{width:100%}
+    nav.toc a{border-left:0;border-bottom:2px solid transparent}
+    nav.toc a.active{border-left:0;border-bottom-color:var(--cyan)}
+  }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">CloudLabs · Rocky v2 · character rig</div>
+    <h1 style="margin-top:18px">Expressive floating hands</h1>
+    <p class="lead" style="margin-top:18px">A build-ready gesture rig for Rocky's 2D canvas body — two detached EVE-style hands that retract to rest, follow the body with overlapping lag, and resolve into seven intentional poses. Every offset, angle, duration, and curve below is wired into the live rig at the top; the buttons drive the same data a build would ship.</p>
+    <div class="badges">
+      <span class="pill">canvas · <b>60fps rAF</b></span>
+      <span class="pill">origin <b>(cx, cy)</b> · scale <b>0.6</b></span>
+      <span class="pill">body <b>150 × 190</b></span>
+      <span class="pill">smoothing <b>exp-damp + spring</b></span>
+      <span class="pill"><b>7</b> gestures</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" aria-label="Contents">
+    <span class="lbl">Contents</span>
+    <a href="#live" class="active">Live rig</a>
+    <a href="#shape">Hand geometry</a>
+    <a href="#rest">Rest pose</a>
+    <a href="#library">Gesture library</a>
+    <a href="#secondary">Secondary motion</a>
+    <a href="#impl">Drop-in code</a>
+    <a href="#sources">Sources</a>
+  </nav>
+
+  <main>
+    <!-- ============ LIVE ============ -->
+    <section id="live">
+      <div class="sec-head"><span class="sec-no">00</span><h2>The rig, running</h2></div>
+      <div class="body-flow">
+        <p>Move your cursor over the stage — the hands track it with lag. Click a gesture to fire it; click the same one again to release back to rest. This is the deliverable executing: the canvas reads the exact target table in §4 and the spring constants in §5.</p>
+      </div>
+
+      <div class="stage-wrap">
+        <div class="stage-top">
+          <span class="dot"></span>
+          <span class="t"><b>Rocky</b> · hand rig preview</span>
+          <span class="hint">move cursor to see follow-lag · click a gesture</span>
+        </div>
+        <canvas id="stage" aria-label="Live Rocky hand-rig preview"></canvas>
+        <div class="gbar" id="gbar" role="group" aria-label="Gesture triggers">
+          <button class="gbtn on" data-g="rest">rest</button>
+          <button class="gbtn" data-g="wave">wave 👋</button>
+          <button class="gbtn" data-g="point">point-at-target ☝</button>
+          <button class="gbtn" data-g="think">think 🤔</button>
+          <button class="gbtn" data-g="celebrate">celebrate 🎉</button>
+          <button class="gbtn" data-g="investigate">investigate 🔍</button>
+          <button class="gbtn" data-g="reassure">open-palm reassure ✋</button>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><span class="swatch" style="background:var(--cyan)"></span>palm node + spokes</span>
+        <span><span class="swatch" style="background:var(--accent)"></span>wrist tether</span>
+        <span><span class="swatch" style="background:var(--violet)"></span>active target</span>
+      </div>
+    </section>
+
+    <!-- ============ SHAPE ============ -->
+    <section id="shape">
+      <div class="sec-head"><span class="sec-no">01</span><h2>Hand shape &amp; geometry</h2></div>
+      <div class="body-flow">
+        <p>Rocky has no arms. Like EVE, the hands are <b>detached mitts</b> that hover beside the body, joined to it only by a soft luminous tether — this is what lets them retract fully and reappear, and what keeps the silhouette clean at rest. Each hand is a single readable unit: a rounded <b>palm pad</b>, three short <b>spoke-fingers</b>, and an opposable <b>thumb</b> that only extends for poses that need it (point, thumbs-up). Built from <code>roundRect</code> + <code>arc</code> primitives so it matches the existing body's vector look — no sprites.</p>
+
+        <div class="grid2">
+          <div class="card">
+            <span class="tag">Palm pad</span>
+            <h3>Rounded capsule, 22 × 26</h3>
+            <p>The anchor. Drawn at the hand's local origin as a <code>roundRect(-11,-13,22,26,9)</code> with the same body gradient (<code>#fbfdff → #bcc9e0</code>) and a 2px <code>#ffffff66</code> rim-light on the upper arc. A 14px-blur cyan inner glow keys it to the eyes.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Fingers</span>
+            <h3>3 spokes, len 9, gap 14°</h3>
+            <p>Capsule spokes radiating from the palm's top edge, <code>lineWidth 5</code>, <code>lineCap round</code>, length <b>9px</b> at rest and extending to <b>15px</b> when a pose curls or splays them. Fan spread <b>±14°</b> around the palm's local up-axis.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Thumb</span>
+            <h3>Opposable, default tucked</h3>
+            <p>A 4px spoke off the palm's inner-lower corner. <code>tuck</code> at rest (rotation +70° toward palm, length 5). <code>extend</code> for point/thumbs-up (rotation −20°, length 11). Drives most of the "intent" reading.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Tether</span>
+            <h3>Quadratic wisp, not a limb</h3>
+            <p>A single <code>quadraticCurveTo</code> from the body's shoulder anchor to the wrist, 3px, indigo <code>#6d7cff</code> at 40% alpha, control point pulled toward the body. Stretches and thins with distance; fades to 0 alpha when a hand fully retracts.</p>
+          </div>
+        </div>
+
+        <div class="note"><b>Handedness.</b> The two hands are mirror images: the right hand draws with local x un-flipped, the left with <code>ctx.scale(-1,1)</code> on its local frame, so finger fan, thumb, and rim-light all read correctly on both sides. All offsets below are written for the <b>right</b> hand; the left negates every <code>x</code> offset and every <code>rotation</code>.</p>
+      </div>
+    </section>
+
+    <!-- ============ REST ============ -->
+    <section id="rest">
+      <div class="sec-head"><span class="sec-no">02</span><h2>Rest pose &amp; the coordinate frame</h2></div>
+      <div class="body-flow">
+        <p>All hand positions are <b>body-local</b>: offsets in pixels from Rocky's draw origin <code>(cx, cy)</code>, measured <em>before</em> the global <code>scale(0.6)</code> so the rig authors in the same 150×190 body space the eyes use. Positive <code>x</code> is right, positive <code>y</code> is <em>down</em> (canvas convention), <code>rotation</code> is degrees clockwise with 0° = palm facing the viewer, fingers up.</p>
+
+        <div class="tbl-scroll">
+          <table>
+            <caption>Rest-pose offsets — right hand (left hand mirrors x &amp; rotation)</caption>
+            <thead>
+              <tr><th>Param</th><th class="num">Value</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Shoulder anchor</td><td class="mono num">(+58, −6)</td><td>Tether root, just outside the body ellipse at mid-height.</td></tr>
+              <tr><td>Wrist x</td><td class="mono num">+86</td><td>Hand sits clear of the 75px body half-width — reads as floating.</td></tr>
+              <tr><td>Wrist y</td><td class="mono num">+34</td><td>Below centre, near the body's widest point — a relaxed "hands low" idle.</td></tr>
+              <tr><td>Rotation</td><td class="mono num">+12°</td><td>Slight inward cant so palms angle toward the body, not flat-on.</td></tr>
+              <tr><td>Finger length</td><td class="mono num">9</td><td>Spokes relaxed, slightly curled.</td></tr>
+              <tr><td>Finger spread</td><td class="mono num">±14°</td><td>Loose fan.</td></tr>
+              <tr><td>Thumb</td><td class="mono">tucked</td><td>+70°, length 5.</td></tr>
+              <tr><td>Scale</td><td class="mono num">1.0</td><td>Local hand scale (poses push to 1.15 on celebrate).</td></tr>
+              <tr><td>Idle drift</td><td class="mono num">±2.5px @ 0.6Hz</td><td><code>sin(perf·0.6)</code> on y, offset π between hands — a slow breathing float.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note"><b>Why offsets, not absolute coords.</b> Rocky roams, leans to the cursor, bobs, and rides a portal entrance. Authoring hands as body-local offsets means a single <code>translate(cx, cy+bob)</code> already inherited from <code>drawRocky</code> carries the hands along for free — the gesture layer never touches screen-space.</p>
+      </div>
+    </section>
+
+    <!-- ============ LIBRARY ============ -->
+    <section id="library">
+      <div class="sec-head"><span class="sec-no">03</span><h2>Gesture library</h2></div>
+      <div class="body-flow">
+        <p>Seven poses. Each is a <b>keyframed target</b> for one or both hands plus a hold/loop behaviour. The render loop never jumps to these values — it eases the live hand toward them with the spring in §5, so timing here is the <em>shape envelope</em>, not a per-frame schedule. Durations are in milliseconds; easing names map to the curves listed under the table.</p>
+
+        <div class="tbl-scroll">
+          <table>
+            <caption>Gesture → hand targets (right hand; °CW, px body-local)</caption>
+            <thead>
+              <tr>
+                <th>Gesture</th><th>Hands</th>
+                <th class="num">wrist&nbsp;x</th><th class="num">wrist&nbsp;y</th><th class="num">rot</th>
+                <th>fingers</th><th>thumb</th><th class="num">in&nbsp;ms</th><th>ease-in</th>
+                <th>hold / loop</th><th class="num">out&nbsp;ms</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#8295b8"></span>rest</span></td>
+                <td>both</td>
+                <td class="mono num">+86</td><td class="mono num">+34</td><td class="mono num">+12</td>
+                <td>curl · len 9</td><td>tuck</td><td class="mono num">420</td><td>easeOutCubic</td>
+                <td>idle float ±2.5px</td><td class="mono num">—</td>
+              </tr>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#38e1ff"></span>wave</span></td>
+                <td>right only</td>
+                <td class="mono num">+92</td><td class="mono num">−40</td><td class="mono num">−8 ↔ +26</td>
+                <td>splay · len 14</td><td>tuck</td><td class="mono num">260</td><td>easeOutBack</td>
+                <td>oscillate rot <b>±17°</b> @ 2.6Hz, 3 cycles</td><td class="mono num">320</td>
+              </tr>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#fbbf24"></span>point-at-target</span></td>
+                <td>right only</td>
+                <td class="mono">→ target*</td><td class="mono">→ target*</td><td class="mono">→ target*</td>
+                <td>fist · index len 16</td><td>extend</td><td class="mono num">300</td><td>easeOutQuint</td>
+                <td>hold + 2px push-pulse @ 1.5Hz</td><td class="mono num">360</td>
+              </tr>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#a78bfa"></span>think</span></td>
+                <td>right only</td>
+                <td class="mono num">+34</td><td class="mono num">−54</td><td class="mono num">−42</td>
+                <td>curl · index len 13 to "chin"</td><td>tuck</td><td class="mono num">480</td><td>easeInOutSine</td>
+                <td>tiny tap −3px y @ 0.9Hz</td><td class="mono num">420</td>
+              </tr>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#5ef0a0"></span>celebrate</span></td>
+                <td>both</td>
+                <td class="mono num">+78</td><td class="mono num">−72</td><td class="mono num">−30 (mirror +30)</td>
+                <td>splay · len 15</td><td>extend</td><td class="mono num">240</td><td>easeOutBack(1.7)</td>
+                <td>raise/shake ±9px y @ 3Hz · scale 1.15</td><td class="mono num">300</td>
+              </tr>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#5fe6ff"></span>investigate</span></td>
+                <td>right holds lens</td>
+                <td class="mono num">+44</td><td class="mono num">−18</td><td class="mono num">+4</td>
+                <td>grip · curl 8</td><td>extend (grip)</td><td class="mono num">380</td><td>easeOutCubic</td>
+                <td>sweep wrist x +28→+70 @ 0.5Hz · lens-glint</td><td class="mono num">400</td>
+              </tr>
+              <tr>
+                <td><span class="gname"><span class="swatch" style="background:#cdd6ff"></span>open-palm reassure</span></td>
+                <td>both</td>
+                <td class="mono num">+70</td><td class="mono num">+6</td><td class="mono num">−6 (palm up)</td>
+                <td>splay · len 13</td><td>extend out</td><td class="mono num">460</td><td>easeInOutSine</td>
+                <td>slow breathe ±2px y @ 0.5Hz</td><td class="mono num">460</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="legend">
+          <span><code>easeOutCubic</code> → cubic-bezier(.22,1,.36,1)</span>
+          <span><code>easeOutBack</code> → cubic-bezier(.34,1.56,.64,1)</span>
+          <span><code>easeOutQuint</code> → cubic-bezier(.22,1,.18,1)</span>
+          <span><code>easeInOutSine</code> → cubic-bezier(.45,.05,.55,.95)</span>
+        </div>
+
+        <p style="margin-top:20px">* <b>point-at-target</b> is the only data-driven pose. Given a screen target <code>(tx, ty)</code> — a failing validation row, a panel control, a lab step — convert to body-local, clamp the wrist to a 64px reach radius around the shoulder anchor, and aim <code>rotation = atan2(ty−wristY, tx−wristX)</code> so the extended index finger points <em>down the line</em> to the target. The fingertip, not the wrist, lands on the aim line.</p>
+
+        <div class="grid2" style="margin-top:8px">
+          <div class="card"><span class="tag">Emotion coupling</span><h3>Hands follow the eyes</h3><p>Fire gestures off the existing <code>setEmotion()</code> calls so hands and eyes stay one creature: <code>thinking→think</code>, <code>celebrate→celebrate</code>, <code>hero→</code> hands-on-hips power-set (wrist +64,+30, rot +40 in), <code>curious→investigate</code>, panel-open greet <code>→wave</code>. Reassure fires on concerned-after-help.</p></div>
+          <div class="card"><span class="tag">Restraint</span><h3>One gesture at a time, budgeted</h3><p>Hands obey the same attention budget as bubbles — at most one active gesture, auto-releasing to <code>rest</code> after its hold. Loops (wave, celebrate) cap at 3 cycles then settle. In Focus mode, only point/reassure are allowed; the playful set is suppressed.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECONDARY ============ -->
+    <section id="secondary">
+      <div class="sec-head"><span class="sec-no">04</span><h2>Secondary motion &amp; overlapping action</h2></div>
+      <div class="body-flow">
+        <p>The single biggest "alive" cue is that hands <b>lag the body</b>. When Rocky moves, the hands don't rigidly travel with him — they trail, overshoot slightly, and settle. This is Disney's <em>overlapping action / follow-through / drag</em> principle: appended parts arrive late and stop late. We get it almost for free with a critically-tuned spring per hand, fed the body's <em>own smoothed</em> position as a moving anchor.</p>
+
+        <div class="grid2">
+          <div class="card"><span class="tag">Drag (the lag)</span><h3>λ = 9, behind the body</h3><p>Body position uses <code>damp(λ≈2.2)</code>. Each hand chases its target with a faster but still-trailing spring; the gap between body and hand <em>during</em> motion is the visible drag. Hands lead-in late and overshoot ~6% on stop.</p></div>
+          <div class="card"><span class="tag">Velocity skew</span><h3>Streamline into motion</h3><p>Offset each hand opposite the body's velocity: <code>wristX −= bodyVx · 0.06</code>, <code>wristY −= bodyVy · 0.06</code>, clamped ±16px. Hands stream behind a fast move and snap forward as it stops — the overshoot reads as weight.</p></div>
+          <div class="card"><span class="tag">Counter-rotation</span><h3>Wrist trails the turn</h3><p>Add <code>rotation += clamp(bodyVx · 0.5, ±12°)</code> so wrists tilt back into a horizontal dash, like a hand dragging through air. Eases out as velocity decays.</p></div>
+          <div class="card"><span class="tag">Phase offset</span><h3>Hands aren't twins</h3><p>Left hand idle-float and any shake run <b>π out of phase</b> from the right (and at 0.96× frequency) so the pair never moves in lockstep — asymmetry is life.</p></div>
+        </div>
+
+        <h3 style="margin-top:30px">The per-hand spring</h3>
+        <p style="margin-top:10px">A semi-implicit spring beats raw <code>damp()</code> here because it carries velocity — that's what produces the trailing overshoot. Tuned just under critical so it overshoots once and settles in ~320ms, matching the panel-open spring in the v2 spec.</p>
+        <pre><span class="c">// per hand, per frame — dt in seconds, target in body-local px</span>
+<span class="k">const</span> STIFF = <span class="n">220</span>, DAMP = <span class="n">26</span>;        <span class="c">// ~3% overshoot, settles ~320ms</span>
+<span class="f">function</span> springStep(h, tx, ty, trot, dt){
+  <span class="c">// velocity-skew the target by the body's smoothed velocity</span>
+  tx -= clamp(body.vx * <span class="n">0.06</span>, -<span class="n">16</span>, <span class="n">16</span>);
+  ty -= clamp(body.vy * <span class="n">0.06</span>, -<span class="n">16</span>, <span class="n">16</span>);
+  trot += clamp(body.vx * <span class="n">0.5</span>, -<span class="n">12</span>, <span class="n">12</span>);
+  <span class="k">for</span> (<span class="k">const</span> ax <span class="k">of</span> [<span class="s">"x"</span>,<span class="s">"y"</span>,<span class="s">"rot"</span>]){
+    <span class="k">const</span> t = ax===<span class="s">"x"</span>?tx : ax===<span class="s">"y"</span>?ty : trot;
+    <span class="k">const</span> a = STIFF*(t - h[ax]) - DAMP*h[<span class="s">"v"</span>+ax];   <span class="c">// F = -k·x - c·v</span>
+    h[<span class="s">"v"</span>+ax] += a * dt;
+    h[ax]      += h[<span class="s">"v"</span>+ax] * dt;                    <span class="c">// arrives late, stops late</span>
+  }
+}</pre>
+        <div class="note"><b>Reduced-motion.</b> Under <code>prefers-reduced-motion</code>, drop velocity-skew and counter-rotation, raise <code>DAMP</code> to 40 (no overshoot), and replace looped shakes with a single settle to the pose's mid value. Hands still appear and point — they just don't bounce.</p>
+      </div>
+    </section>
+
+    <!-- ============ IMPL ============ -->
+    <section id="impl">
+      <div class="sec-head"><span class="sec-no">05</span><h2>Drop-in integration</h2></div>
+      <div class="body-flow">
+        <p>The rig slots into <code>rocky.html</code> with three additions: a <code>GESTURE</code> table (the §3 data), a <code>drawHand()</code> primitive called twice inside <code>drawRocky</code> <em>before</em> the body so hands sit behind it at rest, and the <code>springStep</code> in the frame loop. It reuses the file's existing <code>damp</code>, <code>roundRect</code>, <code>perf</code> clock, and <code>setEmotion</code> hook.</p>
+        <pre><span class="c">// 1 — gesture data (subset; full table in §3)</span>
+<span class="k">const</span> GESTURE = {
+  rest:     { x:<span class="n">86</span>,  y:<span class="n">34</span>,  rot:<span class="n">12</span>,  fl:<span class="n">9</span>,  thumb:<span class="s">"tuck"</span>,   both:<span class="k">true</span>  },
+  wave:     { x:<span class="n">92</span>,  y:-<span class="n">40</span>, rot:<span class="n">9</span>,   fl:<span class="n">14</span>, thumb:<span class="s">"tuck"</span>,   loop:<span class="s">"wave"</span>    },
+  point:    { x:<span class="k">null</span>,y:<span class="k">null</span>,rot:<span class="k">null</span>,fl:<span class="n">16</span>, thumb:<span class="s">"extend"</span>, aim:<span class="k">true</span>   },
+  think:    { x:<span class="n">34</span>,  y:-<span class="n">54</span>, rot:-<span class="n">42</span>, fl:<span class="n">13</span>, thumb:<span class="s">"tuck"</span>,   loop:<span class="s">"tap"</span>     },
+  celebrate:{ x:<span class="n">78</span>,  y:-<span class="n">72</span>, rot:-<span class="n">30</span>, fl:<span class="n">15</span>, thumb:<span class="s">"extend"</span>, both:<span class="k">true</span>, loop:<span class="s">"shake"</span> },
+  investigate:{x:<span class="n">44</span>, y:-<span class="n">18</span>, rot:<span class="n">4</span>,  fl:<span class="n">8</span>,  thumb:<span class="s">"extend"</span>, lens:<span class="k">true</span>, loop:<span class="s">"sweep"</span> },
+  reassure: { x:<span class="n">70</span>,  y:<span class="n">6</span>,   rot:-<span class="n">6</span>,  fl:<span class="n">13</span>, thumb:<span class="s">"extend"</span>, both:<span class="k">true</span> },
+};
+
+<span class="c">// 2 — one hand, local frame already at wrist; side = +1 right / -1 left</span>
+<span class="f">function</span> drawHand(side, fl, thumb){
+  ctx.scale(side, <span class="n">1</span>);                                <span class="c">// mirror the left</span>
+  <span class="c">// palm</span>
+  ctx.shadowColor=<span class="s">"#38e1ff"</span>; ctx.shadowBlur=<span class="n">14</span>;
+  <span class="k">const</span> g=ctx.createLinearGradient(<span class="n">0</span>,-<span class="n">13</span>,<span class="n">0</span>,<span class="n">13</span>);
+  g.addColorStop(<span class="n">0</span>,<span class="s">"#fbfdff"</span>); g.addColorStop(<span class="n">1</span>,<span class="s">"#bcc9e0"</span>);
+  ctx.fillStyle=g; roundRect(-<span class="n">11</span>,-<span class="n">13</span>,<span class="n">22</span>,<span class="n">26</span>,<span class="n">9</span>); ctx.fill();
+  <span class="c">// 3 fingers fanned ±14° off local up</span>
+  ctx.shadowBlur=<span class="n">0</span>; ctx.lineWidth=<span class="n">5</span>; ctx.lineCap=<span class="s">"round"</span>; ctx.strokeStyle=<span class="s">"#eaf0fb"</span>;
+  [-<span class="n">14</span>,<span class="n">0</span>,<span class="n">14</span>].forEach(deg=>{ <span class="k">const</span> a=(deg-<span class="n">90</span>)*Math.PI/<span class="n">180</span>;
+    ctx.beginPath(); ctx.moveTo(<span class="n">0</span>,-<span class="n">11</span>);
+    ctx.lineTo(Math.cos(a)*fl, -<span class="n">11</span>+Math.sin(a)*fl); ctx.stroke(); });
+  <span class="c">// thumb (tuck vs extend) + optional magnifier ring for investigate</span>
+  drawThumb(thumb);
+}
+
+<span class="c">// 3 — in frame(): chase targets behind the body, then draw</span>
+<span class="k">const</span> tgtH = resolveGesture(activeGesture, mouse);    <span class="c">// §3 + aim math</span>
+springStep(handR, tgtH.x,  tgtH.y,  tgtH.rot,  dt);
+springStep(handL, -tgtH.x, tgtH.y, -tgtH.rot,  dt);  <span class="c">// mirror x &amp; rot</span></pre>
+        <div class="note"><b>Draw order.</b> Call both hands at the <em>top</em> of <code>drawRocky</code> (before the body ellipse) so at rest they tuck behind Rocky's silhouette and only their outer edge shows. Poses that lift the hands above <code>y &lt; −30</code> draw them <em>after</em> the body instead, so a wave or celebrate reads in front — switch by the live wrist y, not the target, so the layer flips mid-arc.</p>
+      </div>
+    </section>
+
+    <!-- ============ SOURCES ============ -->
+    <section id="sources">
+      <div class="sec-head"><span class="sec-no">06</span><h2>Sources &amp; lineage</h2></div>
+      <div class="body-flow">
+        <p>Design references for the hand language and the motion principles behind the timing choices:</p>
+        <div class="grid2">
+          <div class="card"><span class="tag">Character lineage</span><h3>EVE · BD-1 · Cozmo</h3><p><b>EVE</b> (WALL·E, Pixar 2008) — detached hovering hands joined by no visible arm; the core silhouette idea. <b>BD-1</b> (Star Wars Jedi, Respawn) — expressive intent from minimal jointed parts. <b>Cozmo / Vector</b> (Anki) — a single lift arm carrying a full emotional vocabulary; the "one part, much meaning" economy.</p></div>
+          <div class="card"><span class="tag">Animation principles</span><h3>Overlapping action &amp; drag</h3><p>Thomas &amp; Johnston, <i>The Illusion of Life</i> (Disney, 1981) — follow-through, overlapping action, slow-in/slow-out: appended parts lag and settle late. This is the basis for §4's per-hand spring trailing the body.</p></div>
+          <div class="card"><span class="tag">Social-robot gesture</span><h3>Deictic &amp; legible motion</h3><p>Deictic (pointing) gesture and "legibility" in HRI — Cynthia Breazeal's <i>Designing Sociable Robots</i> (MIT, 2002) and work on legible robot motion (Dragan &amp; Srinivasa) — gestures should telegraph intent before completion. Point/reassure are built to be readable at their halfway frame.</p></div>
+          <div class="card"><span class="tag">Motion feel / timing</span><h3>Springs over linear tweens</h3><p>Spring dynamics for UI (the "stiffness / damping / mass" model popularised by iOS UIKit dynamics &amp; react-spring) — the 220/26 constants and ~3% overshoot mirror the panel-open spring already specified in Rocky's v2 interaction spec.</p></div>
+        </div>
+        <p style="margin-top:20px;color:var(--muted);font-size:14px">Grounded against the live build: coordinate frame, <code>damp()</code> smoothing, <code>roundRect</code>, the emotion table, and the investigate/hero beats are read directly from <code>source/rocky-prototype/web/public/rocky.html</code> and <code>docs/rocky_living_presence_interaction_spec.html</code>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div style="font:600 12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--cyan)">Rocky v2 — hand rig</div>
+    <div>Build-ready gesture rig · all offsets in body-local px before scale 0.6 · °CW · ms · sourced curves.</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = document.getElementById('stage');
+  const ctx = cv.getContext('2d');
+  let W=0,H=0,DPR=1;
+  function resize(){
+    DPR=Math.min(devicePixelRatio||1,2);
+    W=cv.clientWidth; H=cv.clientHeight;
+    cv.width=W*DPR; cv.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  // ---- helpers mirrored from rocky.html ----
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
+  function roundRect(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+  // ---- gesture targets (the §3 table) ----
+  const GEST={
+    rest:      {x:86, y:34,  rot:12,  fl:9,  thumb:'tuck',   both:true},
+    wave:      {x:92, y:-40, rot:9,   fl:14, thumb:'tuck',   loop:'wave'},
+    point:     {x:null,y:null,rot:null,fl:16, thumb:'extend', aim:true},
+    think:     {x:34, y:-54, rot:-42, fl:13, thumb:'tuck',   loop:'tap'},
+    celebrate: {x:78, y:-72, rot:-30, fl:15, thumb:'extend', both:true, loop:'shake'},
+    investigate:{x:44,y:-18, rot:4,   fl:8,  thumb:'extend', both:false, lens:true, loop:'sweep'},
+    reassure:  {x:70, y:6,   rot:-6,  fl:13, thumb:'extend', both:true}
+  };
+
+  // body model
+  const body={x:0,y:0, px:0,py:0, vx:0,vy:0, tx:0,ty:0};
+  // per-hand spring state (local px around shoulder)
+  function mkHand(){return {x:86,y:34,rot:12, vx:0,vy:0,vrot:0, fl:9, thumb:'tuck'};}
+  const handR=mkHand(), handL=mkHand();
+  const SHOULDER_X=58, SHOULDER_Y=-6;
+
+  let active='rest', gestT=0;
+  let perf=0, last=performance.now();
+  const mouse={x:0,y:0,has:false};
+
+  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();
+    mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top; mouse.has=true;});
+  cv.addEventListener('pointerleave',()=>{mouse.has=false;});
+
+  // gesture buttons
+  const gbar=document.getElementById('gbar');
+  gbar.addEventListener('click',e=>{
+    const b=e.target.closest('.gbtn'); if(!b)return;
+    const g=b.dataset.g;
+    active=(active===g && g!=='rest')?'rest':g;
+    gestT=0;
+    gbar.querySelectorAll('.gbtn').forEach(x=>x.classList.toggle('on',x.dataset.g===active));
+  });
+
+  const STIFF=reduce?260:220, DMP=reduce?40:26;
+
+  function springStep(h, tx, ty, trot, dt){
+    if(!reduce){
+      tx -= clamp(body.vx*0.06,-16,16);
+      ty -= clamp(body.vy*0.06,-16,16);
+      trot += clamp(body.vx*0.5,-12,12);
+    }
+    const set=(ax,t)=>{const a=STIFF*(t-h[ax])-DMP*h['v'+ax]; h['v'+ax]+=a*dt; h[ax]+=h['v'+ax]*dt;};
+    set('x',tx); set('y',ty); set('rot',trot);
+  }
+
+  // resolve active gesture to a right-hand target {x,y,rot,fl,thumb}
+  function resolveGesture(g, t){
+    const base=GEST[g]||GEST.rest;
+    let x=base.x, y=base.y, rot=base.rot, fl=base.fl, thumb=base.thumb;
+
+    if(base.aim){ // point-at-target → aim at cursor (data-driven pose)
+      // cursor in body-local space:
+      const lx=(mouse.has?mouse.x:body.x+90)-body.x;
+      const ly=(mouse.has?mouse.y:body.y)-body.y;
+      const ang=Math.atan2(ly-SHOULDER_Y, lx-SHOULDER_X);
+      const reach=clamp(Math.hypot(lx-SHOULDER_X,ly-SHOULDER_Y),20,64);
+      x=SHOULDER_X+Math.cos(ang)*reach;
+      y=SHOULDER_Y+Math.sin(ang)*reach;
+      rot=ang*180/Math.PI+90;        // local up-axis points down the aim line
+      // pulse
+      const pp=Math.sin(perf*1.5*2*Math.PI)*2;
+      x+=Math.cos(ang)*pp; y+=Math.sin(ang)*pp;
+    } else {
+      // loop behaviours layered on the static target
+      if(base.loop==='wave'){ rot += (reduce?9:Math.sin(perf*2.6*2*Math.PI)*17); }
+      if(base.loop==='tap'){ y += (reduce?0:Math.sin(perf*0.9*2*Math.PI)*-3); }
+      if(base.loop==='shake'){ y += (reduce?0:Math.sin(perf*3*2*Math.PI)*-9); }
+      if(base.loop==='sweep'){ x = 28 + (reduce?42:(Math.sin(perf*0.5*2*Math.PI)*0.5+0.5)*42); }
+    }
+    return {x,y,rot,fl,thumb,both:!!base.both,lens:!!base.lens,loop:base.loop};
+  }
+
+  function drawThumb(thumb){
+    ctx.lineWidth=4; ctx.lineCap='round'; ctx.strokeStyle='#dfe7f5';
+    let deg,len;
+    if(thumb==='extend'){deg=-20;len=11;} else {deg=70;len=5;}
+    const a=(deg-90)*Math.PI/180;
+    ctx.beginPath(); ctx.moveTo(-9,4);
+    ctx.lineTo(-9+Math.cos(a)*len, 4+Math.sin(a)*len); ctx.stroke();
+  }
+
+  function drawHand(side, fl, thumb, lens, glint){
+    ctx.save();
+    ctx.scale(side,1);
+    // palm
+    ctx.shadowColor='#38e1ff'; ctx.shadowBlur=14;
+    const g=ctx.createLinearGradient(0,-13,0,13);
+    g.addColorStop(0,'#fbfdff'); g.addColorStop(.55,'#e7eefb'); g.addColorStop(1,'#bcc9e0');
+    ctx.fillStyle=g; roundRect(-11,-13,22,26,9); ctx.fill();
+    // rim light
+    ctx.shadowBlur=0; ctx.strokeStyle='#ffffff66'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,-2,9,Math.PI*1.05,Math.PI*1.95); ctx.stroke();
+    // fingers
+    ctx.lineWidth=5; ctx.lineCap='round'; ctx.strokeStyle='#eaf0fb';
+    [-14,0,14].forEach(deg=>{const a=(deg-90)*Math.PI/180;
+      ctx.beginPath(); ctx.moveTo(0,-11);
+      ctx.lineTo(Math.cos(a)*fl, -11+Math.sin(a)*fl); ctx.stroke();});
+    drawThumb(thumb);
+    // magnifier for investigate
+    if(lens){
+      ctx.strokeStyle='#5fe6ff'; ctx.lineWidth=3; ctx.shadowColor='#5fe6ff'; ctx.shadowBlur=10;
+      ctx.beginPath(); ctx.arc(0,-26,12,0,7); ctx.stroke();
+      ctx.shadowBlur=0; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(8,-17); ctx.lineTo(14,-9); ctx.stroke();
+      // glint
+      ctx.globalAlpha=.5+.5*Math.sin(perf*4);
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(0,-26,7,Math.PI*1.1,Math.PI*1.5); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    ctx.restore();
+  }
+
+  function drawTether(sx,sy,wx,wy){
+    const d=Math.hypot(wx-sx,wy-sy);
+    const alpha=clamp(1-(d-40)/160,0,.55);
+    if(alpha<=0)return;
+    ctx.save();
+    ctx.strokeStyle='rgba(109,124,255,'+alpha+')';
+    ctx.lineWidth=3; ctx.lineCap='round';
+    ctx.shadowColor='#6d7cff'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.moveTo(sx,sy);
+    ctx.quadraticCurveTo((sx+wx)/2-10,(sy+wy)/2+14, wx,wy); ctx.stroke();
+    ctx.restore();
+  }
+
+  const SCALE=0.92; // bigger than the live app (0.6) so detail reads in the demo
+
+  function drawRockyBody(cx,cy,glow){
+    // body
+    ctx.save();
+    ctx.shadowColor='#0009'; ctx.shadowBlur=36; ctx.shadowOffsetY=18;
+    const bw=150,bh=190;
+    const bg=ctx.createLinearGradient(cx,cy-bh/2,cx,cy+bh/2);
+    bg.addColorStop(0,'#fbfdff'); bg.addColorStop(.5,'#e7eefb'); bg.addColorStop(1,'#bcc9e0');
+    ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(cx,cy,bw/2,bh/2,0,0,7); ctx.fill();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.strokeStyle='#ffffff66'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(cx,cy-2,bw/2-2,bh/2-2,0,Math.PI*1.1,Math.PI*1.95); ctx.stroke();
+    // visor
+    const vw=118,vh=86;
+    ctx.shadowColor=glow; ctx.shadowBlur=26;
+    const vg=ctx.createLinearGradient(cx,cy-vh/2-18,cx,cy+vh/2-18);
+    vg.addColorStop(0,'#0c1426'); vg.addColorStop(1,'#060a16');
+    ctx.fillStyle=vg; roundRect(cx-vw/2,cy-vh/2-18,vw,vh,30); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#ffffff10'; roundRect(cx-vw/2+10,cy-vh/2-12,vw-20,18,12); ctx.fill();
+    // eyes (simple, gaze toward cursor)
+    const eCY=cy-26;
+    let gx=0,gy=0;
+    if(mouse.has){gx=clamp((mouse.x-cx)/220,-1,1)*7; gy=clamp((mouse.y-cy)/220,-1,1)*6;}
+    const eye=(ex)=>{
+      ctx.save(); ctx.translate(ex+gx,eCY+gy);
+      ctx.shadowColor=glow; ctx.shadowBlur=22;
+      const g=ctx.createLinearGradient(0,-20,0,20);
+      g.addColorStop(0,'#fff'); g.addColorStop(.35,glow); g.addColorStop(1,'#1fa9c9');
+      ctx.fillStyle=g; roundRect(-16,-20,32,40,12); ctx.fill();
+      ctx.shadowBlur=0; ctx.fillStyle='#ffffffdd';
+      ctx.beginPath(); ctx.arc(-5,-7,3.4,0,7); ctx.fill();
+      ctx.restore();
+    };
+    eye(cx-30); eye(cx+30);
+    ctx.restore();
+  }
+
+  function frame(now){
+    const dt=Math.min(.05,(now-last)/1000); last=now; perf+=dt;
+    if(cv.clientWidth!==W||cv.clientHeight!==H) resize();
+    gestT+=dt;
+
+    // body drifts gently across the stage so follow-lag is visible
+    const cx0=W*0.5, cy0=H*0.52;
+    body.tx = cx0 + Math.sin(perf*0.45)* (reduce?0:Math.min(W*0.16,150));
+    body.ty = cy0 + Math.cos(perf*0.62)* (reduce?0:26);
+    body.px=body.x; body.py=body.y;
+    body.x=damp(body.x,body.tx,2.2,dt);
+    body.y=damp(body.y,body.ty,2.2,dt);
+    body.vx=(body.x-body.px)/Math.max(dt,1e-4);
+    body.vy=(body.y-body.py)/Math.max(dt,1e-4);
+    const bob=reduce?0:Math.sin(perf*1.1*2)*4;
+
+    // resolve + spring hands
+    const T=resolveGesture(active,perf);
+    handR.fl=damp(handR.fl,T.fl,9,dt); handR.thumb=T.thumb;
+    // idle float (phase-split)
+    const driftR=reduce?0:Math.sin(perf*0.6)*2.5;
+    const driftL=reduce?0:Math.sin(perf*0.6*0.96+Math.PI)*2.5;
+    springStep(handR, T.x, T.y+driftR, T.rot, dt);
+    if(T.both){
+      handL.fl=damp(handL.fl,T.fl,9,dt); handL.thumb=T.thumb;
+      springStep(handL, -T.x, T.y+driftL, -T.rot, dt);
+    } else {
+      // non-both gestures: left hand returns to rest
+      handL.fl=damp(handL.fl,GEST.rest.fl,9,dt); handL.thumb='tuck';
+      springStep(handL, -GEST.rest.x, GEST.rest.y+driftL, -GEST.rest.rot, dt);
+    }
+
+    // ---- render ----
+    ctx.clearRect(0,0,W,H);
+    // faint grid floor for the lab feel
+    ctx.save(); ctx.globalAlpha=.5; ctx.strokeStyle='#16203a'; ctx.lineWidth=1;
+    for(let gx=0;gx<=W;gx+=44){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(let gy=0;gy<=H;gy+=44){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    ctx.restore();
+
+    const cx=body.x, cy=body.y+bob, glow='#38e1ff';
+
+    // shoulder anchors (screen space, after scale)
+    const sxR=cx+SHOULDER_X*SCALE, syR=cy+SHOULDER_Y*SCALE;
+    const sxL=cx-SHOULDER_X*SCALE, syL=cy+SHOULDER_Y*SCALE;
+    // wrist positions (screen space)
+    const wxR=cx+handR.x*SCALE, wyR=cy+handR.y*SCALE;
+    const wxL=cx+handL.x*SCALE, wyL=cy+handL.y*SCALE;
+
+    // decide layer: hands lifted above the body draw in front
+    const frontR=handR.y<-30, frontL=handL.y<-30;
+
+    function paintHand(side,h,wx,wy,front,lens){
+      ctx.save();
+      ctx.translate(wx,wy);
+      ctx.scale(SCALE,SCALE);
+      ctx.rotate(h.rot*Math.PI/180);
+      drawHand(side,h.fl,h.thumb,lens, true);
+      ctx.restore();
+    }
+
+    // back layer hands
+    drawTether(sxR,syR,wxR,wyR);
+    drawTether(sxL,syL,wxL,wyL);
+    if(!frontR) paintHand(1,handR,wxR,wyR,false,T.lens);
+    if(!frontL) paintHand(-1,handL,wxL,wyL,false,false);
+
+    drawRockyBody(cx,cy,glow);
+
+    // front layer hands
+    if(frontR) paintHand(1,handR,wxR,wyR,true,T.lens);
+    if(frontL) paintHand(-1,handL,wxL,wyL,true,false);
+
+    // active-target marker (the violet dot) for point
+    if(active==='point' && mouse.has){
+      ctx.save(); ctx.globalAlpha=.8; ctx.fillStyle='#a78bfa';
+      ctx.shadowColor='#a78bfa'; ctx.shadowBlur=14;
+      ctx.beginPath(); ctx.arc(mouse.x,mouse.y,5,0,7); ctx.fill();
+      ctx.globalAlpha=.3; ctx.strokeStyle='#a78bfa'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(mouse.x,mouse.y,5+Math.sin(perf*4)*3+6,0,7); ctx.stroke();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  addEventListener('resize',resize);
+  requestAnimationFrame(frame);
+
+  // ---- TOC scroll-spy ----
+  const links=[...document.querySelectorAll('nav.toc a')];
+  const secs=links.map(l=>document.querySelector(l.getAttribute('href')));
+  const obs=new IntersectionObserver(es=>{
+    es.forEach(en=>{ if(en.isIntersecting){
+      const id='#'+en.target.id;
+      links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')===id));
+    }});
+  },{rootMargin:'-30% 0px -60% 0px'});
+  secs.forEach(s=>s&&obs.observe(s));
+})();
+</script>

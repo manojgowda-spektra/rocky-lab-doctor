@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — flagship preview</title>
+<style>
+  :root{--ink:#e8eef9;--muted:#93a3c4}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font:15px/1.5 system-ui,"Segoe UI",Roboto,sans-serif;color:var(--ink);overflow:hidden;
+    background:
+      radial-gradient(900px 600px at 72% 18%, #15407a55, transparent 60%),
+      radial-gradient(800px 600px at 22% 88%, #5b2da855, transparent 60%),
+      radial-gradient(1200px 900px at 50% 50%, #0c1530, #070a16 70%);}
+  .stage{position:relative;height:100vh;width:100vw}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .hud{position:absolute;left:0;right:0;top:0;text-align:center;padding:22px 16px;pointer-events:none}
+  .hud h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.3px}
+  .hud p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .emotion{position:absolute;left:50%;transform:translateX(-50%);bottom:108px;color:var(--muted);font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+  .dock{position:absolute;left:50%;transform:translateX(-50%);bottom:30px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:92vw}
+  .chip{cursor:pointer;border:1px solid #ffffff22;background:#ffffff0c;color:var(--ink);padding:7px 13px;border-radius:999px;font-size:13px;
+    backdrop-filter:blur(8px);transition:.18s}
+  .chip:hover{border-color:#7df9ff88;background:#7df9ff18;color:#fff;transform:translateY(-1px)}
+  .hint{position:absolute;left:50%;transform:translateX(-50%);top:70px;color:#7df9ffcc;font-size:12.5px;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <h1>Rocky</h1>
+    <p>flagship preview · his face & motion language</p>
+  </div>
+  <div class="hint" id="hint">move your mouse — he's watching you 👀</div>
+  <div class="emotion" id="emoLabel">neutral</div>
+  <div class="dock" id="dock"></div>
+</div>
+<script>
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);
+
+// ---------- emotion presets (eyes-as-emotion) ----------
+// eye: mode rect|arc|line ; w,h ; tilt (deg, +inner) ; yOff (look up-/down+) ; asym (L raise) ; corner
+// glow hex ; bob {amp,spd} ; label
+const E={
+  neutral :{mode:'rect',w:34,h:40,tilt:0,yOff:0,asym:0,corner:13,glow:'#38e1ff',bob:{a:7,s:1},label:'neutral'},
+  happy   :{mode:'arc', w:36,h:30,tilt:0,yOff:0,asym:0,corner:13,glow:'#43e8ff',bob:{a:8,s:1.1},label:'happy'},
+  curious :{mode:'rect',w:33,h:42,tilt:0,yOff:-6,asym:8,corner:13,glow:'#5fe6ff',bob:{a:8,s:1.3},label:'curious'},
+  thinking:{mode:'rect',w:30,h:32,tilt:0,yOff:-8,asym:4,corner:12,glow:'#a78bfa',bob:{a:5,s:0.8},label:'thinking'},
+  excited :{mode:'rect',w:38,h:48,tilt:0,yOff:0,asym:0,corner:16,glow:'#7df9ff',bob:{a:14,s:1.9},label:'excited'},
+  shocked :{mode:'rect',w:44,h:44,tilt:0,yOff:0,asym:0,corner:22,glow:'#bfefff',bob:{a:4,s:1.2},label:'shocked'},
+  concerned:{mode:'rect',w:33,h:36,tilt:13,yOff:4,asym:0,corner:13,glow:'#fbbf24',bob:{a:5,s:0.9},label:'concerned'},
+  hero    :{mode:'rect',w:40,h:26,tilt:-12,yOff:0,asym:0,corner:9,glow:'#ff6a5a',bob:{a:9,s:1.4},label:'hero mode'},
+  celebrate:{mode:'arc',w:38,h:32,tilt:0,yOff:0,asym:0,corner:13,glow:'#5ef0a0',bob:{a:16,s:2.1},label:'celebrate'},
+  proud   :{mode:'arc',w:36,h:30,tilt:0,yOff:-2,asym:0,corner:13,glow:'#5ef0a0',bob:{a:8,s:1},label:'proud'},
+  sleeping:{mode:'line',w:34,h:5, tilt:0,yOff:6,asym:0,corner:3, glow:'#5b6b86',bob:{a:3,s:0.5},label:'sleeping 💤'},
+};
+const ORDER=['neutral','happy','curious','thinking','excited','shocked','concerned','hero','celebrate','sleeping'];
+
+// interpolated (cur) vs target
+let cur=JSON.parse(JSON.stringify(E.neutral));
+let tgt=E.neutral, tgtName='neutral';
+function setEmotion(name){tgt=E[name];tgtName=name;document.getElementById('emoLabel').textContent=tgt.label;}
+const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
+
+// dock buttons
+const dock=document.getElementById('dock');
+ORDER.forEach(n=>{const b=document.createElement('div');b.className='chip';b.textContent=E[n].label.replace(' 💤','');b.onclick=()=>{auto=false;setEmotion(n);};dock.appendChild(b);});
+
+// mouse gaze
+let mx=0.5,my=0.4,haveMouse=false;
+addEventListener('mousemove',e=>{mx=e.clientX/W;my=e.clientY/H;haveMouse=true;});
+
+// blink + saccade + auto-cycle timers
+let blink=1, nextBlink=1.2, sacc={x:0,y:0}, nextSacc=2, auto=true, nextAuto=4, t=0, lastBlinkSet=0;
+
+function roundRect(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+function drawEye(cx,cy,p,gazeX,gazeY,blinkF,side){
+  ctx.save();ctx.translate(cx+gazeX, cy+gazeY);ctx.rotate((p.tilt*side)*Math.PI/180);
+  ctx.shadowColor=p.glow; ctx.shadowBlur=26;
+  const grad=ctx.createLinearGradient(0,-p.h/2,0,p.h/2);
+  grad.addColorStop(0,'#ffffff');grad.addColorStop(.35,p.glow);grad.addColorStop(1,shade(p.glow,-22));
+  ctx.fillStyle=grad;ctx.strokeStyle=grad;
+  if(p.mode==='arc'){
+    ctx.lineWidth=p.h*0.55;ctx.lineCap='round';ctx.beginPath();
+    ctx.moveTo(-p.w/2,p.h*0.28);ctx.quadraticCurveTo(0,-p.h*0.55,p.w/2,p.h*0.28);ctx.stroke();
+  } else {
+    const h=Math.max(2,p.h*blinkF);
+    roundRect(-p.w/2,-h/2,p.w,h,p.corner);ctx.fill();
+    // catchlight
+    if(p.mode!=='line'&&blinkF>0.5){ctx.shadowBlur=0;ctx.fillStyle='#ffffffdd';
+      ctx.beginPath();ctx.arc(-p.w*0.16+gazeX*0.4,-h*0.18+gazeY*0.4,Math.max(2,p.w*0.10),0,7);ctx.fill();}
+  }
+  ctx.restore();
+}
+function shade(c,amt){const p=hx(c);const cl=(v)=>Math.max(0,Math.min(255,Math.round(v+amt)));return`rgb(${cl(p[0])},${cl(p[1])},${cl(p[2])})`;}
+
+function drawBody(cx,cy,glow){
+  // glass egg body
+  ctx.save();
+  ctx.shadowColor='#0008';ctx.shadowBlur=40;ctx.shadowOffsetY=24;
+  const bw=150,bh=190;
+  const bg=ctx.createLinearGradient(cx,cy-bh/2,cx,cy+bh/2);
+  bg.addColorStop(0,'#fbfdff');bg.addColorStop(.5,'#e7eefb');bg.addColorStop(1,'#bcc9e0');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.ellipse(cx,cy,bw/2,bh/2,0,0,7);ctx.fill();
+  ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  // rim light
+  ctx.strokeStyle='#ffffff70';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,cy-2,bw/2-2,bh/2-2,0,Math.PI*1.1,Math.PI*1.95);ctx.stroke();
+  // visor (face screen)
+  const vw=118,vh=86;
+  ctx.save();ctx.shadowColor=glow;ctx.shadowBlur=30;
+  const vg=ctx.createLinearGradient(cx,cy-vh/2-18,cx,cy-vh/2-18+vh);
+  vg.addColorStop(0,'#0c1426');vg.addColorStop(1,'#060a16');
+  ctx.fillStyle=vg;roundRect(cx-vw/2,cy-vh/2-18,vw,vh,30);ctx.fill();ctx.restore();
+  // visor gloss
+  ctx.fillStyle='#ffffff10';roundRect(cx-vw/2+10,cy-vh/2-12,vw-20,20,14);ctx.fill();
+  ctx.restore();
+}
+
+let particles=[...Array(26)].map((_,i)=>({x:Math.random(),y:Math.random(),r:Math.random()*1.6+0.4,s:Math.random()*0.4+0.1,ph:Math.random()*7}));
+
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;t+=dt;
+  resizeIfNeeded();
+  ctx.clearRect(0,0,W,H);
+
+  // ambient particles
+  ctx.save();
+  for(const p of particles){const px=p.x*W,py=((p.y - (reduce?0:t*p.s*0.02))%1+1)%1*H;
+    ctx.globalAlpha=0.18+0.18*Math.sin(t*0.7+p.ph);ctx.fillStyle='#9fd8ff';ctx.beginPath();ctx.arc(px,py,p.r,0,7);ctx.fill();}
+  ctx.restore();
+
+  // interpolate emotion params
+  const L=7;
+  for(const k of ['w','h','tilt','yOff','asym','corner']) cur[k]=damp(cur[k],tgt[k],L,dt);
+  cur.mode=tgt.mode; // discrete
+  // glow color lerp
+  cur.glow=lerpHex(cur.glow,tgt.glow,1-Math.exp(-6*dt));
+
+  // timers
+  if(!reduce){
+    nextBlink-=dt; if(nextBlink<=0){blinkPhase=0.0001;nextBlink=1.6+Math.random()*3.4;}
+    if(blinkPhase!==null){blinkPhase+=dt/0.14; if(blinkPhase>=1){blinkPhase=null;blink=1;} else {blink=Math.abs(Math.cos(blinkPhase*Math.PI));}}
+    nextSacc-=dt; if(nextSacc<=0 && !haveMouse){sacc={x:(Math.random()-0.5),y:(Math.random()-0.5)*0.6};nextSacc=1.5+Math.random()*2.5;}
+    nextAuto-=dt; if(auto && nextAuto<=0){const i=ORDER.indexOf(tgtName);setEmotion(ORDER[(i+1)%ORDER.length]);nextAuto=3.8;}
+  }
+
+  // gaze target (cursor or saccade)
+  const gx = haveMouse ? (mx-0.5)*2 : sacc.x;
+  const gy = haveMouse ? (my-0.5)*2 : sacc.y;
+  gazeX=damp(gazeX,gx,8,dt); gazeY=damp(gazeY,gy,8,dt);
+
+  // float
+  const bob=reduce?0:Math.sin(t*tgt.bob.s*2)*tgt.bob.a;
+  const cx=W/2, cy=H/2 + 10 + bob;
+
+  drawBody(cx,cy,cur.glow);
+
+  // eyes inside visor
+  const eyeCY=cy-26 + cur.yOff;
+  const gap=cur.mode==='arc'?34:30;
+  const gXpx=gazeX*7, gYpx=gazeY*6;
+  drawEye(cx-gap, eyeCY - cur.asym, cur, gXpx, gYpx, cur.mode==='line'?1:blink, 1);
+  drawEye(cx+gap, eyeCY + cur.asym, cur, gXpx, gYpx, cur.mode==='line'?1:blink, -1);
+
+  // Zzz for sleeping
+  if(tgtName==='sleeping'){ctx.save();ctx.globalAlpha=0.6+0.4*Math.sin(t*2);ctx.fillStyle='#9fb3d6';ctx.font='600 18px system-ui';
+    ctx.fillText('z',cx+70,cy-60-(t*8%26));ctx.font='600 24px system-ui';ctx.fillText('Z',cx+82,cy-74-((t*8+10)%26));ctx.restore();}
+
+  requestAnimationFrame(frame);
+}
+let blinkPhase=null, gazeX=0, gazeY=0;
+function lerpHex(a,b,m){const pa=hx(a),pb=hx(b);return`rgb(${Math.round(pa[0]+(pb[0]-pa[0])*m)},${Math.round(pa[1]+(pb[1]-pa[1])*m)},${Math.round(pa[2]+(pb[2]-pa[2])*m)})`;}
+function hx(c){if(c[0]==='#'){const n=parseInt(c.slice(1),16);return[n>>16,(n>>8)&255,n&255];}const m=c.match(/\d+/g);return[+m[0],+m[1],+m[2]];}
+function resizeIfNeeded(){if(cv.clientWidth!==W||cv.clientHeight!==H)resize();}
+
+resize();setEmotion('neutral');requestAnimationFrame(frame);
+</script>
+</body>
+</html>

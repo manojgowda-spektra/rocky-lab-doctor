@@ -1,0 +1,352 @@
+URL_START: https://cosmos.cloudlabs.ai/dashboard/organization/ai/chat/a83a1856-e0ea-417b-abd9-6c526bd652c2
+URL_FINAL: https://cosmos.cloudlabs.ai/dashboard/organization/ai/chat/a83a1856-e0ea-417b-abd9-6c526bd652c2
+WAITED_MS: 14000
+
+=== CAPTURED ===
+Short answer: partially, but not as a real-time activity feed of “what the learner is doing right now” inside the lab UI.
+
+What appears to exist today in CloudLabs is:
+
+A lab progress read API:
+GET /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/users/{eventUserId}
+Summary: “Gets the lab progress detail.”
+A progress summary / leaderboard API:
+POST /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/summary
+Summary: “Gets the lab progress leaderboard.”
+A template validation-definition API:
+GET /api/partners/{partnerGuid}/templates/{templateGuid}/template-lab-guide-validations
+Summary: “Gets the template lab guide validations.”
+Lab guide content/association APIs that can help you retrieve the guide structure:
+GET /api/partners/{partnerGuid}/labGuide/{labGuideGuid}/partner-lab-guide
+GET /api/partners/{partnerGuid}/labGuide/{templateGuid}/template-lab-guides/{onDemandLabGuid}
+
+What this likely means in practice:
+
+You can probably retrieve progress state for a learner at the lab / exercise / validation-step level.
+You can likely retrieve the defined validation structure for a template, which may let an external system infer:
+step names
+exercise names
+validation steps
+You may also retrieve the associated lab guide to get authored instructional content.
+
+What I do not see evidence of today:
+
+No obvious webhook, event stream, SSE, WebSocket, or push-based real-time learner telemetry endpoint.
+No clearly exposed API specifically described as:
+“current active step”
+“learner is viewing/clicking X now”
+“lab objective for current step”
+“expected outcome of each step” as a dedicated feed
+fine-grained in-session activity like browser navigation, command execution, or portal interactions
+
+So, being specific:
+
+Available today
+
+Progress detail endpoint
+
+GET /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/users/{eventUserId}
+Best candidate for learner progress tracking.
+Likely useful for “how far along is this learner?” rather than “what are they doing this second?”
+
+Progress summary endpoint
+
+POST /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/summary
+Aggregate/leaderboard style progress, not detailed live behavior.
+
+Validation-definition endpoint
+
+GET /api/partners/{partnerGuid}/templates/{templateGuid}/template-lab-guide-validations
+Gives the authored validation model for the lab template.
+Useful for expected checks/steps if your lab uses validations.
+
+Lab guide endpoints
+
+GET /api/partners/{partnerGuid}/labGuide/{labGuideGuid}/partner-lab-guide
+GET /api/partners/{partnerGuid}/labGuide/{templateGuid}/template-lab-guides/{onDemandLabGuid}
+Useful for the guide content and associations, if you need to map progress back to authored instructions/objectives.
+Not clearly available today
+Real-time event feed of learner actions
+Push notifications when a learner changes step
+Dedicated API field for step objective / expected outcome as telemetry
+Live “currently doing” feed for external systems
+Best-possible external integration pattern today
+
+If you need this now, the likely design is:
+
+Pull lab guide + validation metadata to understand the authored steps/objectives.
+Poll the progress detail endpoint for each learner.
+Correlate that progress with the guide/validation structure in your external system.
+
+That gives you a derived progress view, but not true real-time behavioral telemetry.
+
+If you want, I can help with the next step and draft a concrete integration map showing:
+
+which endpoint to call first,
+how to resolve eventUserId,
+how to correlate progress rows to lab guide steps/objectives,
+and what gaps you’d still have versus a true live activity feed.
+---
+Short answer: not from the APIs I can see here. CloudLabs does expose identifiers for a learner’s deployment, but I do not see an API that hands an external system direct cloud credentials or grants native cloud control-plane access.
+
+What is exposed today from the CloudLabs side:
+
+Per-attendee lab instance records via cloudlabs_labs_instances
+Each deployment row includes:
+deploymentId — the DID shown in the portal
+deploymentUniqueId
+cloudUserId — labeled “Cloud DID”
+subscriptionFriendlyName
+eventUserEmail
+status
+Per-user registration / launch info via cloudlabs_labs_users
+Includes user status and launch link
+Deployment troubleshooting logs via cloudlabs_deployment_activity_log
+Read-only deployment activity/error log for one attendee deployment
+Template / ODL metadata via the metadata tools
+Useful to inspect configured VM definitions, licenses, settings, validations, etc.
+
+What I do not see exposed today:
+
+No API surfaced here for:
+Azure subscription ID
+tenant ID
+service principal client ID / secret
+managed identity details
+AWS access key / secret key / role credentials
+GCP service account key / project credentials
+a CloudLabs-issued token you can use against Azure Resource Graph, Azure ARM, AWS APIs, or GCP APIs
+No endpoint indicating “exchange this lab deployment for cloud credentials”
+No external inspection API that proxies native cloud inventory queries on your behalf
+
+Important distinction:
+
+subscriptionFriendlyName is just a display name, not proof of direct API access.
+cloudUserId / deploymentId / deploymentUniqueId are CloudLabs identifiers, useful for correlating deployments, not cloud credentials.
+
+So if your question is:
+
+Can an external system inspect the learner’s actual Azure/AWS/GCP resources directly?
+
+Not based on what’s exposed here, unless you already have separate cloud access outside CloudLabs.
+
+To do that, your external system would need credentials obtained independently of CloudLabs, for example:
+
+your own Azure service principal / managed identity with access to the target subscription
+your own AWS cross-account role or credentials
+your own GCP service account with project permissions
+
+But from the CloudLabs APIs/tools visible here, I do not see a supported path where CloudLabs gives those credentials to the external system.
+
+What you can do programmatically today
+
+You can use CloudLabs to determine:
+
+which learner deployment exists
+its deployment/status identifiers
+the subscription friendly name
+logs/status around provisioning
+the authored template/validation structure
+
+You cannot, from what’s visible here, programmatically obtain:
+
+cloud admin credentials
+direct subscription/project/account identifiers suitable for native cloud API queries
+a built-in CloudLabs resource inventory feed of “what the learner created”
+Practical implication
+
+If you need automated inspection of actual learner-created resources, the supported pattern is usually:
+
+Build the lab so resources are created in cloud accounts/subscriptions you control
+Use your own cloud credentials outside CloudLabs to inspect those environments
+Correlate cloud state back to the learner using CloudLabs identifiers like:
+eventUserEmail
+deploymentId
+deploymentUniqueId
+cloudUserId
+subscriptionFriendlyName
+
+But CloudLabs itself, from the interfaces available here, does not appear to expose raw cloud credentials to external systems.
+
+If you want, I can turn this into a precise capability matrix with columns for:
+
+CloudLabs identifier available?
+Cloud credentials available?
+Native Azure/AWS/GCP query possible?
+What an external LMS/analytics platform can infer vs cannot infer today
+---
+Here’s the most precise answer I can give from what’s exposed today:
+
+1) What a validation definition contains
+
+The relevant definition endpoints I can see are:
+
+GET /api/partners/{partnerGuid}/templates/{templateGuid}/template-lab-guide-validations
+GET /api/partners/{partnerGuid}/templates/{templateGuid}/cloud-platforms/{cloudPlatformGuid}/validations
+POST /api/partners/{partnerGuid}/templates/{templateGuid}/cloud-platforms/{cloudPlatformGuid}/validations/modules/{moduleGuid}/exercises/{exerciseGuid}/steps/{stepGuid}
+
+From those endpoint names and summaries, CloudLabs clearly models validations as a hierarchy of:
+
+modules
+exercises
+steps
+
+and the step is the unit of validation.
+
+What I can say confidently:
+
+A validation definition includes at least:
+the module / exercise / step structure
+a step identity (stepGuid)
+some form of validation configuration / check definition, because there is a create-or-update endpoint specifically for a validation step
+The system is built to support deployable validation steps, which strongly implies the step definition contains executable or evaluable check logic:
+GET /templates/{templateGuid}/validations/steps/{stepGuid}/deploy-step
+GET /templates/{templateGuid}/validations/steps/deploy-steps
+
+What I cannot verify field-by-field from the tools available here:
+
+exact JSON property names such as:
+expectedOutcome
+description
+script
+resourceId
+resourceType
+expectedState
+passCriteria
+whether the human-readable expectation is stored as a dedicated field versus inferred from the lab guide text
+whether the “check logic” is stored as script text, declarative rules, resource selectors, or another internal schema
+
+So, specifically to your sub-questions:
+
+Does each validation step include the expected resource/state?
+
+Possibly, often effectively yes, but not proven as a guaranteed named field from what I can inspect here.
+
+Because validations are step-based and deployable, the definition almost certainly includes enough metadata or logic to test for an expected state. But I cannot name the exact field exposed by the API.
+
+Does it include the check logic?
+
+Very likely yes.
+
+The existence of create/update/deploy endpoints for validation steps strongly indicates that each step stores executable validation logic or a machine-readable rule definition.
+
+Does it include a human-readable description of the expected outcome?
+
+Possibly, but not confirmed as a dedicated validation field.
+
+This may live in:
+
+the validation definition itself,
+the linked lab guide content,
+or both.
+2) Can you read per-learner validation results at runtime?
+
+The strongest runtime endpoints I can see are:
+
+GET /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/users/{eventUserId}
+“Gets the lab progress detail.”
+POST /api/partners/{partnerGuid}/lab-cluster/{labClusterGuid}/lab-cluster-validation-progress
+“Gets the lab cluster validation progress.”
+POST /api/partners/{partnerGuid}/lab-cluster/{labClusterGuid}/lab-cluster-user-validation-status
+“Gets the lab cluster user validation status.”
+PUT /api/partners/{partnerGuid}/lab-cluster/{labClusterGuid}/event-users/{eventUserId}/validations/exercises/{exerciseGuid}/steps/{stepGuid}
+“Updates the validation result for a user in a lab cluster.”
+
+That is enough to say:
+
+Yes — CloudLabs appears to expose runtime per-learner validation status/results
+
+At least at the level of:
+
+learner (eventUserId)
+exercise
+step
+validation status/progress
+What result detail is likely available
+
+Because there is an endpoint to update the validation result for a user at a specific exercise/step, the runtime model almost certainly includes at least:
+
+learner/user ID
+exercise ID
+step ID
+validation status/result for that step
+Can I confirm passed/failed is available?
+
+Very likely yes.
+
+The runtime APIs are specifically about validation progress/status, so pass/fail-or-equivalent state is strongly implied.
+
+Can I confirm timestamps are available?
+
+Not from the endpoint catalog alone.
+
+Timestamps are plausible, but I cannot honestly name a field like:
+
+validatedAt
+completedAt
+lastUpdatedAt
+passedAt without seeing a live payload or schema.
+3) Specific fields I can name vs. cannot name
+I can name these identifiers from the endpoint shapes
+
+These are definitely part of the model, because they appear in the paths:
+
+templateGuid
+cloudPlatformGuid
+moduleGuid
+exerciseGuid
+stepGuid
+onDemandLabGuid
+eventUserId
+labClusterGuid
+I can infer these result concepts exist
+
+But I cannot guarantee exact property names:
+
+per-step validation status
+per-user progress detail
+per-exercise / per-step results
+pass/fail-or-equivalent outcome
+I cannot name exact payload fields today
+
+I cannot verify exact response JSON fields for:
+
+expected resource/state
+check logic body
+expected outcome text
+result timestamps
+error message / failure reason
+who triggered the validation
+attempt count
+duration
+Bottom line
+
+Definition side:
+
+CloudLabs definitely exposes validation definitions organized as module → exercise → step, and those steps are rich enough to be created/updated/deployed, so they almost certainly contain machine-readable validation logic.
+
+What I cannot confirm from the catalog alone is the exact field-level schema for:
+
+expected state/resource
+human-readable expected outcome
+script/rule body
+
+Runtime side:
+
+CloudLabs does appear to expose per-learner validation progress/results through:
+
+GET /labs/{ondemandLabGuid}/progress/users/{eventUserId}
+POST /lab-cluster/{labClusterGuid}/lab-cluster-validation-progress
+POST /lab-cluster/{labClusterGuid}/lab-cluster-user-validation-status
+
+That strongly suggests you can read which learner has passed/failed which validation step, but I cannot confirm exact result fields or timestamp field names without a live payload/schema sample.
+
+If you want, I can do one more pass and map these endpoints into a confidence table:
+
+endpoint
+definition vs runtime
+definitely known fields
+inferred fields
+not confirmed
+
+That would give you a clean “what CloudLabs clearly exposes vs what remains unproven” artifact.

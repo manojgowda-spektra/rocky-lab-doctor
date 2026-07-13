@@ -1,0 +1,10 @@
+# secrets — never commit (live Azure OpenAI key lives here locally)
+.env.local
+.env
+*.env.local
+# runtime artifacts
+source/rocky-prototype/logs/
+node_modules/
+*.zip
+# local editor/agent settings
+.claude/

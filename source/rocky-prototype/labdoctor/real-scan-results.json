@@ -1,0 +1,1616 @@
+{
+ "scannedAt": "2026-07-11T02:03:47.685Z",
+ "root": "C:\\Users\\ManojGowda\\OneDrive - Spektra Systems LLC\\Desktop\\Labs",
+ "repoCount": 8,
+ "repos": [
+  {
+   "name": "Accelerating Development with GitHub Copilot & Copilot Chat",
+   "files": 8,
+   "mdLines": 2067,
+   "findingCount": 0,
+   "byType": {},
+   "findings": [],
+   "ms": 278,
+   "git": {
+    "branch": "fix/media-updates",
+    "commit": "5d340fb",
+    "dirty": false
+   }
+  },
+  {
+   "name": "AI-Agents-using-Microsoft-Frameworks",
+   "files": 9,
+   "mdLines": 1999,
+   "findingCount": 53,
+   "byType": {
+    "BROKEN_ASSET_LINK": 53
+   },
+   "findings": [
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step04-dataset-structure.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 67,
+     "evidence": "![](./media/lab04/l4-step04-dataset-structure.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step09-metrics.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 131,
+     "evidence": "![](./media/lab04/l4-step09-metrics.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step12-comparison.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 163,
+     "evidence": "![](./media/lab04/l4-step12-comparison.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step13-decision.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 181,
+     "evidence": "![](./media/lab04/l4-step13-decision.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step14-open-workflow.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 193,
+     "evidence": "![](./media/lab04/l4-step14-open-workflow.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step15-workflow-structure.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 206,
+     "evidence": "![](./media/lab04/l4-step15-workflow-structure.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab04/l4-step16-architecture.png",
+     "file": "Instructions/Labs/Lab04.md",
+     "line": 216,
+     "evidence": "![](./media/lab04/l4-step16-architecture.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step01-open-appinsights.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 26,
+     "evidence": "![](./media/lab05/l5-step01-open-appinsights.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step02-copy-connstring.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 30,
+     "evidence": "![](./media/lab05/l5-step02-copy-connstring.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step03-open-env.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 38,
+     "evidence": "![](./media/lab05/l5-step03-open-env.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step04-update-env.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 47,
+     "evidence": "![](./media/lab05/l5-step04-update-env.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step05-sensitive-data.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 57,
+     "evidence": "![](./media/lab05/l5-step05-sensitive-data.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step06-start-mcp.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 76,
+     "evidence": "![](./media/lab05/l5-step06-start-mcp.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step07-start-backend.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 89,
+     "evidence": "![](./media/lab05/l5-step07-start-backend.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step08-confirm-enabled.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 97,
+     "evidence": "![](./media/lab05/l5-step08-confirm-enabled.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step09-diagnostics.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 109,
+     "evidence": "![](./media/lab05/l5-step09-diagnostics.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step10-diagnostics-response.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 120,
+     "evidence": "![](./media/lab05/l5-step10-diagnostics-response.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step11-run-sample.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 141,
+     "evidence": "![](./media/lab05/l5-step11-run-sample.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step12-trace-output.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 150,
+     "evidence": "![](./media/lab05/l5-step12-trace-output.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step13-portal-appinsights.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 160,
+     "evidence": "![](./media/lab05/l5-step13-portal-appinsights.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step14-transaction-search.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 164,
+     "evidence": "![](./media/lab05/l5-step14-transaction-search.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step15-search-trace.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 168,
+     "evidence": "![](./media/lab05/l5-step15-search-trace.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step16-trace-detail.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 172,
+     "evidence": "![](./media/lab05/l5-step16-trace-detail.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step17-span-breakdown.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 183,
+     "evidence": "![](./media/lab05/l5-step17-span-breakdown.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step18-live-metrics.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 191,
+     "evidence": "![](./media/lab05/l5-step18-live-metrics.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step19-live-metrics-activity.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 206,
+     "evidence": "![](./media/lab05/l5-step19-live-metrics-activity.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step20-dashboard-links.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 217,
+     "evidence": "![](./media/lab05/l5-step20-dashboard-links.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step21-observations.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 232,
+     "evidence": "![](./media/lab05/l5-step21-observations.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab05/l5-step22-backend-trace.png",
+     "file": "Instructions/Labs/Lab05.md",
+     "line": 244,
+     "evidence": "![](./media/lab05/l5-step22-backend-trace.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step01-open-infra-readme.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 25,
+     "evidence": "![](./media/lab06/l6-step01-open-infra-readme.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step02-architecture.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 38,
+     "evidence": "![](./media/lab06/l6-step02-architecture.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step03-open-azureyaml.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 44,
+     "evidence": "![](./media/lab06/l6-step03-open-azureyaml.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step04-services.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 58,
+     "evidence": "![](./media/lab06/l6-step04-services.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step05-security.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 73,
+     "evidence": "![](./media/lab06/l6-step05-security.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step06-workflows.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 85,
+     "evidence": "![](./media/lab06/l6-step06-workflows.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step07-azd-login.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 105,
+     "evidence": "![](./media/lab06/l6-step07-azd-login.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step08-login-complete.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 109,
+     "evidence": "![](./media/lab06/l6-step08-login-complete.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step09-env-new.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 120,
+     "evidence": "![](./media/lab06/l6-step09-env-new.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step10-azd-up.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 132,
+     "evidence": "![](./media/lab06/l6-step10-azd-up.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step11-azd-progress.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 141,
+     "evidence": "![](./media/lab06/l6-step11-azd-progress.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step12-azd-complete.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 145,
+     "evidence": "![](./media/lab06/l6-step12-azd-complete.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step13-env-values.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 161,
+     "evidence": "![](./media/lab06/l6-step13-env-values.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step14-backend-browser.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 165,
+     "evidence": "![](./media/lab06/l6-step14-backend-browser.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step15-health-check.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 173,
+     "evidence": "![](./media/lab06/l6-step15-health-check.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step16-resource-group.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 179,
+     "evidence": "![](./media/lab06/l6-step16-resource-group.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step17-resources.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 193,
+     "evidence": "![](./media/lab06/l6-step17-resources.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step18-identity.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 201,
+     "evidence": "![](./media/lab06/l6-step18-identity.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step19-identity-enabled.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 205,
+     "evidence": "![](./media/lab06/l6-step19-identity-enabled.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step20-no-secrets.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 214,
+     "evidence": "![](./media/lab06/l6-step20-no-secrets.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step21-logs.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 226,
+     "evidence": "![](./media/lab06/l6-step21-logs.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step22-log-output.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 230,
+     "evidence": "![](./media/lab06/l6-step22-log-output.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step23-commands.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 245,
+     "evidence": "![](./media/lab06/l6-step23-commands.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "./media/lab06/l6-step24-observations.png",
+     "file": "Instructions/Labs/Lab06.md",
+     "line": 260,
+     "evidence": "![](./media/lab06/l6-step24-observations.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    }
+   ],
+   "ms": 271,
+   "git": {
+    "branch": "lab-upgrade-pr-qa",
+    "commit": "5226596",
+    "dirty": false
+   }
+  },
+  {
+   "name": "ai-developer",
+   "files": 28,
+   "mdLines": 2861,
+   "findingCount": 8,
+   "byType": {
+    "DEPRECATED_DEPENDENCY": 8
+   },
+   "findings": [
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "gpt-35-turbo",
+     "file": "Dotnet/challenges/Challenge-01.md",
+     "line": 59,
+     "evidence": "[QuickStart: Get started using GPT-35-Turbo with Azure AI Foundry Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/chatgpt-quickstart?tabs=command-line%2Cpython-new&pivots=programming-language-studio)",
+     "replacement": "gpt-4o-mini",
+     "note": "GPT-3.5 Turbo deployments are legacy; new labs should target the gpt-4o family.",
+     "when": "legacy model on the Azure OpenAI retirement path",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "Dotnet/challenges/Challenge-05.md",
+     "line": 112,
+     "evidence": "1. Using [Azure AI Studio](https://ai.azure.com/resource/deployments), deploy a *Standard* **text-embedding-ada-002** model in the same deployment as your previous GPT-4o model. Once deployed, add the **Embedding Deploym",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "Dotnet/challenges/Challenge-05.md",
+     "line": 114,
+     "evidence": "![Embedding Model](./Resources/images/text-embedding-ada-002.png)",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "Dotnet/challenges/Challenge-05.md",
+     "line": 119,
+     "evidence": "\"EMBEDDINGS_DEPLOYMODEL\": \"text-embedding-ada-002\"",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "gpt-35-turbo",
+     "file": "Python/challenges/Challenge-01.md",
+     "line": 59,
+     "evidence": "[QuickStart: Get started using GPT-35-Turbo with Azure AI Foundry Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/chatgpt-quickstart?tabs=command-line%2Cpython-new&pivots=programming-language-studio)",
+     "replacement": "gpt-4o-mini",
+     "note": "GPT-3.5 Turbo deployments are legacy; new labs should target the gpt-4o family.",
+     "when": "legacy model on the Azure OpenAI retirement path",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "Python/challenges/Challenge-05.md",
+     "line": 112,
+     "evidence": "1. Using [Azure AI Foundry](https://ai.azure.com/resource/deployments), deploy a *Standard* **text-embedding-ada-002** model in the same deployment as your previous GPT-4o model. Once deployed, add the **Embedding Deploy",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "Python/challenges/Challenge-05.md",
+     "line": 119,
+     "evidence": "AZURE_OPENAI_EMBED_DEPLOYMENT_NAME: \"text-embedding-ada-002\"",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "Python/challenges/Challenge-05.md",
+     "line": 145,
+     "evidence": "1. Select the **text-embedding-ada-002** model created previously",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    }
+   ],
+   "ms": 333,
+   "git": {
+    "branch": "main",
+    "commit": "58b1a7a",
+    "dirty": false
+   }
+  },
+  {
+   "name": "CAF-Infra-Security",
+   "files": 19,
+   "mdLines": 3515,
+   "findingCount": 0,
+   "byType": {},
+   "findings": [],
+   "ms": 257,
+   "git": {
+    "branch": "main",
+    "commit": "8d554fb",
+    "dirty": false
+   }
+  },
+  {
+   "name": "Fabric-Analytics-in-aday",
+   "files": 72,
+   "mdLines": 41229,
+   "findingCount": 0,
+   "byType": {},
+   "findings": [],
+   "ms": 538,
+   "git": {
+    "branch": "March-2026",
+    "commit": "b89787b",
+    "dirty": false
+   }
+  },
+  {
+   "name": "MCW-App-modernization",
+   "files": 36,
+   "mdLines": 6228,
+   "findingCount": 4,
+   "byType": {
+    "BROKEN_ASSET_LINK": 4
+   },
+   "findings": [
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "media/azure-migrate-create-project-settings.png",
+     "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+     "line": 129,
+     "evidence": "![Azure Migrate project settings page is shown. The project name is set to partsunlimitedweb. Create button is highlighted.](media/azure-migrate-create-project-settings.png \"Azure Migrate Project Creation\")",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "media/resource-group-appservice-resource.png",
+     "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+     "line": 593,
+     "evidence": "![The search box for resource is filled in with partsunlimited-web. The partsunlimited-web-20 Azure App Service is highlighted in the list of resources in the hands-on-lab-SUFFIX resource group.](media/resource-group-app",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "media/resource-group-appservice-resource.png",
+     "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+     "line": 716,
+     "evidence": "![The search box for resources is filled in with partsunlimited-web. The partsunlimited-web-20 Azure App Service is highlighted in the list of resources in the hands-on-lab-SUFFIX resource group.](media/resource-group-ap",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "media/resource-group-appservice-resource.png",
+     "file": "Hands-on lab/HOL step-by-step - App modernization.md",
+     "line": 857,
+     "evidence": "![The search box for resources is filled in with partsunlimited-web. The partsunlimited-web-20 Azure App Service is highlighted in the list of resources in the hands-on-lab-SUFFIX resource group.](media/resource-group-ap",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    }
+   ],
+   "ms": 303,
+   "git": {
+    "branch": "microsoft-app-modernization-v2",
+    "commit": "0deaea6",
+    "dirty": true
+   }
+  },
+  {
+   "name": "OpenAIWorkshop",
+   "files": 60,
+   "mdLines": 10888,
+   "findingCount": 26,
+   "byType": {
+    "EOL_RUNTIME": 5,
+    "BROKEN_ASSET_LINK": 1,
+    "RENAMED_PRODUCT": 12,
+    "DEPRECATED_DEPENDENCY": 8
+   },
+   "findings": [
+    {
+     "type": "EOL_RUNTIME",
+     "token": "Node.js 16",
+     "file": "agentic_ai/agents/agent_framework/README.md",
+     "line": 21,
+     "evidence": "2. **Node.js 16+** (for React frontend) - Check with `node --version`",
+     "replacement": "Node.js 22 (current LTS)",
+     "note": "Node 16 reached end-of-life 2023-09-11 (endoflife.date/nodejs); guides should state a supported version floor.",
+     "when": "2023-09-11",
+     "severity": "medium"
+    },
+    {
+     "type": "EOL_RUNTIME",
+     "token": "Node.js 16",
+     "file": "agentic_ai/agents/agent_framework/README.md",
+     "line": 43,
+     "evidence": "The React frontend requires Node.js 16+ and npm:",
+     "replacement": "Node.js 22 (current LTS)",
+     "note": "Node 16 reached end-of-life 2023-09-11 (endoflife.date/nodejs); guides should state a supported version floor.",
+     "when": "2023-09-11",
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../docs/media/observability-dashboard.png",
+     "file": "agentic_ai/observability/README.md",
+     "line": 118,
+     "evidence": "![Agent Framework Dashboard](../docs/media/observability-dashboard.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "EOL_RUNTIME",
+     "token": "Node.js 18",
+     "file": "agentic_ai/workflow/fraud_detection_durable/README.md",
+     "line": 554,
+     "evidence": "- **Node.js 18+** — for React UI",
+     "replacement": "Node.js 22 (current LTS)",
+     "note": "Node 18 reached end-of-life 2025-04-30 (endoflife.date/nodejs); guides should state a supported version floor.",
+     "when": "2025-04-30",
+     "severity": "medium"
+    },
+    {
+     "type": "EOL_RUNTIME",
+     "token": "Node.js 18",
+     "file": "agentic_ai/workflow/fraud_detection_durable/ui/README.md",
+     "line": 26,
+     "evidence": "- Node.js 18+ or newer",
+     "replacement": "Node.js 22 (current LTS)",
+     "note": "Node 18 reached end-of-life 2025-04-30 (endoflife.date/nodejs); guides should state a supported version floor.",
+     "when": "2025-04-30",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "ARCHITECTURE.md",
+     "line": 379,
+     "evidence": "- **Authentication:** Azure AD (AAD) with RBAC - no keys in code",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "ARCHITECTURE.md",
+     "line": 560,
+     "evidence": "- ✅ **1536-dimension embeddings**: text-embedding-ada-002 compatible",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "ARCHITECTURE.md",
+     "line": 688,
+     "evidence": "- **Azure AD**: Authentication and RBAC",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "EOL_RUNTIME",
+     "token": "Node.js 16",
+     "file": "docs/03_frontend_react.md",
+     "line": 22,
+     "evidence": "The React frontend requires Node.js 16+ and npm.",
+     "replacement": "Node.js 22 (current LTS)",
+     "note": "Node 16 reached end-of-life 2023-09-11 (endoflife.date/nodejs); guides should state a supported version floor.",
+     "when": "2023-09-11",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "infra/GITHUB_ACTIONS_SETUP.md",
+     "line": 237,
+     "evidence": "| `AZURE_TENANT_ID` | Azure AD Tenant ID | `0fbe7234-...` |",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "infra/README.md",
+     "line": 270,
+     "evidence": "openai_embedding_deployment_name   = \"text-embedding-ada-002\"",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "azurerm",
+     "file": "infra/README.md",
+     "line": 680,
+     "evidence": "- [Terraform AzureRM Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)",
+     "replacement": "Az PowerShell module",
+     "note": "AzureRM PowerShell module retired; use Az.",
+     "when": "2024-02-29",
+     "severity": "high"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "mcp/MULTI_TENANT_MCP_SECURITY.md",
+     "line": 22,
+     "evidence": "subgraph HomeTenant[\"Our Company Tenant (Azure AD)\"]",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "mcp/MULTI_TENANT_MCP_SECURITY.md",
+     "line": 79,
+     "evidence": "- When a **Customer Tenant Admin** consents to the app, Azure AD creates an **Enterprise Application** in their tenant.",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "mcp/MULTI_TENANT_MCP_SECURITY.md",
+     "line": 87,
+     "evidence": "- Azure AD issues a **v2.0 access token** containing:",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "mcp/README.md",
+     "line": 132,
+     "evidence": "NonDCRIdP[\"Non-DCR IdP\\n(GitHub, Google, Azure AD)\"]",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "mcp/SETUP.md",
+     "line": 45,
+     "evidence": "- **Azure OpenAI** - For embeddings (text-embedding-ada-002)",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "mcp/SETUP.md",
+     "line": 91,
+     "evidence": "AZURE_OPENAI_EMBEDDING_DEPLOYMENT=\"text-embedding-ada-002\"",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "mcp/SETUP.md",
+     "line": 321,
+     "evidence": "AZURE_OPENAI_EMBEDDING_DEPLOYMENT=\"text-embedding-ada-002\"",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "mcp/SETUP.md",
+     "line": 340,
+     "evidence": "# For production with Azure AD:",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "mcp/SETUP.md",
+     "line": 627,
+     "evidence": "2. **Configure authentication** - Set up Azure AD for production",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "SETUP.md",
+     "line": 100,
+     "evidence": "# (2) Azure AD service-principal (preferred in production)",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "SETUP.md",
+     "line": 123,
+     "evidence": "> If you choose Cosmos DB and use Azure AD service-principal authentication, you must grant the service principal a custom role for data plane (read/write) access in Cosmos DB.",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "RENAMED_PRODUCT",
+     "token": "Azure AD",
+     "file": "SETUP.md",
+     "line": 127,
+     "evidence": "> Without this role, the application will not be able to access or persist chat history in Cosmos DB using Azure AD authentication.",
+     "replacement": "Microsoft Entra ID",
+     "note": "Abbreviated legacy name; guide text no longer matches current portal naming.",
+     "when": "2023-08",
+     "severity": "medium"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "SETUP.md",
+     "line": 132,
+     "evidence": "# This file is a sample configuration for the MCP backend services's knowledge retrieval APIs which uses text-embedding-ada-002 embedding model",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    },
+    {
+     "type": "DEPRECATED_DEPENDENCY",
+     "token": "text-embedding-ada-002",
+     "file": "SETUP.md",
+     "line": 136,
+     "evidence": "AZURE_OPENAI_EMBEDDING_DEPLOYMENT=\"text-embedding-ada-002\"",
+     "replacement": "text-embedding-3-large / text-embedding-3-small",
+     "note": "Legacy embedding model on the retirement path; new labs should target the text-embedding-3 family.",
+     "when": "retirement announced on the Azure OpenAI model lifecycle",
+     "severity": "high"
+    }
+   ],
+   "ms": 564,
+   "git": {
+    "branch": "main",
+    "commit": "8478be6",
+    "dirty": false
+   }
+  },
+  {
+   "name": "RTIAD-Workshop-April-2026",
+   "files": 36,
+   "mdLines": 20430,
+   "findingCount": 42,
+   "byType": {
+    "BROKEN_ASSET_LINK": 13,
+    "ASSET_CASE_MISMATCH": 12,
+    "INJECT_TOKEN_LOSS": 16,
+    "LOCALE_POINTER_DRIFT": 1
+   },
+   "findings": [
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-2---April-2026/image3.png",
+     "file": "French/Labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "![](../media/Lab-2---April-2026/image3.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-5---April-2026/Fabrikam.png?raw=true",
+     "file": "French/Labguide/Lab-5---April-2026.md",
+     "line": 463,
+     "evidence": "\\![Fabrikam\\](../media/Lab-5---April-2026/Fabrikam.png?raw=true \"Fabrikam\")",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "German/Labguide/Lab-1---April-2026.md",
+     "line": 1,
+     "evidence": "35 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-1---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "German/Labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "69 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-2---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "German/Labguide/Lab-3---April-2026.md",
+     "line": 1,
+     "evidence": "61 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-3---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "German/Labguide/Lab-4---April-2026.md",
+     "line": 1,
+     "evidence": "47 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-4---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-5---April-2026/Fabrikam.png?raw=true",
+     "file": "German/Labguide/Lab-5---April-2026.md",
+     "line": 443,
+     "evidence": "![Fabrikam](../media/Lab-5---April-2026/Fabrikam.png?raw=true \"Fabrikam\")",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "German/Labguide/Lab-5---April-2026.md",
+     "line": 1,
+     "evidence": "63 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-5---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-6---April-2026/l6.png",
+     "file": "German/Labguide/Lab-6---April-2026.md",
+     "line": 3,
+     "evidence": "![](../media/Lab-6---April-2026/l6.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "German/Labguide/Lab-6---April-2026.md",
+     "line": 1,
+     "evidence": "12 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-6---April-2026/image15.jpeg) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-5---April-2026/Fabrikam.png?raw=true",
+     "file": "Japanese/Labguide/Lab-5---April-2026.md",
+     "line": 459,
+     "evidence": "\\![Fabrikam\\](../media/Lab-5---April-2026/Fabrikam.png?raw=true \"Fabrikam\")",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-1---April-2026/INCTM.png",
+     "file": "Portuguese/labguide/Lab-1---April-2026.md",
+     "line": 111,
+     "evidence": "![](../media/Lab-1---April-2026/INCTM.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-1---April-2026/wrklds.png",
+     "file": "Portuguese/labguide/Lab-1---April-2026.md",
+     "line": 141,
+     "evidence": "![](../media/Lab-1---April-2026/wrklds.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-1---April-2026/rltm.png",
+     "file": "Portuguese/labguide/Lab-1---April-2026.md",
+     "line": 179,
+     "evidence": "![](../media/Lab-1---April-2026/rltm.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "Portuguese/labguide/Lab-1---April-2026.md",
+     "line": 1,
+     "evidence": "35 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-1---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "Portuguese/labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "67 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-2---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-3---April-2026/l3ii.png",
+     "file": "Portuguese/labguide/Lab-3---April-2026.md",
+     "line": 832,
+     "evidence": "![](../media/Lab-3---April-2026/l3ii.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "Portuguese/labguide/Lab-3---April-2026.md",
+     "line": 1,
+     "evidence": "58 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-3---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-4---April-2026/l4.png",
+     "file": "Portuguese/labguide/Lab-4---April-2026.md",
+     "line": 3,
+     "evidence": "![](../media/Lab-4---April-2026/l4.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "Portuguese/labguide/Lab-4---April-2026.md",
+     "line": 1,
+     "evidence": "46 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-4---April-2026/image5.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../media/Lab-5---April-2026/Fabrikam.png?raw=true",
+     "file": "Portuguese/labguide/Lab-5---April-2026.md",
+     "line": 407,
+     "evidence": "\\![Fabrikam\\](../media/Lab-5---April-2026/Fabrikam.png?raw=true \"Fabrikam\")",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "Portuguese/labguide/Lab-5---April-2026.md",
+     "line": 1,
+     "evidence": "63 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-5---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "ASSET_CASE_MISMATCH",
+     "token": "media→Media",
+     "file": "Portuguese/labguide/Lab-6---April-2026.md",
+     "line": 1,
+     "evidence": "12 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-6---April-2026/image3.png) — renders locally on Windows, 404s when served from case-sensitive hosting",
+     "replacement": "use the exact on-disk casing \"Media\" in the links (or rename the folder)",
+     "note": "Case-insensitive filesystems hide this until the guide is served from case-sensitive hosting (e.g. GitHub raw) — then every affected image breaks at once.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../Media/Lab-5---April-2026/image7.png",
+     "file": "Spanish/Labguide/Lab-5---April-2026.md",
+     "line": 88,
+     "evidence": "![](../Media/Lab-5---April-2026/image7.png)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "BROKEN_ASSET_LINK",
+     "token": "../Media/Lab-5---April-2026/image61.jpeg",
+     "file": "Spanish/Labguide/Lab-5---April-2026.md",
+     "line": 450,
+     "evidence": "![](../Media/Lab-5---April-2026/image61.jpeg)",
+     "replacement": null,
+     "note": "Image referenced by the guide does not exist in the repo — learners see a broken image.",
+     "when": null,
+     "severity": "medium"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "French/Labguide/Lab-1---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-1---April-2026.md\" carries 4 <inject> token(s); this French translation carries 3. Missing/short keys: DeploymentID (0/2)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "AzureAdUserEmail, AzureAdUserPassword, DeploymentID",
+     "file": "Japanese/Labguide/Lab-1---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-1---April-2026.md\" carries 4 <inject> token(s); this Japanese translation carries 0. Missing/short keys: AzureAdUserEmail (0/1), AzureAdUserPassword (0/1), DeploymentID (0/2)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID, rti-iad-orders",
+     "file": "French/Labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-2---April-2026.md\" carries 5 <inject> token(s); this French translation carries 0. Missing/short keys: DeploymentID (0/4), rti-iad-orders Primary Key (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "German/Labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-2---April-2026.md\" carries 5 <inject> token(s); this German translation carries 4. Missing/short keys: DeploymentID (3/4)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID, rti-iad-orders",
+     "file": "Japanese/Labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-2---April-2026.md\" carries 5 <inject> token(s); this Japanese translation carries 0. Missing/short keys: DeploymentID (0/4), rti-iad-orders Primary Key (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "Spanish/Labguide/Lab-2---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-2---April-2026.md\" carries 5 <inject> token(s); this Spanish translation carries 4. Missing/short keys: DeploymentID (3/4)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID, rti-iad-trucks",
+     "file": "French/Labguide/Lab-3---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-3---April-2026.md\" carries 6 <inject> token(s); this French translation carries 0. Missing/short keys: DeploymentID (0/5), rti-iad-trucks Primary Key (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID, rti-iad-trucks",
+     "file": "Japanese/Labguide/Lab-3---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-3---April-2026.md\" carries 6 <inject> token(s); this Japanese translation carries 0. Missing/short keys: DeploymentID (0/5), rti-iad-trucks Primary Key (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "Portuguese/Labguide/Lab-3---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-3---April-2026.md\" carries 6 <inject> token(s); this Portuguese translation carries 5. Missing/short keys: DeploymentID (4/5)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "AzureAdUserEmail, AzureAdUserPassword",
+     "file": "French/Labguide/Lab-4---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-4---April-2026.md\" carries 2 <inject> token(s); this French translation carries 0. Missing/short keys: AzureAdUserEmail (0/1), AzureAdUserPassword (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "AzureAdUserEmail, AzureAdUserPassword",
+     "file": "Japanese/Labguide/Lab-4---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-4---April-2026.md\" carries 2 <inject> token(s); this Japanese translation carries 0. Missing/short keys: AzureAdUserEmail (0/1), AzureAdUserPassword (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "AzureAdUserEmail, AzureAdUserPassword",
+     "file": "Portuguese/Labguide/Lab-4---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-4---April-2026.md\" carries 2 <inject> token(s); this Portuguese translation carries 0. Missing/short keys: AzureAdUserEmail (0/1), AzureAdUserPassword (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "French/Labguide/Lab-6---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-6---April-2026.md\" carries 1 <inject> token(s); this French translation carries 0. Missing/short keys: DeploymentID (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "German/Labguide/Lab-6---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-6---April-2026.md\" carries 1 <inject> token(s); this German translation carries 0. Missing/short keys: DeploymentID (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "Japanese/Labguide/Lab-6---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-6---April-2026.md\" carries 1 <inject> token(s); this Japanese translation carries 0. Missing/short keys: DeploymentID (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "INJECT_TOKEN_LOSS",
+     "token": "DeploymentID",
+     "file": "Portuguese/Labguide/Lab-6---April-2026.md",
+     "line": 1,
+     "evidence": "English \"Labguide/Lab-6---April-2026.md\" carries 1 <inject> token(s); this Portuguese translation carries 0. Missing/short keys: DeploymentID (0/1)",
+     "replacement": "restore the <inject key=\"…\"> tokens from the English source",
+     "note": "Learners following this translation see literal placeholder text instead of their injected credentials/IDs — the step (and its validation) cannot succeed.",
+     "when": null,
+     "severity": "high"
+    },
+    {
+     "type": "LOCALE_POINTER_DRIFT",
+     "token": "April-2026 vs February-2026",
+     "file": "English/Labguide/Combined-masterdoc.json",
+     "line": 1,
+     "evidence": "masterdoc pins entries to 2 different release branches: February-2026×30, April-2026×6 — some languages are being served an older release than others",
+     "replacement": "point every language at the same release branch",
+     "note": "Learners in the stale languages get outdated steps/screenshots while English moved on — invisible until someone diffs the branches.",
+     "when": null,
+     "severity": "high"
+    }
+   ],
+   "ms": 3351,
+   "git": {
+    "branch": "April-2026",
+    "commit": "23851e9",
+    "dirty": false
+   }
+  }
+ ],
+ "totals": {
+  "files": 268,
+  "findings": 133,
+  "byType": {
+   "BROKEN_ASSET_LINK": 71,
+   "DEPRECATED_DEPENDENCY": 16,
+   "EOL_RUNTIME": 5,
+   "RENAMED_PRODUCT": 12,
+   "ASSET_CASE_MISMATCH": 12,
+   "INJECT_TOKEN_LOSS": 16,
+   "LOCALE_POINTER_DRIFT": 1
+  }
+ }
+}

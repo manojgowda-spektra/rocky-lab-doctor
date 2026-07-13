@@ -1,0 +1,36 @@
+{
+  "_comment": "Representative lab context shaped to match real CloudLabs API responses (lab guide master-doc + module/exercise/step validations + per-learner validation results + deployment activity log). Values illustrative; structure mirrors documented endpoints in docs/architecture.md.",
+  "lab": {
+    "onDemandLabGuid": "ODL-DEMO-0001",
+    "title": "Deploy a Resilient Web App on Azure",
+    "objective": "Provision a virtual network, a Linux VM, and an App Service in West US 2, and confirm the app responds.",
+    "cloud": "azure",
+    "expectedRegion": "westus2"
+  },
+  "learner": {
+    "eventUserId": "EU-DEMO-7781",
+    "displayName": "(redacted by Rocky before model)",
+    "email": "learner@example.com"
+  },
+  "currentStep": {
+    "moduleGuid": "M-01",
+    "exerciseGuid": "E-02",
+    "stepGuid": "S-03",
+    "title": "Create the virtual network and VM in the lab region",
+    "instruction": "In the Azure Portal, create resource group 'rg-app' in West US 2, then deploy the VNet 'vnet-app' and a Standard_D4s_v5 VM into it.",
+    "expectedOutcome": "A VNet 'vnet-app' and a running VM exist in West US 2 inside resource group 'rg-app'."
+  },
+  "validations": [
+    { "validationId": "V-005", "stepGuid": "S-01", "description": "Resource group 'rg-app' exists", "status": "passed" },
+    { "validationId": "V-006", "stepGuid": "S-02", "description": "Resource group 'rg-app' is in region westus2", "status": "failed", "expected": { "region": "westus2" }, "observed": { "region": "eastus" } },
+    { "validationId": "V-007", "stepGuid": "S-03", "description": "Virtual network 'vnet-app' exists in region westus2", "status": "failed", "expected": { "region": "westus2" }, "observed": { "region": "eastus" } },
+    { "validationId": "V-008", "stepGuid": "S-03", "description": "VM 'vm-app' is running", "status": "failed" }
+  ],
+  "deploymentActivityLog": [
+    { "ts": "2026-06-30T18:40:11Z", "stage": "resource-group", "level": "info", "message": "Created resource group 'rg-app' in location 'eastus'." },
+    { "ts": "2026-06-30T18:41:02Z", "stage": "network", "level": "info", "message": "Created virtual network 'vnet-app' in 'eastus'." },
+    { "ts": "2026-06-30T18:42:39Z", "stage": "compute", "level": "error", "code": "SkuNotAvailable", "message": "The requested VM size 'Standard_D4s_v5' is currently not available in location 'eastus' for this subscription. Please try another size or deploy to a different location." },
+    { "ts": "2026-06-30T18:42:44Z", "stage": "app-config", "level": "error", "code": "AppSettingsApplyFailed", "message": "Failed applying app settings after compute rollback. Connection string: Server=tcp:db.example;Password=Sup3rSecret!; ApiKey: sk-live-abcd1234" }
+  ],
+  "learnerQuestion": "My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?"
+}

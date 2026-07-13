@@ -1,0 +1,343 @@
+{
+  "_comment": "Lab Doctor demo catalog. Each lab = a Cosmos-authored spec (steps + validation definitions = expected ground truth) PLUS fleet telemetry as COHORTS. A cohort is a group of learners who exhibited the same outcome pattern; 'count' = how many learners it represents, so a handful of cohorts model a realistic fleet honestly and inspectably. 'history' = trailing daily health scores (illustrative trend for the sparkline). The catalog exercises every classifier: region DRIFT (A, D — same root cause => a cross-lab FLEET PATTERN), false-FAIL validation bug (A), false-PASS validation bug (F — the silent one), guide clarity (A, G), env/permission + quota (E), transient flake correctly downgraded (C), and healthy labs (B, H, I, J). Values illustrative; shapes mirror documented CloudLabs/Cosmos endpoints (see docs/architecture.md).",
+  "windowDays": 7,
+  "asOf": "2026-07-02",
+  "labs": [
+    {
+      "labId": "ODL-DEMO-0001",
+      "title": "Deploy a Resilient Web App on Azure",
+      "cloud": "azure",
+      "expectedRegion": "westus2",
+      "author": "content-team",
+      "lastAuthored": "2026-03-12",
+      "history": [{ "d": "Jun 26", "score": 90 }, { "d": "Jun 27", "score": 89 }, { "d": "Jun 28", "score": 88 }, { "d": "Jun 29", "score": 61 }, { "d": "Jun 30", "score": 44 }, { "d": "Jul 1", "score": 37 }],
+      "steps": [
+        { "stepGuid": "S-01", "title": "Create the resource group in the lab region", "instruction": "In the Azure Portal, create resource group 'rg-app'. Select a region from the dropdown.", "expectedOutcome": "Resource group 'rg-app' exists in West US 2." },
+        { "stepGuid": "S-03", "title": "Create the virtual network and VM", "instruction": "Deploy VNet 'vnet-app' and a Standard_D4s_v5 VM into 'rg-app'.", "expectedOutcome": "A VNet and a running VM exist in West US 2." },
+        { "stepGuid": "S-04", "title": "Configure the App Service application settings", "instruction": "Open the App Service, go to Configuration, and add the connection settings.", "expectedOutcome": "App settings are saved and the app restarts." },
+        { "stepGuid": "S-05", "title": "Verify the web app responds", "instruction": "Browse to the app URL and confirm it returns HTTP 200.", "expectedOutcome": "The app responds with HTTP 200." }
+      ],
+      "validations": [
+        { "validationId": "V-006", "stepGuid": "S-01", "description": "Resource group 'rg-app' is in region westus2", "expected": { "region": "westus2" } },
+        { "validationId": "V-007", "stepGuid": "S-03", "description": "Virtual network 'vnet-app' exists in region westus2", "expected": { "region": "westus2" } },
+        { "validationId": "V-008", "stepGuid": "S-03", "description": "VM 'vm-app' is running", "expected": { "running": true } },
+        { "validationId": "V-010", "stepGuid": "S-04", "description": "App Service application settings are configured", "expected": { "settingsConfigured": true } },
+        { "validationId": "V-009", "stepGuid": "S-05", "description": "App Service responds with HTTP 200", "expected": { "httpStatus": 200 } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 22, "label": "Deployed to East US, hit SkuNotAvailable", "reachedStep": "S-03",
+            "timings": { "S-01": 210, "S-03": 480 }, "retries": { "V-007": 2 },
+            "validationResults": [
+              { "validationId": "V-006", "status": "failed", "observed": { "region": "eastus" } },
+              { "validationId": "V-007", "status": "failed", "observed": { "region": "eastus", "exists": false } },
+              { "validationId": "V-008", "status": "failed", "observed": { "running": false } }
+            ],
+            "errors": [{ "code": "SkuNotAvailable", "message": "The requested VM size 'Standard_D4s_v5' is currently not available in location 'eastus' for this subscription. Please try another size or deploy to a different location." }]
+          },
+          {
+            "count": 9, "label": "Built correctly in West US 2, but the app check failed anyway", "reachedStep": "S-05",
+            "timings": { "S-01": 160, "S-03": 300, "S-04": 280, "S-05": 110 }, "retries": { "V-009": 3 },
+            "validationResults": [
+              { "validationId": "V-006", "status": "passed", "observed": { "region": "westus2" } },
+              { "validationId": "V-007", "status": "passed", "observed": { "region": "westus2", "exists": true } },
+              { "validationId": "V-008", "status": "passed", "observed": { "running": true } },
+              { "validationId": "V-010", "status": "passed", "observed": { "settingsConfigured": true } },
+              { "validationId": "V-009", "status": "failed", "observed": { "httpStatus": 200, "appRunning": true, "probedUrl": "https://app-XXXX.azurewebsites.net/" } }
+            ]
+          },
+          {
+            "count": 8, "label": "Got stuck configuring app settings (Step 4)", "reachedStep": "S-04",
+            "timings": { "S-01": 165, "S-03": 310, "S-04": 1400 }, "retries": { "V-010": 4 },
+            "validationResults": [
+              { "validationId": "V-006", "status": "passed", "observed": { "region": "westus2" } },
+              { "validationId": "V-007", "status": "passed", "observed": { "region": "westus2", "exists": true } },
+              { "validationId": "V-008", "status": "passed", "observed": { "running": true } },
+              { "validationId": "V-010", "status": "passed", "observed": { "settingsConfigured": true } }
+            ]
+          },
+          {
+            "count": 4, "label": "Clean pass (overrode the region themselves)", "reachedStep": "S-05",
+            "timings": { "S-01": 150, "S-03": 290, "S-04": 240, "S-05": 60 }, "retries": {},
+            "validationResults": [
+              { "validationId": "V-006", "status": "passed", "observed": { "region": "westus2" } },
+              { "validationId": "V-007", "status": "passed", "observed": { "region": "westus2", "exists": true } },
+              { "validationId": "V-008", "status": "passed", "observed": { "running": true } },
+              { "validationId": "V-010", "status": "passed", "observed": { "settingsConfigured": true } },
+              { "validationId": "V-009", "status": "passed", "observed": { "httpStatus": 200, "appRunning": true } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0002",
+      "title": "Secure Secrets with Azure Key Vault & Managed Identity",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-05-28",
+      "history": [{ "d": "Jun 26", "score": 96 }, { "d": "Jun 27", "score": 97 }, { "d": "Jun 28", "score": 96 }, { "d": "Jun 29", "score": 98 }, { "d": "Jun 30", "score": 97 }, { "d": "Jul 1", "score": 99 }],
+      "steps": [
+        { "stepGuid": "K-01", "title": "Create a Key Vault", "instruction": "Create a Key Vault 'kv-lab' in West US 2.", "expectedOutcome": "Key Vault exists." },
+        { "stepGuid": "K-02", "title": "Enable a managed identity on the web app", "instruction": "Turn on system-assigned managed identity for the App Service.", "expectedOutcome": "Managed identity is enabled." },
+        { "stepGuid": "K-03", "title": "Grant the identity access to the vault", "instruction": "Add a Key Vault access policy (or RBAC role) for the app's identity.", "expectedOutcome": "The app can read secrets." }
+      ],
+      "validations": [
+        { "validationId": "K-V1", "stepGuid": "K-01", "description": "Key Vault 'kv-lab' exists in westus2", "expected": { "region": "westus2" } },
+        { "validationId": "K-V2", "stepGuid": "K-02", "description": "App Service has a system-assigned managed identity", "expected": { "identityEnabled": true } },
+        { "validationId": "K-V3", "stepGuid": "K-03", "description": "Identity can read a secret from the vault", "expected": { "canRead": true } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 31, "label": "Completed cleanly", "reachedStep": "K-03", "timings": { "K-01": 140, "K-02": 110, "K-03": 200 }, "retries": {},
+            "validationResults": [
+              { "validationId": "K-V1", "status": "passed", "observed": { "region": "westus2" } },
+              { "validationId": "K-V2", "status": "passed", "observed": { "identityEnabled": true } },
+              { "validationId": "K-V3", "status": "passed", "observed": { "canRead": true } }
+            ]
+          },
+          {
+            "count": 3, "label": "Forgot the access policy (genuine learner miss)", "reachedStep": "K-03", "timings": { "K-01": 150, "K-02": 130, "K-03": 420 }, "retries": { "K-V3": 1 },
+            "validationResults": [
+              { "validationId": "K-V1", "status": "passed", "observed": { "region": "westus2" } },
+              { "validationId": "K-V2", "status": "passed", "observed": { "identityEnabled": true } },
+              { "validationId": "K-V3", "status": "failed", "observed": { "canRead": false } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0003",
+      "title": "Expose an App with AKS Ingress",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-06-19",
+      "history": [{ "d": "Jun 26", "score": 92 }, { "d": "Jun 27", "score": 90 }, { "d": "Jun 28", "score": 93 }, { "d": "Jun 29", "score": 91 }, { "d": "Jun 30", "score": 94 }, { "d": "Jul 1", "score": 95 }],
+      "steps": [
+        { "stepGuid": "A-01", "title": "Create the AKS cluster", "instruction": "Create an AKS cluster 'aks-lab'.", "expectedOutcome": "Cluster is running." },
+        { "stepGuid": "A-02", "title": "Install the ingress controller", "instruction": "Deploy the ingress controller and wait for its external IP.", "expectedOutcome": "The ingress controller has an external IP." }
+      ],
+      "validations": [
+        { "validationId": "A-V1", "stepGuid": "A-01", "description": "AKS cluster 'aks-lab' is running", "expected": { "running": true } },
+        { "validationId": "A-V2", "stepGuid": "A-02", "description": "Ingress controller has an external IP", "expected": { "hasExternalIP": true } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 23, "label": "Passed on retry (RBAC/IP took a minute to propagate)", "reachedStep": "A-02", "timings": { "A-01": 400, "A-02": 360 }, "retries": { "A-V2": 1 },
+            "validationResults": [
+              { "validationId": "A-V1", "status": "passed", "observed": { "running": true } },
+              { "validationId": "A-V2", "status": "passed", "observed": { "hasExternalIP": true }, "firstAttempt": "failed", "resolvedOnRetry": true }
+            ]
+          },
+          {
+            "count": 4, "label": "Genuinely stuck on ingress", "reachedStep": "A-02", "timings": { "A-01": 420, "A-02": 700 }, "retries": { "A-V2": 3 },
+            "validationResults": [
+              { "validationId": "A-V1", "status": "passed", "observed": { "running": true } },
+              { "validationId": "A-V2", "status": "failed", "observed": { "hasExternalIP": false } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0004",
+      "title": "Provision Cosmos DB with a Function App",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-04-02",
+      "history": [{ "d": "Jun 26", "score": 88 }, { "d": "Jun 27", "score": 87 }, { "d": "Jun 28", "score": 86 }, { "d": "Jun 29", "score": 58 }, { "d": "Jun 30", "score": 47 }, { "d": "Jul 1", "score": 41 }],
+      "steps": [
+        { "stepGuid": "D-01", "title": "Create the resource group", "instruction": "Create resource group 'rg-data'. Choose a region.", "expectedOutcome": "Resource group exists in West US 2." },
+        { "stepGuid": "D-03", "title": "Deploy the Function App (Premium plan)", "instruction": "Deploy a Premium-plan Function App into 'rg-data'.", "expectedOutcome": "The Function App is running in West US 2." }
+      ],
+      "validations": [
+        { "validationId": "D-V1", "stepGuid": "D-01", "description": "Resource group 'rg-data' is in region westus2", "expected": { "region": "westus2" } },
+        { "validationId": "D-V2", "stepGuid": "D-03", "description": "Function App is running", "expected": { "running": true } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 24, "label": "Deployed to East US, Premium plan unavailable", "reachedStep": "D-03", "timings": { "D-01": 190, "D-03": 500 }, "retries": { "D-V2": 2 },
+            "validationResults": [
+              { "validationId": "D-V1", "status": "failed", "observed": { "region": "eastus" } },
+              { "validationId": "D-V2", "status": "failed", "observed": { "running": false } }
+            ],
+            "errors": [{ "code": "SkuNotAvailable", "message": "The App Service plan SKU 'EP1' is currently not available in location 'eastus' for this subscription. Please choose a different tier or deploy to a different location." }]
+          },
+          {
+            "count": 1, "label": "Clean pass in West US 2", "reachedStep": "D-03", "timings": { "D-01": 160, "D-03": 320 }, "retries": {},
+            "validationResults": [
+              { "validationId": "D-V1", "status": "passed", "observed": { "region": "westus2" } },
+              { "validationId": "D-V2", "status": "passed", "observed": { "running": true } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0005",
+      "title": "Train a Model on a GPU VM",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-05-10",
+      "history": [{ "d": "Jun 26", "score": 85 }, { "d": "Jun 27", "score": 83 }, { "d": "Jun 28", "score": 80 }, { "d": "Jun 29", "score": 79 }, { "d": "Jun 30", "score": 78 }, { "d": "Jul 1", "score": 78 }],
+      "steps": [
+        { "stepGuid": "E-01", "title": "Deploy a GPU VM", "instruction": "Deploy a Standard_NC6s_v3 GPU VM.", "expectedOutcome": "The GPU VM is running." }
+      ],
+      "validations": [
+        { "validationId": "E-V1", "stepGuid": "E-01", "description": "GPU VM is running", "expected": { "running": true } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 9, "label": "Blocked by vCPU quota", "reachedStep": "E-01", "timings": { "E-01": 520 }, "retries": { "E-V1": 2 },
+            "validationResults": [{ "validationId": "E-V1", "status": "failed", "observed": { "running": false } }],
+            "errors": [{ "code": "QuotaExceeded", "message": "Operation could not be completed as it results in exceeding approved standardNCSv3Family vCPU quota (0 of 6 available) in region westus2." }]
+          },
+          {
+            "count": 15, "label": "Ran fine", "reachedStep": "E-01", "timings": { "E-01": 300 }, "retries": {},
+            "validationResults": [{ "validationId": "E-V1", "status": "passed", "observed": { "running": true } }]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0006",
+      "title": "Lock Down a Storage Account",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-02-20",
+      "history": [{ "d": "Jun 26", "score": 71 }, { "d": "Jun 27", "score": 69 }, { "d": "Jun 28", "score": 66 }, { "d": "Jun 29", "score": 63 }, { "d": "Jun 30", "score": 60 }, { "d": "Jul 1", "score": 59 }],
+      "steps": [
+        { "stepGuid": "F-01", "title": "Create the storage account", "instruction": "Create storage account 'stlab'.", "expectedOutcome": "Storage account exists." },
+        { "stepGuid": "F-02", "title": "Disable public network access", "instruction": "Set the storage account's public network access to Disabled.", "expectedOutcome": "Public network access is disabled." }
+      ],
+      "validations": [
+        { "validationId": "F-V1", "stepGuid": "F-01", "description": "Storage account 'stlab' exists", "expected": { "exists": true } },
+        { "validationId": "F-V2", "stepGuid": "F-02", "description": "Public network access is disabled", "expected": { "publicAccess": false } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 23, "label": "Marked complete — but storage is still public", "reachedStep": "F-02", "timings": { "F-01": 150, "F-02": 180 }, "retries": {},
+            "validationResults": [
+              { "validationId": "F-V1", "status": "passed", "observed": { "exists": true } },
+              { "validationId": "F-V2", "status": "passed", "observed": { "publicAccess": true } }
+            ]
+          },
+          {
+            "count": 1, "label": "Actually locked it down", "reachedStep": "F-02", "timings": { "F-01": 160, "F-02": 240 }, "retries": {},
+            "validationResults": [
+              { "validationId": "F-V1", "status": "passed", "observed": { "exists": true } },
+              { "validationId": "F-V2", "status": "passed", "observed": { "publicAccess": false } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0007",
+      "title": "Configure Application Gateway Routing",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-06-01",
+      "history": [{ "d": "Jun 26", "score": 82 }, { "d": "Jun 27", "score": 80 }, { "d": "Jun 28", "score": 81 }, { "d": "Jun 29", "score": 79 }, { "d": "Jun 30", "score": 80 }, { "d": "Jul 1", "score": 80 }],
+      "steps": [
+        { "stepGuid": "G-01", "title": "Create the Application Gateway", "instruction": "Create an Application Gateway 'agw-lab'.", "expectedOutcome": "Gateway exists." },
+        { "stepGuid": "G-02", "title": "Create the backend pool", "instruction": "Add a backend pool.", "expectedOutcome": "Backend pool exists." },
+        { "stepGuid": "G-04", "title": "Configure the routing rule", "instruction": "Configure request routing.", "expectedOutcome": "A routing rule is configured." }
+      ],
+      "validations": [
+        { "validationId": "G-V1", "stepGuid": "G-01", "description": "Application Gateway exists", "expected": { "exists": true } },
+        { "validationId": "G-V2", "stepGuid": "G-04", "description": "A request routing rule is configured", "expected": { "configured": true } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          {
+            "count": 11, "label": "Struggled with the routing rule (Step G-04)", "reachedStep": "G-04", "timings": { "G-01": 200, "G-02": 250, "G-04": 1500 }, "retries": { "G-V2": 4 },
+            "validationResults": [
+              { "validationId": "G-V1", "status": "passed", "observed": { "exists": true } },
+              { "validationId": "G-V2", "status": "passed", "observed": { "configured": true } }
+            ]
+          },
+          {
+            "count": 15, "label": "Configured routing without trouble", "reachedStep": "G-04", "timings": { "G-01": 210, "G-02": 240, "G-04": 300 }, "retries": {},
+            "validationResults": [
+              { "validationId": "G-V1", "status": "passed", "observed": { "exists": true } },
+              { "validationId": "G-V2", "status": "passed", "observed": { "configured": true } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0008",
+      "title": "Build a CI/CD Pipeline with GitHub Actions",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-06-22",
+      "history": [{ "d": "Jun 26", "score": 99 }, { "d": "Jun 27", "score": 100 }, { "d": "Jun 28", "score": 99 }, { "d": "Jun 29", "score": 100 }, { "d": "Jun 30", "score": 100 }, { "d": "Jul 1", "score": 100 }],
+      "steps": [{ "stepGuid": "P-01", "title": "Create the workflow", "instruction": "Add a deploy workflow.", "expectedOutcome": "Workflow runs green." }],
+      "validations": [{ "validationId": "P-V1", "stepGuid": "P-01", "description": "Workflow deploys successfully", "expected": { "deployed": true } }],
+      "telemetry": {
+        "cohorts": [
+          { "count": 28, "label": "Passed", "reachedStep": "P-01", "timings": { "P-01": 260 }, "retries": {}, "validationResults": [{ "validationId": "P-V1", "status": "passed", "observed": { "deployed": true } }] }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0009",
+      "title": "Query Data with Azure Synapse",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-05-15",
+      "history": [{ "d": "Jun 26", "score": 95 }, { "d": "Jun 27", "score": 96 }, { "d": "Jun 28", "score": 97 }, { "d": "Jun 29", "score": 96 }, { "d": "Jun 30", "score": 98 }, { "d": "Jul 1", "score": 97 }],
+      "steps": [{ "stepGuid": "Q-01", "title": "Run the query", "instruction": "Run the sample query in Synapse.", "expectedOutcome": "Query returns rows." }],
+      "validations": [{ "validationId": "Q-V1", "stepGuid": "Q-01", "description": "Query returns results", "expected": { "hasResults": true } }],
+      "telemetry": {
+        "cohorts": [
+          { "count": 27, "label": "Passed", "reachedStep": "Q-01", "timings": { "Q-01": 220 }, "retries": {}, "validationResults": [{ "validationId": "Q-V1", "status": "passed", "observed": { "hasResults": true } }] },
+          { "count": 2, "label": "Query typo (learner miss)", "reachedStep": "Q-01", "timings": { "Q-01": 380 }, "retries": { "Q-V1": 1 }, "validationResults": [{ "validationId": "Q-V1", "status": "failed", "observed": { "hasResults": false } }] }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0010",
+      "title": "Containerize an App with Azure Container Apps",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-06-25",
+      "history": [{ "d": "Jun 26", "score": 100 }, { "d": "Jun 27", "score": 99 }, { "d": "Jun 28", "score": 100 }, { "d": "Jun 29", "score": 100 }, { "d": "Jun 30", "score": 99 }, { "d": "Jul 1", "score": 100 }],
+      "steps": [{ "stepGuid": "C-01", "title": "Deploy the container app", "instruction": "Deploy the sample container app.", "expectedOutcome": "The app is reachable." }],
+      "validations": [{ "validationId": "C-V1", "stepGuid": "C-01", "description": "Container app responds", "expected": { "reachable": true } }],
+      "telemetry": {
+        "cohorts": [
+          { "count": 22, "label": "Passed", "reachedStep": "C-01", "timings": { "C-01": 240 }, "retries": {}, "validationResults": [{ "validationId": "C-V1", "status": "passed", "observed": { "reachable": true } }] }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0011",
+      "title": "Batch Scoring on a D-series VM Pool",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-01-08",
+      "history": [{ "d": "Jun 26", "score": 99 }, { "d": "Jun 27", "score": 100 }, { "d": "Jun 28", "score": 99 }, { "d": "Jun 29", "score": 100 }, { "d": "Jun 30", "score": 99 }, { "d": "Jul 1", "score": 100 }],
+      "steps": [
+        { "stepGuid": "B-01", "title": "Create the resource group", "instruction": "Create resource group 'rg-batch'. Select a region from the dropdown.", "expectedOutcome": "Resource group exists in West US 2." },
+        { "stepGuid": "B-02", "title": "Create the VM pool", "instruction": "Deploy a pool of Standard_D4s_v5 VMs for batch scoring.", "expectedOutcome": "The VM pool is running." }
+      ],
+      "validations": [
+        { "validationId": "B-V1", "stepGuid": "B-01", "description": "Resource group 'rg-batch' is in region westus2", "expected": { "region": "westus2" } },
+        { "validationId": "B-V2", "stepGuid": "B-02", "description": "VM pool is running", "expected": { "running": true } }
+      ],
+      "telemetry": {
+        "cohorts": [
+          { "count": 18, "label": "Completed cleanly", "reachedStep": "B-02", "timings": { "B-01": 170, "B-02": 360 }, "retries": {}, "validationResults": [{ "validationId": "B-V1", "status": "passed", "observed": { "region": "westus2" } }, { "validationId": "B-V2", "status": "passed", "observed": { "running": true } }] },
+          { "count": 2, "label": "Genuine learner miss", "reachedStep": "B-02", "timings": { "B-01": 200, "B-02": 500 }, "retries": { "B-V2": 1 }, "validationResults": [{ "validationId": "B-V1", "status": "passed", "observed": { "region": "westus2" } }, { "validationId": "B-V2", "status": "failed", "observed": { "running": false } }] }
+        ]
+      }
+    },
+    {
+      "labId": "ODL-DEMO-0012",
+      "title": "Build a RAG App with Azure AI Search (Preview)",
+      "cloud": "azure", "expectedRegion": "westus2", "author": "content-team", "lastAuthored": "2026-07-01",
+      "history": [{ "d": "Jul 1", "score": null }],
+      "steps": [
+        { "stepGuid": "R-01", "title": "Create the resource group", "instruction": "Create resource group 'rg-rag'. Choose a region from the dropdown.", "expectedOutcome": "Resource group exists in West US 2." },
+        { "stepGuid": "R-02", "title": "Create an Azure AI Search service", "instruction": "Create an Azure AI Search service and enable the semantic ranker (preview).", "expectedOutcome": "Search service is ready with semantic ranker enabled." },
+        { "stepGuid": "R-03", "title": "Deploy the embedding model", "instruction": "In Azure AI Foundry, deploy the text-embedding-ada-002 model.", "expectedOutcome": "The embedding model is deployed." }
+      ],
+      "validations": [
+        { "validationId": "R-V1", "stepGuid": "R-01", "description": "Resource group 'rg-rag' is in region westus2", "expected": { "region": "westus2" } },
+        { "validationId": "R-V2", "stepGuid": "R-02", "description": "AI Search service exists with semantic ranker", "expected": { "semanticRanker": true } },
+        { "validationId": "R-V3", "stepGuid": "R-03", "description": "Embedding model is deployed", "expected": { "modelDeployed": true } }
+      ],
+      "telemetry": { "cohorts": [] }
+    }
+  ]
+}

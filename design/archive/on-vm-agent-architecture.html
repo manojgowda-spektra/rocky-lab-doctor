@@ -1,0 +1,494 @@
+<title>Rocky On-VM Agent — Architecture</title>
+<style>
+  :root{
+    --ink:#0d141d;            /* near-black ground for code/diagram */
+    --paper:#11192340;        /* unused alpha helper */
+    --bg:#0f1620;             /* page ground */
+    --panel:#17202c;          /* raised panel */
+    --panel-2:#1c2735;        /* table header / nested */
+    --line:#2a3645;           /* hairlines */
+    --line-soft:#222d3b;
+    --text:#e7edf4;           /* primary text */
+    --muted:#9fb0c3;          /* secondary text */
+    --faint:#6f8197;          /* captions */
+    --accent:#3db8c4;         /* Rocky / agent cyan-teal */
+    --accent-deep:#2a8a94;
+    --warn:#d99a4e;           /* pitfalls / caution amber */
+    --good:#5bbf8a;           /* recommended / pass */
+    --bad:#d96b6b;            /* avoid / fail */
+    --maxw:74ch;
+    --wide:1080px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+    font-size:17px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1200px 600px at 78% -8%, #16222f 0%, rgba(22,34,47,0) 60%);
+  }
+  .wrap{max-width:var(--wide);margin:0 auto;padding:0 24px 120px}
+  .measure{max-width:var(--maxw)}
+  code,kbd,pre,.mono{font-family:"JetBrains Mono","SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,monospace}
+
+  /* ---- header ---- */
+  header.masthead{
+    padding:68px 0 30px;border-bottom:1px solid var(--line);
+    margin-bottom:48px;
+  }
+  .eyebrow{
+    font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 18px;
+  }
+  h1{
+    font-size:clamp(30px,4.6vw,46px);line-height:1.08;margin:0 0 18px;
+    font-weight:700;letter-spacing:-.018em;text-wrap:balance;max-width:18ch;
+  }
+  h1 .lo{color:var(--muted);font-weight:500}
+  .standfirst{font-size:19px;color:var(--muted);max-width:62ch;margin:0}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:26px;
+    font-size:13px;color:var(--faint);
+  }
+  .meta b{color:var(--muted);font-weight:600}
+
+  /* ---- sections ---- */
+  section{margin:54px 0 0;scroll-margin-top:24px}
+  .secnum{
+    font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--faint);font-weight:600;
+    display:flex;align-items:center;gap:12px;margin:0 0 8px;
+  }
+  .secnum .n{color:var(--accent);font-variant-numeric:tabular-nums}
+  .secnum::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+  h2{font-size:clamp(23px,2.8vw,30px);line-height:1.15;margin:0 0 16px;font-weight:700;letter-spacing:-.012em;text-wrap:balance}
+  h3{font-size:19px;margin:34px 0 10px;font-weight:650;letter-spacing:-.005em;color:var(--text)}
+  h4{font-size:15px;margin:22px 0 6px;font-weight:650;color:var(--muted);letter-spacing:.01em}
+  p{margin:0 0 16px}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid #2a8a9455}
+  a:hover{border-bottom-color:var(--accent)}
+  strong{color:#fff;font-weight:650}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin:0 0 7px}
+  li::marker{color:var(--accent-deep)}
+
+  /* ---- lede callout under section heads ---- */
+  .lede{
+    border-left:3px solid var(--accent-deep);padding:2px 0 2px 18px;
+    color:var(--muted);font-size:17.5px;margin:0 0 22px;max-width:64ch;
+  }
+
+  /* ---- recommendation banner ---- */
+  .verdict{
+    background:linear-gradient(180deg,#13202a,#111a23);
+    border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin:26px 0;position:relative;overflow:hidden;
+  }
+  .verdict::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--accent)}
+  .verdict .tag{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0 0 8px}
+  .verdict p{margin:0;color:var(--text)}
+  .verdict.warn::before{background:var(--warn)}
+  .verdict.warn .tag{color:var(--warn)}
+
+  /* ---- tables ---- */
+  .tablewrap{overflow-x:auto;margin:22px 0;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:640px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  thead th{background:var(--panel-2);color:var(--muted);font-weight:650;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#16202b}
+  td .mono{font-size:13px;color:#cfe6e9}
+  .num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .pick td:first-child{box-shadow:inset 3px 0 0 var(--good)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:650;letter-spacing:.03em;white-space:nowrap}
+  .pill.good{background:#16352a;color:var(--good);border:1px solid #295c45}
+  .pill.bad{background:#3a2020;color:var(--bad);border:1px solid #5e3030}
+  .pill.warn{background:#382c19;color:var(--warn);border:1px solid #5e472a}
+  .pill.neu{background:#1f2a37;color:var(--muted);border:1px solid var(--line)}
+
+  /* ---- code ---- */
+  pre{
+    background:var(--ink);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;overflow-x:auto;font-size:13.5px;line-height:1.6;
+    margin:18px 0;color:#cdd9e5;
+  }
+  pre .c{color:#6b8294}
+  pre .k{color:var(--accent)}
+  pre .s{color:#c9b27e}
+  p code,li code,td code{background:#1d2935;border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px;font-size:.86em;color:#bfe3e7}
+
+  /* ---- diagram ---- */
+  .diagram{
+    background:var(--ink);border:1px solid var(--line);border-radius:14px;
+    padding:26px;margin:24px 0;overflow-x:auto;
+  }
+  .diagram .canvas{min-width:760px;display:flex;flex-direction:column;gap:0}
+  .zone{
+    border:1px dashed #33455a;border-radius:12px;padding:16px 18px 18px;margin:0;position:relative;
+  }
+  .zone + .link{display:flex;justify-content:center;padding:0;margin:0}
+  .zone-label{
+    position:absolute;top:-10px;left:16px;background:var(--ink);padding:0 8px;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600;
+  }
+  .zone.tenant{border-color:#2f5f64}
+  .zone.tenant .zone-label{color:var(--accent)}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .node{
+    flex:1 1 200px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;min-width:0;
+  }
+  .node.hi{border-color:var(--accent-deep);background:#142028;box-shadow:0 0 0 1px #2a8a9433}
+  .node .nt{font-weight:650;font-size:14px;margin:0 0 4px;color:var(--text)}
+  .node .nd{font-size:12.5px;color:var(--muted);margin:0;line-height:1.5}
+  .node .badge{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700;display:block;margin:0 0 6px}
+  .flow{
+    text-align:center;color:var(--faint);font-size:12px;font-family:"JetBrains Mono",monospace;
+    padding:7px 0;letter-spacing:.02em;
+  }
+  .flow b{color:var(--accent)}
+  .arrowcol{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0}
+  .arrowcol .ln{width:1px;height:14px;background:var(--accent-deep)}
+  .arrowcol .lbl{font-size:11px;color:var(--accent);font-family:"JetBrains Mono",monospace}
+  .arrowcol .tip{color:var(--accent-deep)}
+
+  /* ---- two-col cards ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:22px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .card h4{margin-top:0}
+  .card p:last-child{margin-bottom:0}
+
+  /* ---- pitfall list ---- */
+  .pitfall{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+  .pitfall:last-child{border-bottom:none}
+  .pitfall .mark{flex:0 0 auto;width:26px;height:26px;border-radius:7px;background:#2c2113;border:1px solid #5e472a;color:var(--warn);font-weight:700;display:grid;place-items:center;font-size:14px}
+  .pitfall .body{flex:1;min-width:0}
+  .pitfall .body p{margin:0}
+  .pitfall .body .pt{font-weight:650;color:var(--text);margin:0 0 3px}
+  .pitfall .body .pd{color:var(--muted);font-size:15px}
+
+  /* ---- footnote / sources ---- */
+  .sources{margin-top:60px;padding-top:28px;border-top:1px solid var(--line)}
+  .sources ol{font-size:13.5px;color:var(--muted);columns:2;column-gap:40px;padding-left:20px}
+  .sources li{margin-bottom:9px;break-inside:avoid}
+  .sources a{word-break:break-word}
+  @media(max-width:680px){.sources ol{columns:1}}
+
+  .note{font-size:14px;color:var(--faint);font-style:italic}
+  hr.soft{border:none;border-top:1px solid var(--line-soft);margin:30px 0}
+  .kbd{background:#1d2935;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:.84em;font-family:"JetBrains Mono",monospace;color:#cfe6e9}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Rocky × CloudLabs · Component &amp; Deployment Design</p>
+  <h1>The On-VM Agent <span class="lo">for whole-Windows-VM awareness</span></h1>
+  <p class="standfirst">A first-party agent baked into the CloudLabs Windows image — perceiving the desktop via UI&nbsp;Automation, reasoning in-tenant, and rendering Rocky as an always-on-top overlay the learner sees inside the RDP video.</p>
+  <div class="meta">
+    <span><b>Scope</b> P3 "In-VM Rocky" (per ADR-004)</span>
+    <span><b>Status</b> Design proposal — pre-build</span>
+    <span><b>Pairs with</b> docs/architecture.md, decisions.md</span>
+    <span><b>Constraints</b> SC-001…006, TC-001…004</span>
+  </div>
+</header>
+
+<!-- ============ FRAMING ============ -->
+<section id="frame">
+  <p class="secnum"><span class="n">00</span> The constraint that decides everything</p>
+  <h2>"RDP-over-browser" means the RDP client is a server, not the learner's PC</h2>
+  <div class="measure">
+    <p>Before choosing a single component, one fact has to be nailed down, because it inverts the obvious answer. CloudLabs delivers the VM as <strong>HTML5 in the browser</strong>. There is no <code>mstsc.exe</code> on the learner's machine. The browser speaks a JS/WebSocket protocol to a <strong>server-side gateway</strong> (the confirmed-unconfirmed backend is abstracted behind a per-learner launch URL, but the dominant open-source pattern — and the realistic assumption — is <strong>Apache Guacamole's <code>guacd</code> driving FreeRDP</strong>).<sup><a href="#s1">1</a></sup></p>
+    <p>So the "RDP client" that terminates the protocol is <code>guacd</code> running in CloudLabs infrastructure. That has a hard consequence the rest of this document is built around:</p>
+  </div>
+  <div class="verdict warn">
+    <p class="tag">Why the "obvious" DVC path is the harder one</p>
+    <p>Microsoft's clean Dynamic Virtual Channel APIs (<code>IWTSPlugin</code>, registered under <code>HKCU\…\Terminal Server Client\Default\AddIns</code>) are <strong>client-side plug-ins for the native RDC/<code>mstsc</code> client</strong>.<sup><a href="#s2">2</a></sup> In a browser-delivered session that client doesn't exist. A DVC here would have to be a <strong>compiled FreeRDP add-in living in <code>guacd</code></strong>, and FreeRDP exposes no documented runtime API to register a custom channel without shipping a separate <code>.so</code> in its plugin directory.<sup><a href="#s3">3</a></sup> DVC is therefore <em>possible</em> but it is platform-team surgery on the remoting tier — not a thing the VM image alone can deliver.</p>
+  </div>
+  <p class="measure">This is the honest version of the trade-off most "RDP companion" pitches gloss over. The recommendation below leads with the path that is actually shippable from the image, and treats DVC as a later optimization gated on platform work.</p>
+</section>
+
+<!-- ============ COMPONENT ARCHITECTURE ============ -->
+<section id="components">
+  <p class="secnum"><span class="n">01</span> Component / deployment architecture</p>
+  <h2>Three processes in the VM, one reasoning service in-tenant</h2>
+  <p class="lede">The agent splits along the Windows security boundary it cannot cross: a privileged <em>service</em> for lifecycle and a <em>per-session UI process</em> for everything the learner sees. Reasoning lives outside the VM.</p>
+
+  <div class="diagram" role="img" aria-label="Deployment diagram: learner browser, CloudLabs remoting tier, the Windows VM with its agent components, and the in-tenant reasoning service.">
+    <div class="canvas">
+
+      <div class="zone">
+        <span class="zone-label">Learner side</span>
+        <div class="row">
+          <div class="node">
+            <span class="badge">Browser</span>
+            <p class="nt">CloudLabs runtime page</p>
+            <p class="nd">HTML5 canvas of the VM video + lab-guide pane. The learner sees Rocky <em>inside</em> the video stream — there is no separate browser widget for the avatar in P3.</p>
+          </div>
+          <div class="node">
+            <span class="badge">Optional</span>
+            <p class="nt">Guide-pane Rocky (P1/P2)</p>
+            <p class="nd">The existing in-page assistant. Coexists with the overlay; they share one reasoning service and session memory.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="link"><div class="arrowcol"><span class="lbl">HTML5 / WebSocket (pixels + input)</span><span class="ln"></span><span class="tip">▼</span></div></div>
+
+      <div class="zone">
+        <span class="zone-label">CloudLabs remoting tier (server-side)</span>
+        <div class="row">
+          <div class="node">
+            <p class="nt"><code>guacd</code> / FreeRDP gateway</p>
+            <p class="nd">Terminates RDP to the VM, encodes the desktop to the browser. <strong>This</strong> is the "RDP client." A custom DVC add-in would live here (see §3, deferred).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="link"><div class="arrowcol"><span class="lbl">RDP (encrypted) — desktop is rendered here</span><span class="ln"></span><span class="tip">▼</span></div></div>
+
+      <div class="zone tenant">
+        <span class="zone-label">Windows lab VM — baked into the CloudLabs image</span>
+        <div class="row" style="margin-bottom:14px">
+          <div class="node">
+            <span class="badge">Session 0 · LocalService-ish</span>
+            <p class="nt">Rocky Agent Service</p>
+            <p class="nd">Windows Service. Owns updates, watchdog, launching the UI process into the active session, secure outbound channel. <strong>Cannot draw UI</strong> — Session 0 isolation.<sup><a href="#s4">4</a></sup></p>
+          </div>
+          <div class="node hi">
+            <span class="badge">Interactive session · the learner</span>
+            <p class="nt">Rocky Companion (UI process)</p>
+            <p class="nd">Runs as the learner. Two windows: (a) the <strong>always-on-top layered overlay</strong> that renders Rocky into the desktop the RDP gateway captures; (b) a hidden message window for IPC. Hosts the <strong>UI Automation client</strong>.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="node">
+            <span class="badge">Perception</span>
+            <p class="nt">UIA / accessibility reader</p>
+            <p class="nd"><code>IUIAutomation</code> tree of the foreground window → structured elements (name, type, value, bounds). OCR/screen-grab is a <em>fallback</em> path, off by default (TC-001, SC-001).<sup><a href="#s5">5</a></sup></p>
+          </div>
+          <div class="node">
+            <span class="badge">Redaction</span>
+            <p class="nt">Context minimizer</p>
+            <p class="nd">Strips secrets/PII before anything leaves the VM (SC-005). Emits a small, structured "screen summary," not raw pixels.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="link"><div class="arrowcol"><span class="lbl">outbound WSS — agent-initiated, TLS-pinned</span><span class="ln"></span><span class="tip">▼</span></div></div>
+
+      <div class="zone tenant">
+        <span class="zone-label">In-tenant (CloudLabs cloud)</span>
+        <div class="row">
+          <div class="node hi">
+            <p class="nt">Rocky Reasoning Service</p>
+            <p class="nd">The Cosmos learner-facing agent (ADR-006). Joins redacted screen context with lab/guide/validation context (§4), runs the model, returns render + speech instructions. Holds session memory.</p>
+          </div>
+          <div class="node">
+            <p class="nt">CloudLabs platform APIs</p>
+            <p class="nd">Guide structure, current step, validation results, deployment diagnostics, per-user OpenAI credit. Source of "intent + correctness."</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <h3>Why this split, component by component</h3>
+
+  <h4>Lifecycle owner — a Windows Service, not a tray app</h4>
+  <p class="measure">A Service starts at boot before any user logs in, survives the learner killing things, and can run a watchdog + auto-update. But a Service lives in <strong>Session 0</strong> and <strong>cannot display UI</strong> — Microsoft's guidance is explicit and longstanding: "services cannot directly interact with a user as of Windows&nbsp;Vista … a service cannot display a user interface item such as a dialog box directly."<sup><a href="#s4">4</a></sup> The documented pattern is exactly what we use: a service plus "a separate … GUI application … run within the context of the interactive user," talking over IPC.<sup><a href="#s4">4</a></sup></p>
+
+  <h4>The visible companion — a per-session UI process the service launches</h4>
+  <p class="measure">The overlay and the avatar live in a normal interactive process running <em>as the learner</em>, in <code>WinSta0\default</code>. The service resolves the active session with <code>WTSGetActiveConsoleSessionId</code> / session-notification callbacks and launches the UI process there with <code>CreateProcessAsUser</code>.<sup><a href="#s4">4</a></sup> Registering the UI app under <code>HKLM\…\CurrentVersion\Run</code> is the documented backstop so it also starts on a fresh interactive logon.<sup><a href="#s4">4</a></sup></p>
+  <div class="verdict">
+    <p class="tag">Could the overlay just be a tray/startup app with no service?</p>
+    <p>Yes, and for a first prototype that is the fastest route — skip the service entirely, ship only the per-session UI process via <code>Run</code> key or Startup folder. You lose: pre-logon presence, a privileged watchdog, and a clean update channel. <strong>Recommendation:</strong> prototype as UI-process-only; promote to service+UI for production because update/repair on an <em>imaged fleet</em> is the real operational problem (see §6).</p>
+  </div>
+</section>
+
+<!-- ============ OVERLAY RENDERING ============ -->
+<section id="overlay">
+  <p class="secnum"><span class="n">02</span> Rendering Rocky onto the desktop the learner sees</p>
+  <h2>An always-on-top, per-pixel-alpha layered window — composited <em>before</em> RDP captures the frame</h2>
+  <p class="lede">The overlay does not need to know anything about RDP. It draws onto the VM desktop; the remoting tier captures that desktop and streams it. If it looks right locally, it looks right in the browser.</p>
+
+  <div class="measure">
+    <p>This is the key insight that makes the overlay tractable: <strong>RDP/Guacamole streams whatever is composited on the VM's desktop.</strong> A top-most window on the VM is, by definition, in the captured frame. We are not compositing into a video stream client-side — we are putting a window on a desktop and letting the existing capture path do its job.</p>
+  </div>
+
+  <h3>The window recipe</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Goal</th><th>Mechanism</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Floats above all apps</td><td class="mono">WS_EX_TOPMOST</td><td>Topmost windows sit ahead of all non-topmost windows in z-order regardless of focus.<sup><a href="#s6">6</a></sup></td></tr>
+        <tr><td>Shaped, soft-edged, anti-aliased avatar (not a rectangle)</td><td class="mono">WS_EX_LAYERED + UpdateLayeredWindow</td><td>Per-pixel alpha. Preferred over <code>SetLayeredWindowAttributes</code> for a complex/animated shape; uses memory more efficiently and avoids the redirection buffer.<sup><a href="#s7">7</a></sup></td></tr>
+        <tr><td>Clicks pass through to the app underneath</td><td class="mono">WS_EX_TRANSPARENT</td><td>See hit-testing below — this is the load-bearing detail.</td></tr>
+        <tr><td>Never steals focus / no taskbar button</td><td class="mono">WS_EX_NOACTIVATE + WS_EX_TOOLWINDOW</td><td>Avatar must not become the foreground window or the UIA "focused element" it is trying to read.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Click-through and hit-testing — the part people get wrong</h3>
+  <p class="measure">For a layered window, Windows hit-tests against the window's <em>shape and transparency</em>: pixels that are color-keyed or have <strong>alpha = 0 already let the mouse through</strong>.<sup><a href="#s7">7</a></sup> So a per-pixel-alpha avatar is naturally click-through everywhere it's invisible — no extra work. But over the <em>opaque</em> avatar pixels you have a binary choice, and you want both behaviors at different times:</p>
+  <ul class="measure">
+    <li><strong>Passive avatar (default):</strong> add <code>WS_EX_TRANSPARENT</code>. Then "the shape of the layered window will be ignored and the mouse events will be passed to other windows underneath"<sup><a href="#s7">7</a></sup> — the learner can click straight <em>through</em> Rocky to the Azure Portal button he's pointing at. This is the correct default: Rocky must never block the lab.</li>
+    <li><strong>Interactive moment (learner clicks Rocky to chat):</strong> toggle <code>WS_EX_TRANSPARENT</code> <em>off</em> so the avatar body receives clicks, or — cleaner — keep the avatar click-through and put the chat affordance in a small, separately-hittable child region. Recommended: a "hot zone" model, so the bulk of Rocky stays click-through and only a deliberate handle is interactive.</li>
+  </ul>
+  <div class="verdict warn">
+    <p class="tag">Pitfall — the input-vs-pixels asymmetry over RDP</p>
+    <p>The overlay's <em>pixels</em> are composited on the VM and travel in the RDP video automatically. The overlay's <em>input handling</em> is purely local Win32 — the browser sends mouse coordinates to <code>guacd</code>, which injects them into the VM session, and only <em>then</em> does Windows hit-test the layered window. So click-through "just works," but it means Rocky cannot intercept input before the app does unless it is the non-transparent foreground window — which we deliberately avoid. <strong>Consequence:</strong> the on-VM agent <em>observes and advises</em>; any "Rocky clicks for you" (P4) must go through a separate, consented automation path, not by eating mouse events under the overlay.</p>
+  </div>
+
+  <h3>Multi-monitor, DPI, and the RDP resize problem</h3>
+  <p class="measure">A browser RDP session resizes constantly — the learner resizes the tab, the gateway renegotiates the remote resolution, and the "monitor" the VM sees changes shape mid-session. The overlay must be robust to this or it will drift off-screen or render blurry.</p>
+  <ul class="measure">
+    <li><strong>Declare Per-Monitor-v2 DPI awareness</strong> (<code>DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2</code>). PMv2 is the only mode where the whole window tree — top-level <em>and</em> child windows — is notified of DPI changes, and the app is never bitmap-stretched (i.e., never blurry).<sup><a href="#s8">8</a></sup></li>
+    <li><strong>Handle <code>WM_DPICHANGED</code></strong> by re-rendering the avatar at the new scale and repositioning to the suggested rect — do not assume a one-time layout at startup; the docs call this out explicitly.<sup><a href="#s9">9</a></sup></li>
+    <li><strong>Re-anchor on resolution change.</strong> Listen for <code>WM_DISPLAYCHANGE</code> / monitor-topology changes and re-pin Rocky to a corner expressed as a fraction of the work area, recomputed against the <em>current</em> monitor via <code>GetDpiForWindow</code> / <code>GetSystemMetricsForDpi</code> rather than cached system metrics.<sup><a href="#s8">8</a></sup></li>
+    <li><strong>Multi-monitor labs:</strong> a remote session can present multiple monitors; pin to the primary work area and clamp the avatar rect to the intersection of the visible monitors so it can't strand itself on a monitor the learner closed.</li>
+  </ul>
+</section>
+
+<!-- ============ COMMS ============ -->
+<section id="comms">
+  <p class="secnum"><span class="n">03</span> Communications — how the pieces talk</p>
+  <h2>Recommended path: agent → cloud WebSocket. DVC is a deferred optimization.</h2>
+  <p class="lede">Three links exist: in-VM IPC (service ↔ UI process), VM ↔ reasoning service, and browser-page ↔ agent. The middle one is where the real design decision is, and the browser-delivered model settles it.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Path</th><th>What it carries</th><th>Pros</th><th>Cons / blockers</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr class="pick">
+          <td><strong>Agent → cloud WSS</strong><br><span class="note">outbound from VM</span></td>
+          <td>Redacted screen context up; render/speech instructions down</td>
+          <td>Independent of remoting backend; works whether it's Guacamole/DCV/W365; standard egress; agent-initiated so no inbound firewall holes; reuses Cosmos agent transport</td>
+          <td>Needs outbound 443 from the lab subnet (CloudLabs controls this); not "in-band" with the pixel stream so clocks/sessions must be correlated by ID</td>
+          <td><span class="pill good">Recommended v1</span></td>
+        </tr>
+        <tr>
+          <td><strong>RDP DVC</strong><br><span class="note">in-band over the RDP connection</span></td>
+          <td>Same payloads, but tunneled inside the existing RDP session</td>
+          <td>No extra egress; traffic rides the channel already open; server side gets a clean per-session pipe (<code>IWTSVirtualChannel</code>)</td>
+          <td>Client end isn't <code>mstsc</code> — it's <code>guacd</code>/FreeRDP; needs a <strong>compiled FreeRDP add-in on the remoting tier</strong> and no clean runtime-register API.<sup><a href="#s3">3</a></sup> Couples Rocky to the backend. Platform-team work.</td>
+          <td><span class="pill warn">Defer / optimize</span></td>
+        </tr>
+        <tr>
+          <td><strong>In-VM IPC</strong><br><span class="note">service ↔ UI process</span></td>
+          <td>"Launch UI in session," health, update triggers</td>
+          <td>Local, fast; named pipes with a tight ACL per the MS pattern<sup><a href="#s4">4</a></sup></td>
+          <td>Must ACL the pipe to the learner SID only (IPC over a loose ACL is an exposed interface)<sup><a href="#s4">4</a></sup></td>
+          <td><span class="pill neu">Required, internal</span></td>
+        </tr>
+        <tr>
+          <td><strong>Browser page ↔ agent (direct)</strong></td>
+          <td>"Learner clicked Ask Rocky in the guide pane → focus the overlay"</td>
+          <td>Tight UX coupling between guide-pane Rocky and overlay Rocky</td>
+          <td>No supported UI-injection / postMessage bridge into the runtime shell today; cross-origin. Route via the reasoning service instead.</td>
+          <td><span class="pill bad">Avoid direct</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="verdict">
+    <p class="tag">Recommendation</p>
+    <p><strong>Ship on an outbound agent→cloud WebSocket.</strong> It decouples Rocky from a remoting backend that is itself unconfirmed, it's the same transport the Cosmos learner-facing agent already needs, and it sidesteps the FreeRDP-add-in dependency entirely. The browser page and the overlay <strong>coordinate through the reasoning service</strong> (both authenticate to the same lab session), not directly — so "Ask Rocky" in the guide pane and the on-desktop avatar stay in sync via shared session state, with no fragile cross-origin bridge. Revisit DVC only if (a) egress proves problematic in a customer tenant, or (b) the platform team is already opening the FreeRDP tier for other reasons — then DVC becomes a latency/egress optimization, not a prerequisite.</p>
+  </div>
+</section>
+
+<!-- ============ CONTEXT ============ -->
+<section id="context">
+  <p class="secnum"><span class="n">04</span> Getting lab / validation context</p>
+  <h2>The desktop tells you "what" — CloudLabs APIs tell you "what it's supposed to be"</h2>
+  <div class="measure">
+    <p>Per ADR-002 the on-VM perception is the <em>fallback/enrichment</em> tier, not the primary. The agent's value comes from <strong>joining</strong> the redacted screen summary with the structured intent + correctness signals CloudLabs already exposes. The reasoning service — not the VM — pulls these, scoped to the lab session:</p>
+    <ul>
+      <li><strong>Guide structure + current step</strong> — what the learner is supposed to be doing. (<code>labGuide/…/partner-lab-guide</code>; current-step needs the proposed Runtime Context API.)</li>
+      <li><strong>Validation results</strong> — pass/fail per step, the ground truth for "did it work." (<code>…/users/{eventUserGuid}/validation-results</code>, on-demand <code>POST …/validate</code>.)</li>
+      <li><strong>Deployment diagnostics</strong> — <code>cloudlabs_deployment_activity_log</code> for provisioning errors the learner can't see.</li>
+      <li><strong>Per-user OpenAI credit</strong> — read/respect/extend existing rails (<code>sync-open-ai-credit</code>) so the overlay inherits the lab's cost model (BC-001).</li>
+    </ul>
+    <p>The on-VM agent carries a <strong>lab-session-scoped, least-privilege token</strong> (SC-003), correlated to <code>eventUserGuid</code>/<code>deploymentGuid</code>, so the reasoning service can fetch context for <em>this</em> learner only. The VM never holds cloud credentials or calls CloudLabs APIs directly — it only emits redacted observations upward.</p>
+  </div>
+  <p class="note">All endpoint names are from prior firsthand platform research (research/cosmos_session_2026-06-30) and remain <strong>unconfirmed against live API docs</strong>. The "current step" and a runtime event bus do not exist yet and are the top platform asks (architecture.md §3).</p>
+</section>
+
+<!-- ============ PACKAGING ============ -->
+<section id="packaging">
+  <p class="secnum"><span class="n">05</span> Packaging, image baking, updates, least privilege</p>
+  <h2>The agent ships in the image; its brain ships in the cloud</h2>
+  <p class="lede">Because CloudLabs owns and images the VM (the premise that makes this feasible at all), the agent install is a known, controlled step — but updating an <em>imaged fleet</em> is the operational hazard, so keep the in-VM binary thin and dumb.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h4>Bake into the image</h4>
+      <p>Install the service + UI app during golden-image build (MSI/MSIX, or a provisioning script in the image pipeline). Service: <span class="kbd">auto-start</span>, delayed. UI app: registered under <code>HKLM\…\Run</code> for interactive-logon start.<sup><a href="#s4">4</a></sup> No per-lab install step at launch.</p>
+    </div>
+    <div class="card">
+      <h4>Keep the binary thin</h4>
+      <p>Prompts, models, tool definitions, and lab knowledge live in the cloud reasoning service — <em>not</em> in the image. Updating Rocky's <em>behavior</em> then needs no image rebake. The in-VM code is just: perceive, redact, transport, render. Version it and let it self-report.</p>
+    </div>
+    <div class="card">
+      <h4>Update channel</h4>
+      <p>The service checks a signed manifest on startup/interval and self-updates the in-VM binaries out-of-band, so a bug fix doesn't wait for the next golden-image cycle. New images pick up the latest at bake time; running fleets get it via the service. Sign everything; pin the update host.</p>
+    </div>
+    <div class="card">
+      <h4>Least privilege</h4>
+      <p>UI process runs as the <strong>learner</strong>, no elevation — UIA reading and an overlay need no admin. The service runs at the lowest right that still lets it <code>CreateProcessAsUser</code> into the session and self-update; avoid <code>LocalSystem</code> drawing on the interactive desktop (MS warns this exposes the service to anything the learner runs).<sup><a href="#s4">4</a></sup></p>
+    </div>
+  </div>
+
+  <div class="verdict warn">
+    <p class="tag">Privacy &amp; consent are gating, not optional (SC-001/002)</p>
+    <p>An on-VM agent that reads the foreground window's accessibility tree is, to an enterprise buyer, a keylogger-shaped thing until proven otherwise. Non-negotiables: a <strong>telemetry-only / no-screen-capture mode</strong> where the OCR fallback is hard-disabled (SC-001); <strong>disclosed, consented observation</strong> with a visible "Rocky is watching this step" state and a one-click dismiss (SC-002, UX-002); <strong>redaction before egress</strong> (SC-005); and the <strong>character-off skin</strong> for enterprise (UX-001). This is exactly why ADR-004 ranked P3 as high-risk and deferred it behind P1/P2. <strong>This design does not change that risk verdict — it makes the in-VM tier buildable when the org chooses to clear that gate.</strong></p>
+  </div>
+</section>
+
+<!-- ============ PITFALLS ============ -->
+<section id="pitfalls">
+  <p class="secnum"><span class="n">06</span> Consolidated pitfalls</p>
+  <h2>What bites you in build, not in the slide deck</h2>
+
+  <div class="card" style="padding:8px 22px">
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">Assuming a <code>mstsc</code> DVC plug-in works</p><p class="pd">It's a server-side FreeRDP add-in in a browser-delivered session. Don't design comms around DVC; lead with outbound WSS.<sup><a href="#s2">2</a></sup><sup><a href="#s3">3</a></sup></p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">Trying to draw UI from the Service</p><p class="pd">Session 0 isolation: services cannot show UI. You <em>must</em> have a separate per-session UI process and IPC.<sup><a href="#s4">4</a></sup></p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">Overlay stealing focus or polluting UIA</p><p class="pd">Without <code>WS_EX_NOACTIVATE</code>, Rocky becomes the foreground/focused element and corrupts the very perception it's trying to do. Tool-window + no-activate.</p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">Forgetting click-through, or making it global</p><p class="pd">Default <code>WS_EX_TRANSPARENT</code> so Rocky never blocks a lab control; carve out one hittable handle for "chat." Don't toggle transparency on the whole window per-frame.<sup><a href="#s7">7</a></sup></p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">System-DPI awareness → blur on resize</p><p class="pd">Browser RDP resizes constantly; System-aware windows get bitmap-stretched and go blurry. Declare PMv2 and handle <code>WM_DPICHANGED</code>.<sup><a href="#s8">8</a></sup><sup><a href="#s9">9</a></sup></p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">UIA cross-user / cross-integrity gaps</p><p class="pd">UIA "does not enable communication between processes started by different users,"<sup><a href="#s5">5</a></sup> and elevated apps may be unreadable from a non-elevated client. Run the reader as the learner; expect blind spots on elevated installers/UAC — that's where the OCR fallback earns its place.</p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">UIA latency on huge trees</p><p class="pd">A full desktop walk can touch thousands of elements; MS says fetch only direct children and start from the foreground window, use cached requests/<code>FindFirst</code>, not a blind <code>FindAll</code> from root.<sup><a href="#s10">10</a></sup></p></div></div>
+    <div class="pitfall"><div class="mark">!</div><div class="body"><p class="pt">Updating a baked fleet</p><p class="pd">If behavior lives in the image, every prompt tweak is a rebake. Keep the binary thin; put the brain in the cloud service; give the in-VM service a signed self-update path.</p></div></div>
+  </div>
+</section>
+
+<!-- ============ TLDR ============ -->
+<section id="tldr">
+  <p class="secnum"><span class="n">07</span> The recommendation in one breath</p>
+  <div class="verdict">
+    <p class="tag">Recommended architecture</p>
+    <p><strong>A Windows Service (lifecycle, update, launch) + a per-session learner-context UI process</strong> that hosts a <strong>UI-Automation reader</strong> (OCR fallback, off by default) and an <strong>always-on-top, per-pixel-alpha layered window</strong> (<code>WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE</code>, PMv2 DPI) that renders Rocky onto the VM desktop the RDP gateway already captures. The UI process talks to a <strong>cloud Rocky Reasoning Service over an outbound WebSocket</strong>, sending redacted screen summaries and receiving render/speech instructions; that service joins the screen context with CloudLabs guide/validation APIs and coordinates with the existing guide-pane Rocky through shared lab-session state. <strong>DVC is deferred</strong> — it needs a FreeRDP add-in on the remoting tier and buys nothing the WebSocket doesn't, until egress or platform direction changes. Privacy mode, consent, redaction, and the enterprise character-off skin are <strong>build gates</strong>, consistent with ADR-004's high-risk verdict on the in-VM tier.</p>
+  </div>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<div class="sources" id="sources">
+  <p class="secnum"><span class="n">··</span> Sources</p>
+  <ol>
+    <li id="s1">Apache Guacamole Manual — <a href="https://guacamole.apache.org/doc/gug/guacamole-architecture.html">Implementation and architecture</a> (<code>guacd</code> loads protocol "client plugins"; RDP via <code>libguac-client-rdp</code>/FreeRDP, HTML5 to the browser).</li>
+    <li id="s2">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/termserv/dvc-plug-in-registration">DVC plug-in registration</a> &amp; <a href="https://learn.microsoft.com/windows/win32/termserv/dynamic-virtual-channels">Dynamic Virtual Channels</a> (client APIs are RDC/<code>mstsc</code> plug-ins; <code>HKCU\…\Terminal Server Client\Default\AddIns</code>).</li>
+    <li id="s3">FreeRDP — <a href="https://github.com/FreeRDP/FreeRDP/discussions/11332">Registering a custom DVC at runtime</a> (unanswered; plugins expected as compiled modules) and <a href="https://github.com/FreeRDP/FreeRDP/wiki/Plugins">Plugins wiki</a> / <a href="https://github.com/apache/guacamole-server/blob/main/src/protocols/rdp/rdp.c">guacamole-server rdp.c</a> (<code>drdynvc</code> loaded server-side).</li>
+    <li id="s4">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/services/interactive-services">Interactive Services</a> &amp; <a href="https://learn.microsoft.com/windows/win32/services/service-changes-for-windows-vista">Session 0 Isolation</a>; <a href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-wtsgetactiveconsolesessionid">WTSGetActiveConsoleSessionId</a> (service can't show UI; use separate user-session GUI app + IPC + <code>Run</code> key).</li>
+    <li id="s5">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/winauto/uiauto-uiautomationoverview">UI Automation Overview</a> (programmatic access to most desktop UI; no cross-user "Run as" communication).</li>
+    <li id="s6">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/winmsg/window-features#window-relationships">Window Features: Z-Order</a> (<code>WS_EX_TOPMOST</code> ordering).</li>
+    <li id="s7">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/winmsg/window-features#window-types">Window Features: Layered Windows</a> (per-pixel alpha via <code>UpdateLayeredWindow</code>; hit-testing by shape/alpha; <code>WS_EX_TRANSPARENT</code> passes mouse through).</li>
+    <li id="s8">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows">High DPI desktop development</a> &amp; <a href="https://learn.microsoft.com/windows/win32/hidpi/dpi-awareness-context">DPI_AWARENESS_CONTEXT</a> (PMv2 notifies the whole window tree; never bitmap-stretched; per-monitor API variants).</li>
+    <li id="s9">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/hidpi/wm-dpichanged">WM_DPICHANGED</a> (resize/reposition to suggested rect on DPI change).</li>
+    <li id="s10">Microsoft Learn — <a href="https://learn.microsoft.com/windows/win32/winauto/uiauto-obtainingelements">Obtaining UI Automation Elements</a> (prefer direct children / start from app window; a descendant search may iterate thousands of elements).</li>
+  </ol>
+</div>
+
+</div>

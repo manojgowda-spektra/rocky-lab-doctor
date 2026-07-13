@@ -1,0 +1,88 @@
+URL_START: https://cosmos.cloudlabs.ai/dashboard/organization
+URL_FINAL: https://cosmos.cloudlabs.ai/dashboard/organization/ai/chat/a83a1856-e0ea-417b-abd9-6c526bd652c2
+WAITED_MS: 26000
+
+=== CAPTURED ===
+Short answer: partially, but not as a real-time activity feed of “what the learner is doing right now” inside the lab UI.
+
+What appears to exist today in CloudLabs is:
+
+A lab progress read API:
+GET /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/users/{eventUserId}
+Summary: “Gets the lab progress detail.”
+A progress summary / leaderboard API:
+POST /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/summary
+Summary: “Gets the lab progress leaderboard.”
+A template validation-definition API:
+GET /api/partners/{partnerGuid}/templates/{templateGuid}/template-lab-guide-validations
+Summary: “Gets the template lab guide validations.”
+Lab guide content/association APIs that can help you retrieve the guide structure:
+GET /api/partners/{partnerGuid}/labGuide/{labGuideGuid}/partner-lab-guide
+GET /api/partners/{partnerGuid}/labGuide/{templateGuid}/template-lab-guides/{onDemandLabGuid}
+
+What this likely means in practice:
+
+You can probably retrieve progress state for a learner at the lab / exercise / validation-step level.
+You can likely retrieve the defined validation structure for a template, which may let an external system infer:
+step names
+exercise names
+validation steps
+You may also retrieve the associated lab guide to get authored instructional content.
+
+What I do not see evidence of today:
+
+No obvious webhook, event stream, SSE, WebSocket, or push-based real-time learner telemetry endpoint.
+No clearly exposed API specifically described as:
+“current active step”
+“learner is viewing/clicking X now”
+“lab objective for current step”
+“expected outcome of each step” as a dedicated feed
+fine-grained in-session activity like browser navigation, command execution, or portal interactions
+
+So, being specific:
+
+Available today
+
+Progress detail endpoint
+
+GET /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/users/{eventUserId}
+Best candidate for learner progress tracking.
+Likely useful for “how far along is this learner?” rather than “what are they doing this second?”
+
+Progress summary endpoint
+
+POST /api/partners/{partnerGuid}/labs/{ondemandLabGuid}/progress/summary
+Aggregate/leaderboard style progress, not detailed live behavior.
+
+Validation-definition endpoint
+
+GET /api/partners/{partnerGuid}/templates/{templateGuid}/template-lab-guide-validations
+Gives the authored validation model for the lab template.
+Useful for expected checks/steps if your lab uses validations.
+
+Lab guide endpoints
+
+GET /api/partners/{partnerGuid}/labGuide/{labGuideGuid}/partner-lab-guide
+GET /api/partners/{partnerGuid}/labGuide/{templateGuid}/template-lab-guides/{onDemandLabGuid}
+Useful for the guide content and associations, if you need to map progress back to authored instructions/objectives.
+Not clearly available today
+Real-time event feed of learner actions
+Push notifications when a learner changes step
+Dedicated API field for step objective / expected outcome as telemetry
+Live “currently doing” feed for external systems
+Best-possible external integration pattern today
+
+If you need this now, the likely design is:
+
+Pull lab guide + validation metadata to understand the authored steps/objectives.
+Poll the progress detail endpoint for each learner.
+Correlate that progress with the guide/validation structure in your external system.
+
+That gives you a derived progress view, but not true real-time behavioral telemetry.
+
+If you want, I can help with the next step and draft a concrete integration map showing:
+
+which endpoint to call first,
+how to resolve eventUserId,
+how to correlate progress rows to lab guide steps/objectives,
+and what gaps you’d still have versus a true live activity feed.

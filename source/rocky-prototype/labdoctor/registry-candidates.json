@@ -1,0 +1,3609 @@
+{
+ "harvestedAt": "2026-07-04T15:26:44.440Z",
+ "review": "ALL entries are candidates — human review required before promotion to the scanner registry",
+ "candidates": [
+  {
+   "id": "eol:nodejs:25",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "25",
+   "date": "2026-06-01",
+   "daysUntil": -34,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 25",
+    "node 25",
+    "nodejs 25"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:23",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "23",
+   "date": "2025-06-01",
+   "daysUntil": -399,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 23",
+    "node 23",
+    "nodejs 23"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:22",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "22",
+   "date": "2027-04-30",
+   "daysUntil": 299,
+   "status": "approaching",
+   "tokens": [
+    "Node.js 22",
+    "node 22",
+    "nodejs 22"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:21",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "21",
+   "date": "2024-06-01",
+   "daysUntil": -764,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 21",
+    "node 21",
+    "nodejs 21"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:20",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "20",
+   "date": "2026-04-30",
+   "daysUntil": -66,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 20",
+    "node 20",
+    "nodejs 20"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:19",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "19",
+   "date": "2023-06-01",
+   "daysUntil": -1130,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 19",
+    "node 19",
+    "nodejs 19"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:18",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "18",
+   "date": "2025-04-30",
+   "daysUntil": -431,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 18",
+    "node 18",
+    "nodejs 18"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:17",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "17",
+   "date": "2022-06-01",
+   "daysUntil": -1495,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 17",
+    "node 17",
+    "nodejs 17"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:16",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "16",
+   "date": "2023-09-11",
+   "daysUntil": -1028,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 16",
+    "node 16",
+    "nodejs 16"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:15",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "15",
+   "date": "2021-06-01",
+   "daysUntil": -1860,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 15",
+    "node 15",
+    "nodejs 15"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:14",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "14",
+   "date": "2023-04-30",
+   "daysUntil": -1162,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 14",
+    "node 14",
+    "nodejs 14"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:13",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "13",
+   "date": "2020-06-01",
+   "daysUntil": -2225,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 13",
+    "node 13",
+    "nodejs 13"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:12",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "12",
+   "date": "2022-04-30",
+   "daysUntil": -1527,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 12",
+    "node 12",
+    "nodejs 12"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:11",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "11",
+   "date": "2019-06-30",
+   "daysUntil": -2562,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 11",
+    "node 11",
+    "nodejs 11"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "10",
+   "date": "2021-04-30",
+   "daysUntil": -1892,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 10",
+    "node 10",
+    "nodejs 10"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:9",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "9",
+   "date": "2018-06-30",
+   "daysUntil": -2927,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 9",
+    "node 9",
+    "nodejs 9"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:8",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "8",
+   "date": "2019-12-31",
+   "daysUntil": -2378,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 8",
+    "node 8",
+    "nodejs 8"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:7",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "7",
+   "date": "2017-06-30",
+   "daysUntil": -3292,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 7",
+    "node 7",
+    "nodejs 7"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "6",
+   "date": "2019-04-30",
+   "daysUntil": -2623,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 6",
+    "node 6",
+    "nodejs 6"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "5",
+   "date": "2016-06-30",
+   "daysUntil": -3657,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 5",
+    "node 5",
+    "nodejs 5"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:nodejs:4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/nodejs",
+   "type": "EOL",
+   "product": "Node.js",
+   "cycle": "4",
+   "date": "2018-04-30",
+   "daysUntil": -2988,
+   "status": "already-eol",
+   "tokens": [
+    "Node.js 4",
+    "node 4",
+    "nodejs 4"
+   ],
+   "replacement": "Node.js 26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.10",
+   "date": "2026-10-31",
+   "daysUntil": 118,
+   "status": "approaching",
+   "tokens": [
+    "Python 3.10"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.9",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.9",
+   "date": "2025-10-31",
+   "daysUntil": -247,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.9"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.8",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.8",
+   "date": "2024-10-07",
+   "daysUntil": -636,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.8"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.7",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.7",
+   "date": "2023-06-27",
+   "daysUntil": -1104,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.7"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.6",
+   "date": "2021-12-23",
+   "daysUntil": -1655,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.6"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.5",
+   "date": "2020-09-30",
+   "daysUntil": -2104,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.5"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.4",
+   "date": "2019-03-18",
+   "daysUntil": -2666,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.4"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.3",
+   "date": "2017-09-29",
+   "daysUntil": -3201,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.3"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.2",
+   "date": "2016-02-20",
+   "daysUntil": -3788,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.2"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:2.7",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "2.7",
+   "date": "2020-01-01",
+   "daysUntil": -2377,
+   "status": "already-eol",
+   "tokens": [
+    "Python 2.7"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.1",
+   "date": "2012-04-09",
+   "daysUntil": -5200,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.1"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:3.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "3.0",
+   "date": "2009-06-27",
+   "daysUntil": -6217,
+   "status": "already-eol",
+   "tokens": [
+    "Python 3.0"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:python:2.6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/python",
+   "type": "EOL",
+   "product": "Python",
+   "cycle": "2.6",
+   "date": "2013-10-29",
+   "daysUntil": -4632,
+   "status": "already-eol",
+   "tokens": [
+    "Python 2.6"
+   ],
+   "replacement": "Python 3.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:25.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "25.10",
+   "date": "2026-07-01",
+   "daysUntil": -4,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 25.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:25.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "25.04",
+   "date": "2026-01-17",
+   "daysUntil": -169,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 25.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:24.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "24.10",
+   "date": "2025-07-10",
+   "daysUntil": -360,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 24.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:23.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "23.10",
+   "date": "2024-07-12",
+   "daysUntil": -723,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 23.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:23.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "23.04",
+   "date": "2024-01-20",
+   "daysUntil": -897,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 23.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:22.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "22.10",
+   "date": "2023-07-20",
+   "daysUntil": -1081,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 22.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:22.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "22.04",
+   "date": "2027-04-01",
+   "daysUntil": 270,
+   "status": "approaching",
+   "tokens": [
+    "Ubuntu 22.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:21.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "21.10",
+   "date": "2022-07-14",
+   "daysUntil": -1452,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 21.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:21.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "21.04",
+   "date": "2022-01-20",
+   "daysUntil": -1627,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 21.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:20.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "20.10",
+   "date": "2021-07-22",
+   "daysUntil": -1809,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 20.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:20.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "20.04",
+   "date": "2025-05-31",
+   "daysUntil": -400,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 20.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:19.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "19.10",
+   "date": "2020-07-06",
+   "daysUntil": -2190,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 19.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:19.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "19.04",
+   "date": "2020-01-23",
+   "daysUntil": -2355,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 19.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:18.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "18.10",
+   "date": "2019-07-18",
+   "daysUntil": -2544,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 18.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:18.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "18.04",
+   "date": "2023-05-31",
+   "daysUntil": -1131,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 18.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:17.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "17.10",
+   "date": "2018-07-19",
+   "daysUntil": -2908,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 17.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:17.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "17.04",
+   "date": "2018-01-13",
+   "daysUntil": -3095,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 17.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:16.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "16.10",
+   "date": "2017-07-20",
+   "daysUntil": -3272,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 16.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:16.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "16.04",
+   "date": "2021-04-02",
+   "daysUntil": -1920,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 16.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:15.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "15.10",
+   "date": "2016-07-28",
+   "daysUntil": -3629,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 15.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:15.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "15.04",
+   "date": "2016-02-04",
+   "daysUntil": -3804,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 15.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:14.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "14.10",
+   "date": "2015-07-23",
+   "daysUntil": -4000,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 14.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:14.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "14.04",
+   "date": "2019-04-02",
+   "daysUntil": -2651,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 14.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:13.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "13.10",
+   "date": "2014-07-17",
+   "daysUntil": -4371,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 13.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:13.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "13.04",
+   "date": "2014-01-27",
+   "daysUntil": -4542,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 13.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:12.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "12.10",
+   "date": "2014-05-16",
+   "daysUntil": -4433,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 12.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:12.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "12.04",
+   "date": "2017-04-28",
+   "daysUntil": -3355,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 12.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:11.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "11.10",
+   "date": "2013-05-09",
+   "daysUntil": -4805,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 11.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:11.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "11.04",
+   "date": "2012-10-28",
+   "daysUntil": -4998,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 11.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:10.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "10.10",
+   "date": "2012-04-10",
+   "daysUntil": -5199,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 10.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:10.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "10.04",
+   "date": "2013-05-09",
+   "daysUntil": -4805,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 10.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:9.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "9.10",
+   "date": "2011-04-30",
+   "daysUntil": -5545,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 9.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:9.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "9.04",
+   "date": "2010-10-23",
+   "daysUntil": -5734,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 9.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:8.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "8.10",
+   "date": "2010-04-30",
+   "daysUntil": -5910,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 8.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:8.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "8.04",
+   "date": "2013-05-09",
+   "daysUntil": -4805,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 8.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:7.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "7.10",
+   "date": "2009-04-18",
+   "daysUntil": -6287,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 7.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:7.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "7.04",
+   "date": "2008-10-19",
+   "daysUntil": -6468,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 7.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:6.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "6.10",
+   "date": "2008-04-26",
+   "daysUntil": -6644,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 6.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:6.06",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "6.06",
+   "date": "2011-06-01",
+   "daysUntil": -5513,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 6.06"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:5.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "5.10",
+   "date": "2007-04-13",
+   "daysUntil": -7023,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 5.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:5.04",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "5.04",
+   "date": "2006-10-31",
+   "daysUntil": -7187,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 5.04"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:ubuntu:4.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/ubuntu",
+   "type": "EOL",
+   "product": "Ubuntu",
+   "cycle": "4.10",
+   "date": "2006-04-30",
+   "daysUntil": -7371,
+   "status": "already-eol",
+   "tokens": [
+    "Ubuntu 4.10"
+   ],
+   "replacement": "Ubuntu 26.04",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.36",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.36",
+   "date": "2027-06-28",
+   "daysUntil": 358,
+   "status": "approaching",
+   "tokens": [
+    "Kubernetes 1.36",
+    "k8s 1.36",
+    "AKS 1.36"
+   ],
+   "replacement": "Kubernetes 1.36.2",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.35",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.35",
+   "date": "2027-02-28",
+   "daysUntil": 238,
+   "status": "approaching",
+   "tokens": [
+    "Kubernetes 1.35",
+    "k8s 1.35",
+    "AKS 1.35"
+   ],
+   "replacement": "Kubernetes 1.35.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.34",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.34",
+   "date": "2026-10-27",
+   "daysUntil": 114,
+   "status": "approaching",
+   "tokens": [
+    "Kubernetes 1.34",
+    "k8s 1.34",
+    "AKS 1.34"
+   ],
+   "replacement": "Kubernetes 1.34.9",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.33",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.33",
+   "date": "2026-06-28",
+   "daysUntil": -7,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.33",
+    "k8s 1.33",
+    "AKS 1.33"
+   ],
+   "replacement": "Kubernetes 1.33.13",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.32",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.32",
+   "date": "2026-02-28",
+   "daysUntil": -127,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.32",
+    "k8s 1.32",
+    "AKS 1.32"
+   ],
+   "replacement": "Kubernetes 1.32.13",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.31",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.31",
+   "date": "2025-10-28",
+   "daysUntil": -250,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.31",
+    "k8s 1.31",
+    "AKS 1.31"
+   ],
+   "replacement": "Kubernetes 1.31.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.30",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.30",
+   "date": "2025-06-28",
+   "daysUntil": -372,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.30",
+    "k8s 1.30",
+    "AKS 1.30"
+   ],
+   "replacement": "Kubernetes 1.30.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.29",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.29",
+   "date": "2025-02-28",
+   "daysUntil": -492,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.29",
+    "k8s 1.29",
+    "AKS 1.29"
+   ],
+   "replacement": "Kubernetes 1.29.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.28",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.28",
+   "date": "2024-10-28",
+   "daysUntil": -615,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.28",
+    "k8s 1.28",
+    "AKS 1.28"
+   ],
+   "replacement": "Kubernetes 1.28.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.27",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.27",
+   "date": "2024-06-28",
+   "daysUntil": -737,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.27",
+    "k8s 1.27",
+    "AKS 1.27"
+   ],
+   "replacement": "Kubernetes 1.27.16",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.26",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.26",
+   "date": "2024-02-28",
+   "daysUntil": -858,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.26",
+    "k8s 1.26",
+    "AKS 1.26"
+   ],
+   "replacement": "Kubernetes 1.26.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.25",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.25",
+   "date": "2023-10-27",
+   "daysUntil": -982,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.25",
+    "k8s 1.25",
+    "AKS 1.25"
+   ],
+   "replacement": "Kubernetes 1.25.16",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.24",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.24",
+   "date": "2023-07-28",
+   "daysUntil": -1073,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.24",
+    "k8s 1.24",
+    "AKS 1.24"
+   ],
+   "replacement": "Kubernetes 1.24.17",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.23",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.23",
+   "date": "2023-02-28",
+   "daysUntil": -1223,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.23",
+    "k8s 1.23",
+    "AKS 1.23"
+   ],
+   "replacement": "Kubernetes 1.23.17",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.22",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.22",
+   "date": "2022-10-28",
+   "daysUntil": -1346,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.22",
+    "k8s 1.22",
+    "AKS 1.22"
+   ],
+   "replacement": "Kubernetes 1.22.17",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.21",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.21",
+   "date": "2022-06-28",
+   "daysUntil": -1468,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.21",
+    "k8s 1.21",
+    "AKS 1.21"
+   ],
+   "replacement": "Kubernetes 1.21.14",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.20",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.20",
+   "date": "2022-02-28",
+   "daysUntil": -1588,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.20",
+    "k8s 1.20",
+    "AKS 1.20"
+   ],
+   "replacement": "Kubernetes 1.20.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.19",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.19",
+   "date": "2021-10-28",
+   "daysUntil": -1711,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.19",
+    "k8s 1.19",
+    "AKS 1.19"
+   ],
+   "replacement": "Kubernetes 1.19.16",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.18",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.18",
+   "date": "2021-06-18",
+   "daysUntil": -1843,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.18",
+    "k8s 1.18",
+    "AKS 1.18"
+   ],
+   "replacement": "Kubernetes 1.18.20",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.17",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.17",
+   "date": "2020-12-25",
+   "daysUntil": -2018,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.17",
+    "k8s 1.17",
+    "AKS 1.17"
+   ],
+   "replacement": "Kubernetes 1.17.17",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:kubernetes:1.16",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/kubernetes",
+   "type": "EOL",
+   "product": "Kubernetes",
+   "cycle": "1.16",
+   "date": "2020-08-04",
+   "daysUntil": -2161,
+   "status": "already-eol",
+   "tokens": [
+    "Kubernetes 1.16",
+    "k8s 1.16",
+    "AKS 1.16"
+   ],
+   "replacement": "Kubernetes 1.16.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.13",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.13",
+   "date": "2026-04-29",
+   "daysUntil": -67,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.13"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.12",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.12",
+   "date": "2025-11-19",
+   "daysUntil": -228,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.12"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.11",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.11",
+   "date": "2025-08-20",
+   "daysUntil": -319,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.11"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.10",
+   "date": "2025-05-14",
+   "daysUntil": -417,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.10"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.9",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.9",
+   "date": "2025-02-27",
+   "daysUntil": -493,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.9"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.8",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.8",
+   "date": "2024-11-26",
+   "daysUntil": -586,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.8"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.7",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.7",
+   "date": "2024-06-26",
+   "daysUntil": -739,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.7"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.6",
+   "date": "2024-04-10",
+   "daysUntil": -816,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.6"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.5",
+   "date": "2024-01-17",
+   "daysUntil": -900,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.5"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.4",
+   "date": "2023-10-04",
+   "daysUntil": -1005,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.4"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.3",
+   "date": "2023-06-12",
+   "daysUntil": -1119,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.3"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.2",
+   "date": "2023-03-08",
+   "daysUntil": -1215,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.2"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.1",
+   "date": "2022-09-21",
+   "daysUntil": -1383,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.1"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:terraform:1.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/terraform",
+   "type": "EOL",
+   "product": "Terraform",
+   "cycle": "1.0",
+   "date": "2022-05-18",
+   "daysUntil": -1509,
+   "status": "already-eol",
+   "tokens": [
+    "Terraform 1.0"
+   ],
+   "replacement": "Terraform 1.15",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:9",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "9",
+   "date": "2026-11-10",
+   "daysUntil": 128,
+   "status": "approaching",
+   "tokens": [
+    ".NET 9",
+    "dotnet 9"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:8",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "8",
+   "date": "2026-11-10",
+   "daysUntil": 128,
+   "status": "approaching",
+   "tokens": [
+    ".NET 8",
+    "dotnet 8"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:7",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "7",
+   "date": "2024-05-14",
+   "daysUntil": -782,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 7",
+    "dotnet 7"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "6",
+   "date": "2024-11-12",
+   "daysUntil": -600,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 6",
+    "dotnet 6"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "5",
+   "date": "2022-05-10",
+   "daysUntil": -1517,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 5",
+    "dotnet 5"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:3.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "3.1",
+   "date": "2022-12-13",
+   "daysUntil": -1300,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 3.1",
+    "dotnet 3.1"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:3.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "3.0",
+   "date": "2020-03-03",
+   "daysUntil": -2315,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 3.0",
+    "dotnet 3.0"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:2.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "2.2",
+   "date": "2019-12-23",
+   "daysUntil": -2386,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 2.2",
+    "dotnet 2.2"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:2.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "2.1",
+   "date": "2021-08-21",
+   "daysUntil": -1779,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 2.1",
+    "dotnet 2.1"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:2.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "2.0",
+   "date": "2018-10-01",
+   "daysUntil": -2834,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 2.0",
+    "dotnet 2.0"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:1.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "1.1",
+   "date": "2019-06-27",
+   "daysUntil": -2565,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 1.1",
+    "dotnet 1.1"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:dotnet:1.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/dotnet",
+   "type": "EOL",
+   "product": ".NET",
+   "cycle": "1.0",
+   "date": "2019-06-27",
+   "daysUntil": -2565,
+   "status": "already-eol",
+   "tokens": [
+    ".NET 1.0",
+    "dotnet 1.0"
+   ],
+   "replacement": ".NET 10",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:14",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "14",
+   "date": "2026-11-12",
+   "daysUntil": 130,
+   "status": "approaching",
+   "tokens": [
+    "PostgreSQL 14",
+    "postgres 14"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:13",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "13",
+   "date": "2025-11-13",
+   "daysUntil": -234,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 13",
+    "postgres 13"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:12",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "12",
+   "date": "2024-11-21",
+   "daysUntil": -591,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 12",
+    "postgres 12"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:11",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "11",
+   "date": "2023-11-09",
+   "daysUntil": -969,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 11",
+    "postgres 11"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "10",
+   "date": "2022-11-10",
+   "daysUntil": -1333,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 10",
+    "postgres 10"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.6",
+   "date": "2021-11-11",
+   "daysUntil": -1697,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.6",
+    "postgres 9.6"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.5",
+   "date": "2021-02-11",
+   "daysUntil": -1970,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.5",
+    "postgres 9.5"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.4",
+   "date": "2020-02-13",
+   "daysUntil": -2334,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.4",
+    "postgres 9.4"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.3",
+   "date": "2018-11-08",
+   "daysUntil": -2796,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.3",
+    "postgres 9.3"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.2",
+   "date": "2017-11-09",
+   "daysUntil": -3160,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.2",
+    "postgres 9.2"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.1",
+   "date": "2016-10-27",
+   "daysUntil": -3538,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.1",
+    "postgres 9.1"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:9.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "9.0",
+   "date": "2015-10-08",
+   "daysUntil": -3923,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 9.0",
+    "postgres 9.0"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:8.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "8.4",
+   "date": "2014-07-24",
+   "daysUntil": -4364,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 8.4",
+    "postgres 8.4"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:8.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "8.3",
+   "date": "2013-02-07",
+   "daysUntil": -4896,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 8.3",
+    "postgres 8.3"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:8.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "8.2",
+   "date": "2011-12-05",
+   "daysUntil": -5326,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 8.2",
+    "postgres 8.2"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:8.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "8.1",
+   "date": "2010-11-08",
+   "daysUntil": -5718,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 8.1",
+    "postgres 8.1"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:8.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "8.0",
+   "date": "2010-10-01",
+   "daysUntil": -5756,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 8.0",
+    "postgres 8.0"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:7.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "7.4",
+   "date": "2010-10-01",
+   "daysUntil": -5756,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 7.4",
+    "postgres 7.4"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:7.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "7.3",
+   "date": "2007-11-27",
+   "daysUntil": -6795,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 7.3",
+    "postgres 7.3"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:7.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "7.2",
+   "date": "2007-02-04",
+   "daysUntil": -7091,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 7.2",
+    "postgres 7.2"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:7.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "7.1",
+   "date": "2006-04-13",
+   "daysUntil": -7388,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 7.1",
+    "postgres 7.1"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:7.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "7.0",
+   "date": "2005-05-08",
+   "daysUntil": -7728,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 7.0",
+    "postgres 7.0"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:6.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "6.5",
+   "date": "2004-06-09",
+   "daysUntil": -8061,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 6.5",
+    "postgres 6.5"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:6.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "6.4",
+   "date": "2003-10-30",
+   "daysUntil": -8284,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 6.4",
+    "postgres 6.4"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:postgresql:6.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/postgresql",
+   "type": "EOL",
+   "product": "PostgreSQL",
+   "cycle": "6.3",
+   "date": "2003-03-01",
+   "daysUntil": -8527,
+   "status": "already-eol",
+   "tokens": [
+    "PostgreSQL 6.3",
+    "postgres 6.3"
+   ],
+   "replacement": "PostgreSQL 18",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.6",
+   "date": "2026-04-21",
+   "daysUntil": -75,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.6"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.5",
+   "date": "2026-01-20",
+   "daysUntil": -166,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.5"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.4",
+   "date": "2025-10-21",
+   "daysUntil": -257,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.4"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.3",
+   "date": "2025-07-22",
+   "daysUntil": -348,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.3"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.2",
+   "date": "2025-04-15",
+   "daysUntil": -446,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.2"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.1",
+   "date": "2025-01-21",
+   "daysUntil": -530,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.1"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:9.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "9.0",
+   "date": "2024-10-15",
+   "daysUntil": -628,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 9.0"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:8.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "8.3",
+   "date": "2024-04-10",
+   "daysUntil": -816,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 8.3"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:8.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "8.2",
+   "date": "2023-12-14",
+   "daysUntil": -934,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 8.2"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:8.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "8.1",
+   "date": "2023-10-25",
+   "daysUntil": -984,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 8.1"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:8.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "8.0",
+   "date": "2026-04-30",
+   "daysUntil": -66,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 8.0"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:5.7",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "5.7",
+   "date": "2023-10-31",
+   "daysUntil": -978,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 5.7"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:5.6",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "5.6",
+   "date": "2021-02-28",
+   "daysUntil": -1953,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 5.6"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:mysql:5.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/mysql",
+   "type": "EOL",
+   "product": "MySQL",
+   "cycle": "5.5",
+   "date": "2018-12-31",
+   "daysUntil": -2743,
+   "status": "already-eol",
+   "tokens": [
+    "MySQL 5.5"
+   ],
+   "replacement": "MySQL 9.7",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:redis:8.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/redis",
+   "type": "EOL",
+   "product": "Redis",
+   "cycle": "8.2",
+   "date": "2026-05-25",
+   "daysUntil": -41,
+   "status": "already-eol",
+   "tokens": [
+    "Redis 8.2"
+   ],
+   "replacement": "Redis 8.8",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:redis:8.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/redis",
+   "type": "EOL",
+   "product": "Redis",
+   "cycle": "8.0",
+   "date": "2026-02-11",
+   "daysUntil": -144,
+   "status": "already-eol",
+   "tokens": [
+    "Redis 8.0"
+   ],
+   "replacement": "Redis 8.8",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:redis:7.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/redis",
+   "type": "EOL",
+   "product": "Redis",
+   "cycle": "7.0",
+   "date": "2024-07-29",
+   "daysUntil": -706,
+   "status": "already-eol",
+   "tokens": [
+    "Redis 7.0"
+   ],
+   "replacement": "Redis 8.8",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:redis:6.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/redis",
+   "type": "EOL",
+   "product": "Redis",
+   "cycle": "6.0",
+   "date": "2022-05-31",
+   "daysUntil": -1496,
+   "status": "already-eol",
+   "tokens": [
+    "Redis 6.0"
+   ],
+   "replacement": "Redis 8.8",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:redis:5.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/redis",
+   "type": "EOL",
+   "product": "Redis",
+   "cycle": "5.0",
+   "date": "2022-04-27",
+   "daysUntil": -1530,
+   "status": "already-eol",
+   "tokens": [
+    "Redis 5.0"
+   ],
+   "replacement": "Redis 8.8",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:23h2-ac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "23h2-ac",
+   "date": "2025-10-24",
+   "daysUntil": -254,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 23h2-ac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:20h2-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "20h2-sac",
+   "date": "2022-08-09",
+   "daysUntil": -1426,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 20h2-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2004-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2004-sac",
+   "date": "2021-12-14",
+   "daysUntil": -1664,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2004-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:1909-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "1909-sac",
+   "date": "2021-05-11",
+   "daysUntil": -1881,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 1909-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:1903-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "1903-sac",
+   "date": "2020-12-08",
+   "daysUntil": -2035,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 1903-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:1809-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "1809-sac",
+   "date": "2020-11-10",
+   "daysUntil": -2063,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 1809-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:1803-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "1803-sac",
+   "date": "2019-11-12",
+   "daysUntil": -2427,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 1803-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:1709-sac",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "1709-sac",
+   "date": "2019-04-09",
+   "daysUntil": -2644,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 1709-sac"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2016",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2016",
+   "date": "2027-01-12",
+   "daysUntil": 191,
+   "status": "approaching",
+   "tokens": [
+    "Windows Server 2016"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2012-r2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2012-r2",
+   "date": "2023-10-10",
+   "daysUntil": -999,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2012-r2"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2012",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2012",
+   "date": "2023-10-10",
+   "daysUntil": -999,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2012"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2008-r2-sp1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2008-r2-sp1",
+   "date": "2020-01-14",
+   "daysUntil": -2364,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2008-r2-sp1"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2008-sp2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2008-sp2",
+   "date": "2020-01-14",
+   "daysUntil": -2364,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2008-sp2"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2003-sp2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2003-sp2",
+   "date": "2015-07-14",
+   "daysUntil": -4009,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2003-sp2"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2003-sp1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2003-sp1",
+   "date": "2009-04-14",
+   "daysUntil": -6291,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2003-sp1"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2003",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2003",
+   "date": "2007-04-10",
+   "daysUntil": -7026,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2003"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:windows-server:2000",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/windows-server",
+   "type": "EOL",
+   "product": "Windows Server",
+   "cycle": "2000",
+   "date": "2010-07-13",
+   "daysUntil": -5836,
+   "status": "already-eol",
+   "tokens": [
+    "Windows Server 2000"
+   ],
+   "replacement": "Windows Server 2025",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:7.5",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "7.5",
+   "date": "2026-11-10",
+   "daysUntil": 128,
+   "status": "approaching",
+   "tokens": [
+    "PowerShell 7.5"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:7.4",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "7.4",
+   "date": "2026-11-10",
+   "daysUntil": 128,
+   "status": "approaching",
+   "tokens": [
+    "PowerShell 7.4"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:7.3",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "7.3",
+   "date": "2024-05-08",
+   "daysUntil": -788,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 7.3"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:7.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "7.2",
+   "date": "2024-11-08",
+   "daysUntil": -604,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 7.2"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:7.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "7.1",
+   "date": "2022-05-08",
+   "daysUntil": -1519,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 7.1"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:7.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "7.0",
+   "date": "2022-12-03",
+   "daysUntil": -1310,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 7.0"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:6.2",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "6.2",
+   "date": "2020-09-04",
+   "daysUntil": -2130,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 6.2"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:6.1",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "6.1",
+   "date": "2019-09-28",
+   "daysUntil": -2472,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 6.1"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:powershell:6.0",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/powershell",
+   "type": "EOL",
+   "product": "PowerShell",
+   "cycle": "6.0",
+   "date": "2019-02-13",
+   "daysUntil": -2699,
+   "status": "already-eol",
+   "tokens": [
+    "PowerShell 6.0"
+   ],
+   "replacement": "PowerShell 7.6",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.24",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.24",
+   "date": "2026-02-11",
+   "daysUntil": -144,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.24",
+    "golang 1.24"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.23",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.23",
+   "date": "2025-08-12",
+   "daysUntil": -327,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.23",
+    "golang 1.23"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.22",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.22",
+   "date": "2025-02-11",
+   "daysUntil": -509,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.22",
+    "golang 1.22"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.21",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.21",
+   "date": "2024-08-13",
+   "daysUntil": -691,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.21",
+    "golang 1.21"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.20",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.20",
+   "date": "2024-02-06",
+   "daysUntil": -880,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.20",
+    "golang 1.20"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.19",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.19",
+   "date": "2023-09-06",
+   "daysUntil": -1033,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.19",
+    "golang 1.19"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.18",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.18",
+   "date": "2023-02-01",
+   "daysUntil": -1250,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.18",
+    "golang 1.18"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.17",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.17",
+   "date": "2022-08-02",
+   "daysUntil": -1433,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.17",
+    "golang 1.17"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.16",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.16",
+   "date": "2022-03-15",
+   "daysUntil": -1573,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.16",
+    "golang 1.16"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.15",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.15",
+   "date": "2021-08-16",
+   "daysUntil": -1784,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.15",
+    "golang 1.15"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.14",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.14",
+   "date": "2021-02-16",
+   "daysUntil": -1965,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.14",
+    "golang 1.14"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.13",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.13",
+   "date": "2020-08-11",
+   "daysUntil": -2154,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.13",
+    "golang 1.13"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.12",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.12",
+   "date": "2020-02-25",
+   "daysUntil": -2322,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.12",
+    "golang 1.12"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.11",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.11",
+   "date": "2019-09-03",
+   "daysUntil": -2497,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.11",
+    "golang 1.11"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "eol:go:1.10",
+   "source": "endoflife.date",
+   "citation": "https://endoflife.date/go",
+   "type": "EOL",
+   "product": "Go",
+   "cycle": "1.10",
+   "date": "2019-02-25",
+   "daysUntil": -2687,
+   "status": "already-eol",
+   "tokens": [
+    "Go 1.10",
+    "golang 1.10"
+   ],
+   "replacement": "Go 1.26",
+   "review": "candidate — promote to registry only after human review"
+  },
+  {
+   "id": "azup:updates?id=564806",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=564806",
+   "type": "RETIREMENT",
+   "product": "Migrate from Azure Blueprints by January 31, 2027",
+   "cycle": null,
+   "date": "2027-01-30",
+   "daysUntil": 210,
+   "announced": "Thu, 25 Jun 2026 16:00:03 Z",
+   "title": "Retirement: Migrate from Azure Blueprints by January 31, 2027",
+   "tokens": [
+    "Migrate from Azure Blueprints by January 31, 2027"
+   ],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=503883",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=503883",
+   "type": "RETIREMENT",
+   "product": "Azure VMware Solution AV36 Node",
+   "cycle": null,
+   "date": "2027-09-29",
+   "daysUntil": 452,
+   "announced": "Sat, 27 Sep 2025 00:30:39 Z",
+   "title": "Retirement: Azure VMware Solution AV36 Node Retirement now on September 30, 2027",
+   "tokens": [
+    "Azure VMware Solution AV36 Node"
+   ],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=564774",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=564774",
+   "type": "RETIREMENT",
+   "product": "Av2-series, F-series, Fs-series, Fsv2-series, G-series, Gs-series, and Lsv2-series Virtual Machines for Azure Batch pools",
+   "cycle": null,
+   "date": "2028-11-14",
+   "daysUntil": 864,
+   "announced": "Thu, 11 Jun 2026 19:00:41 Z",
+   "title": "Retirement: Av2-series, F-series, Fs-series, Fsv2-series, G-series, Gs-series, and Lsv2-series Virtual Machines for Azure Batch pools",
+   "tokens": [],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=564772",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=564772",
+   "type": "RETIREMENT",
+   "product": "D-series, Ds-series, Dv2-series, Dsv2-series, and Ls-series Virtual Machines for Azure Batch pools",
+   "cycle": null,
+   "date": "2028-04-30",
+   "daysUntil": 666,
+   "announced": "Thu, 11 Jun 2026 19:00:41 Z",
+   "title": "Retirement: D-series, Ds-series, Dv2-series, Dsv2-series, and Ls-series Virtual Machines for Azure Batch pools",
+   "tokens": [],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=564441",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=564441",
+   "type": "RETIREMENT",
+   "product": "GPv1 and Legacy Blob storage account creation",
+   "cycle": null,
+   "date": null,
+   "daysUntil": null,
+   "announced": "Thu, 11 Jun 2026 19:00:41 Z",
+   "title": "Retirement: GPv1 and Legacy Blob storage account creation",
+   "tokens": [
+    "GPv1 and Legacy Blob storage account creation"
+   ],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=565482",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=565482",
+   "type": "RETIREMENT",
+   "product": "Azure Load Balancer Inbound NAT rule version 1 for Azure VMSS (aka Inbound NAT Pools)",
+   "cycle": null,
+   "date": null,
+   "daysUntil": null,
+   "announced": "Thu, 11 Jun 2026 16:15:07 Z",
+   "title": "Retirement: Azure Load Balancer Inbound NAT rule version 1 for Azure VMSS (aka Inbound NAT Pools)",
+   "tokens": [],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=558560",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=558560",
+   "type": "RETIREMENT",
+   "product": "Azure Synapse Link for Azure Cosmos DB NoSQL",
+   "cycle": null,
+   "date": "2026-03-30",
+   "daysUntil": -96,
+   "announced": "Wed, 10 Jun 2026 17:00:06 Z",
+   "title": "Retirement: Azure Synapse Link for Azure Cosmos DB NoSQL",
+   "tokens": [
+    "Azure Synapse Link for Azure Cosmos DB NoSQL"
+   ],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=565393",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=565393",
+   "type": "RETIREMENT",
+   "product": "Azure VPN Client for Linux (Preview)",
+   "cycle": null,
+   "date": "2026-08-30",
+   "daysUntil": 57,
+   "announced": "Wed, 10 Jun 2026 16:15:16 Z",
+   "title": "Retirement: Azure VPN Client for Linux (Preview) will be retired on August 31, 2026",
+   "tokens": [
+    "Azure VPN Client for Linux (Preview)"
+   ],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  },
+  {
+   "id": "azup:updates?id=564735",
+   "source": "azure-updates",
+   "citation": "https://azure.microsoft.com/updates?id=564735",
+   "type": "RETIREMENT",
+   "product": "Azure VMware Solution AV36 node End of Support on September 30, 2027",
+   "cycle": null,
+   "date": "2027-09-29",
+   "daysUntil": 452,
+   "announced": "Tue, 02 Jun 2026 13:00:06 Z",
+   "title": "Retirement: Azure VMware Solution AV36 node End of Support on September 30, 2027",
+   "tokens": [
+    "Azure VMware Solution AV36 node End of Support on September 30, 2027"
+   ],
+   "review": "candidate — tokens are heuristic; human must refine before promotion"
+  }
+ ],
+ "errors": []
+}

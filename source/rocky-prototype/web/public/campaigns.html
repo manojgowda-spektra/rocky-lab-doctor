@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rocky · Fixer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#080b11;--panel:rgba(255,255,255,.045);--panel2:rgba(255,255,255,.06);--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+    --ink:#eaf2f6;--dim:#8b98a6;--dim2:#5f6b78;--teal:#2ee6c8;--crit:#ff5c72;--high:#ff9f45;--med:#ffd93d;--low:#6ba6ff;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:radial-gradient(1100px 650px at 75% -8%,rgba(46,230,200,.06),transparent 60%),var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 22px 60px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  .logo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(150deg,rgba(46,230,200,.22),rgba(46,230,200,.05));border:1px solid var(--line2)}
+  h1{font-size:16px;margin:0;font-weight:650} .sub{font-size:11.5px;color:var(--dim)}
+  .spacer{flex:1}
+  .realbadge{font-size:10px;font-weight:800;letter-spacing:.8px;padding:4px 10px;border-radius:6px;background:var(--teal);color:#04120f}
+  a.nav{color:var(--teal);font-size:12.5px;text-decoration:none} a.nav:hover{text-decoration:underline}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .v{font-size:26px;font-weight:800;color:var(--teal)} .stat .v.orange{color:var(--high)}
+  .stat .k{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:18px 0 8px}
+  .camp{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .chead{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+  .chead:hover{background:var(--panel2)}
+  .rank{font-family:var(--mono);font-size:11px;color:var(--dim2);flex:none;width:46px}
+  .kind{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:6px;flex:none}
+  .kind.upstream-change{background:var(--teal);color:#04120f}
+  .kind.repo-hygiene{background:var(--low);color:#04101f}
+  .ctitle{flex:1;font-weight:600;font-size:13px;min-width:200px}
+  .ccount{text-align:right;font-size:11px;color:var(--dim);flex:none} .ccount b{color:var(--ink);font-size:16px}
+  .cbody{display:none;padding:0 14px 14px;border-top:1px solid var(--line)}
+  .cbody.open{display:block}
+  .repo{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px}
+  .repo .rline{display:flex;gap:10px;align-items:baseline;font-size:12.5px}
+  .repo .rname{font-weight:650;color:#fff}
+  .repo .rmeta{color:var(--dim);font-size:11px}
+  .repo .owner{color:var(--dim2);font-size:10.5px;font-style:italic;margin-left:auto}
+  .sample{font-family:var(--mono);font-size:11px;color:#c7d3db;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:6px;padding:6px 9px;margin-top:6px}
+  .sample .loc{color:#8ff0e0;margin-right:8px}
+  .coverage{font-size:11.5px;color:var(--dim);background:rgba(46,230,200,.06);border-left:2px solid var(--teal);padding:8px 10px;border-radius:0 8px 8px 0;margin-bottom:14px}
+  .foot{margin-top:22px;font-size:11px;color:var(--dim2);text-align:center;line-height:1.7}
+  .empty{color:var(--dim2);font-size:12.5px;padding:12px 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="logo" href="/" title="Rocky home" style="text-decoration:none">🛠️</a>
+    <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.6em">· Fixer</span></h1><div class="sub">real findings, grouped by CAUSE — a backlog you can actually merge</div></div>
+    <div class="spacer"></div>
+    <span class="realbadge">REAL REPOSITORY SCAN</span>
+    <a class="nav" href="/labdoctor.html">🩺 Doctor</a>
+    <a class="nav" href="/monitor.html">📡 Watcher →</a>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="coverage" id="coverage"></div>
+  <h2>Campaigns (ranked — cross-repo upstream causes first, so ONE decision covers the most ground)</h2>
+  <div id="campaigns"><div class="empty">Loading…</div></div>
+
+  <div class="foot">
+    Dry-run by design: this screen ranks work, it never opens PRs. Detection already outruns merge capacity —
+    piling on more PRs is the failure mode; a ranked, cause-grouped plan is the fix. Owners read
+    <b>"LABOWNERS pending"</b> honestly — nothing here is invented.<br>
+    Source: <code>labdoctor/scan-real.js</code> → <code>labdoctor/campaigns.js</code> · real production lab repositories.
+  </div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+async function load(){
+  const r=await fetch('/api/labhealth/campaigns').then(x=>x.json());
+  if(!r.available){ $('#campaigns').innerHTML='<div class="empty">No real-scan-results.json yet — run the Real Catalog Scanner first.</div>'; return; }
+  const s=r.stats;
+  $('#stats').innerHTML=
+    '<div class="stat"><div class="v orange">'+s.findings+'</div><div class="k">real findings</div></div>'+
+    '<div class="stat"><div class="v">'+s.campaigns+'</div><div class="k">campaigns (grouped by cause)</div></div>'+
+    '<div class="stat"><div class="v">'+s.crossRepoCampaigns+'</div><div class="k">cross-repo campaigns</div></div>'+
+    '<div class="stat"><div class="v">'+s.top3CoveragePct+'%</div><div class="k">covered by the top 3</div></div>';
+  $('#coverage').innerHTML='<b>'+s.findings+' findings</b> is a backlog nobody merges. Grouped by cause it is <b>'+s.campaigns+' campaigns</b>, and the top 3 alone cover <b>'+s.top3CoveragePct+'%</b> of everything — that is a Dependabot-shaped unit of work, not a wall of lint.';
+
+  const host=$('#campaigns'); host.innerHTML='';
+  r.campaigns.forEach((c,i)=>{
+    const box=document.createElement('div'); box.className='camp';
+    const head=document.createElement('div'); head.className='chead';
+    head.innerHTML='<span class="rank">'+esc(c.campaignId)+'</span>'+
+      '<span class="kind '+esc(c.cause.kind)+'">'+(c.cause.kind==='upstream-change'?'upstream change':'repo hygiene')+'</span>'+
+      '<span class="ctitle">'+esc(c.title)+'<div style="font-size:10.5px;color:var(--dim);font-weight:400">'+c.repoCount+' repo'+(c.repoCount>1?'s':'')+' · '+c.fileCount+' file'+(c.fileCount>1?'s':'')+'</div></span>'+
+      '<span class="ccount"><b>'+c.findings+'</b><br>finding'+(c.findings>1?'s':'')+'</span>';
+    const body=document.createElement('div'); body.className='cbody';
+    body.innerHTML=c.repos.map(r2=>
+      '<div class="repo"><div class="rline"><span class="rname">'+esc(r2.repo)+'</span>'+
+      '<span class="rmeta">'+r2.findings+' finding'+(r2.findings>1?'s':'')+' across '+r2.files+' file'+(r2.files>1?'s':'')+'</span>'+
+      '<span class="owner">'+esc(r2.owner)+'</span></div>'+
+      r2.samples.map(sm=>'<div class="sample"><span class="loc">'+esc(sm.file)+':'+sm.line+'</span>'+esc(sm.evidence)+'</div>').join('')+
+      '</div>'
+    ).join('');
+    head.onclick=()=>body.classList.toggle('open');
+    box.append(head,body); host.appendChild(box);
+    if(i===0) body.classList.add('open'); // the top campaign opens by default — it's the one to lead with
+  });
+}
+load();
+</script>
+</body>
+</html>
