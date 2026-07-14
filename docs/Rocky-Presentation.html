@@ -94,7 +94,15 @@
 
   /* chrome */
   #bar{position:fixed;left:0;bottom:0;height:3px;background:var(--accent);z-index:30;width:0;transition:width .4s linear}
-  #hint{position:fixed;right:14px;bottom:10px;font-family:var(--mono);font-size:11px;color:#ffffff55;z-index:30}
+  #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;font-family:var(--mono);font-size:11px;color:#ffffff66;z-index:30}
+  /* always-visible navigation buttons */
+  #nav{position:fixed;z-index:50;bottom:26px;right:28px;display:flex;gap:12px}
+  #nav button{cursor:pointer;font-family:var(--sans);font-size:16px;font-weight:700;border:none;border-radius:10px;
+    padding:12px 20px;color:#04241f;background:var(--accent);box-shadow:0 8px 24px #0006}
+  #nav button.ghost{background:#ffffff;color:var(--ink);border:1px solid #ffffff}
+  #nav button:hover{filter:brightness(1.06)}
+  #nav button:disabled{opacity:.4;cursor:default;filter:none}
+  #nav button:focus-visible{outline:3px solid #7df0dd;outline-offset:2px}
   #note{position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;background:#0b1512f2;color:#eaf2ee;
     padding:22px 8vw;font-size:16px;line-height:1.55;border-top:2px solid var(--accent)}
   #note.on{display:block}
@@ -114,6 +122,7 @@
 <div id="stage"><div id="wrap"></div></div>
 <div id="bar"></div>
 <div id="hint">← →  ·  F full screen  ·  N notes  ·  Ctrl/Cmd+P → PDF</div>
+<div id="nav"><button id="prev" class="ghost" aria-label="Previous slide">‹ Back</button><button id="next" aria-label="Next slide">Next ›</button></div>
 <div id="note"></div>
 <script>
 const S=[
@@ -224,9 +233,13 @@ const slides=[...wrap.children];
 let cur=0;
 function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--s',s);}
 addEventListener('resize',fit);fit();
+const prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next');
 function show(n){cur=Math.max(0,Math.min(S.length-1,n));slides.forEach((el,i)=>el.classList.toggle('on',i===cur));
   bar.style.width=((cur+1)/S.length*100)+'%';
+  prevBtn.disabled=(cur===0); nextBtn.disabled=(cur===S.length-1);
   if(noteEl.classList.contains('on'))noteEl.innerHTML=`<span class="k">Say this</span>${S[cur].note||''}`;}
+prevBtn.addEventListener('click',(e)=>{e.stopPropagation();show(cur-1);});
+nextBtn.addEventListener('click',(e)=>{e.stopPropagation();show(cur+1);});
 addEventListener('keydown',e=>{
   if(['ArrowRight',' ','PageDown'].includes(e.key)){show(cur+1);e.preventDefault();}
   else if(['ArrowLeft','PageUp'].includes(e.key))show(cur-1);
