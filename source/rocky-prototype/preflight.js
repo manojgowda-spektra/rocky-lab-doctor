@@ -182,6 +182,12 @@ async function waitForServer(ms = 20000) {
     const clsimTxt = await clsim.text();
     ok('CloudLabs-sim stage serves with SIMULATED labelling + live guide wiring', clsim.status === 200 && clsimTxt.includes('SIMULATED ENVIRONMENT') && clsimTxt.includes('evidenceCard') && clsimTxt.includes('/api/labstate'));
 
+    // 8c. Backstage feed: page serves, events accumulated from this very preflight run, clear works
+    const bsPage = await fetch(BASE + '/backstage.html');
+    ok('Backstage page serves', bsPage.status === 200 && (await bsPage.text()).includes('Backstage'));
+    const bsFeed = await get('/api/backstage');
+    ok('Backstage feed captured this preflight\'s own actions', Array.isArray(bsFeed.events) && bsFeed.events.length > 5 && bsFeed.events.some((e) => e.kind === 'engine') && bsFeed.events.some((e) => e.kind === 'gate'), `${bsFeed.events.length} events (engine+gate seen)`);
+
     // 9. Dead routes stay dead
     act('Cleanup');
     for (const dead of ['/classic', '/api/insight', '/api/labhealth/ask']) {

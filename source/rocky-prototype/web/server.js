@@ -120,6 +120,17 @@ function amnestyView() {
   };
 }
 
+// ---- BACKSTAGE feed — the demo's live "what's actually happening" narration ----
+// Every meaningful API action logs one plain-English event here; backstage.html tails it on a side
+// screen so the audience can watch the engine think while the presenter clicks the normal UI.
+// In-memory ring buffer, demo-only telemetry: never persisted, cleared on demand.
+const backstage = [];
+let bsId = 0;
+function bs(kind, title, detail, prov, ms) {
+  backstage.push({ id: ++bsId, ts: new Date().toISOString(), kind, title, detail: detail || '', prov: prov || '', ms: ms == null ? null : ms });
+  if (backstage.length > 300) backstage.splice(0, backstage.length - 300);
+}
+
 let ctx, convo, catalog;
 async function init() {
   ctx = await new FixtureContextProvider(path.join(__dirname, '..', 'fixtures', 'lab-context.json')).getContext();
@@ -184,8 +195,25 @@ const server = http.createServer(async (req, res) => {
   // ---- API ----
   if (p === '/api/labstate') { return json(res, labState()); }
 
+  // ---- BACKSTAGE feed endpoints ----
+  if (p === '/api/backstage') {
+    const since = Number(url.searchParams.get('since') || 0);
+    return json(res, { events: backstage.filter((e) => e.id > since), lastId: bsId });
+  }
+  if (p === '/api/backstage/note' && req.method === 'POST') {
+    const b = await readBody(req);
+    bs(String(b.kind || 'learner').slice(0, 16), String(b.title || '').slice(0, 120), String(b.detail || '').slice(0, 240), String(b.prov || '').slice(0, 24));
+    return json(res, { ok: true });
+  }
+  if (p === '/api/backstage/clear' && req.method === 'POST') { backstage.length = 0; return json(res, { ok: true }); }
+
   // ---- LAB DOCTOR — autonomous lab QA over the catalog ----
-  if (p === '/api/labhealth/catalog') { return json(res, analyzeCatalog(catalog)); }
+  if (p === '/api/labhealth/catalog') {
+    const t0 = Date.now();
+    const rep = analyzeCatalog(catalog);
+    bs('engine', `Fleet sweep: analyzed ${rep.labCount} labs`, `${rep.broken} broken · ${rep.learnersAffected} learners in impacted labs · fleet health ${rep.catalogHealth}/100 — pure comparison of authored spec vs telemetry, zero AI calls`, 'FIXTURE', Date.now() - t0);
+    return json(res, rep);
+  }
 
   // Preview-fix-impact: models the best-case ceiling if the approved fixes are merged, on a COPY of the
   // telemetry (never mutates the catalog; C1, a human approved every fix). This is a MODEL, not a test —
@@ -194,7 +222,9 @@ const server = http.createServer(async (req, res) => {
     const { lab: labId, approved } = await readBody(req);
     const lab = (catalog.labs || []).find((l) => l.labId === labId);
     if (!lab) return json(res, { error: 'unknown lab', labId });
-    return json(res, simulatePostFixOutcome(lab, Array.isArray(approved) ? approved : []));
+    const sim = simulatePostFixOutcome(lab, Array.isArray(approved) ? approved : []);
+    bs('engine', `Fix impact MODELED for "${lab.title}"`, `health ${sim.before.score} → ${sim.after.score} IF fixes are approved — a projection on a copy of the data, nothing executed, nothing mutated`, 'MODELED');
+    return json(res, sim);
   }
 
   // Synthetic Learner Probe — deterministic-first pre-launch check, restricted to labs with zero
@@ -221,7 +251,9 @@ const server = http.createServer(async (req, res) => {
   if (p === '/api/labhealth/campaigns') {
     const scan = loadRealScan();
     if (!scan) return json(res, { available: false });
-    return json(res, { available: true, ...buildCampaignPlan(scan) });
+    const plan = buildCampaignPlan(scan);
+    bs('engine', `Grouped ${plan.stats.findings} REAL findings by root cause → ${plan.stats.campaigns} campaigns`, `top 3 campaigns cover ${plan.stats.top3CoveragePct}% · dry-run only: ranks work, never opens PRs`, 'REAL');
+    return json(res, { available: true, ...plan });
   }
 
   if (p === '/api/labhealth/real-scan') {
@@ -252,6 +284,11 @@ const server = http.createServer(async (req, res) => {
   }
   if (p === '/api/monitor/advance' && req.method === 'POST') {
     const snap = monitorAdvance();
+    bs('engine', `Watcher sweep ${snap.sweepId}: re-analyzed the fleet, diffed vs previous sweep`,
+      snap.alerts.length
+        ? snap.alerts.filter((a) => !a.foldedInto).map((a) => `${a.type.toUpperCase()}${a.labTitle ? ': ' + a.labTitle : a.labIds ? ': ' + a.labIds.length + ' labs folded into ONE incident' : ''}`).join(' · ')
+        : 'no change since last sweep → deliberate silence (no alert spam)',
+      'SIMULATED');
     return json(res, { simulated: true, ...snap, ledger: monitorState().caseLedger.view() });
   }
   if (p === '/api/monitor/reset' && req.method === 'POST') { _mon = null; monitorState(); return json(res, { simulated: true, reset: true }); }
@@ -265,7 +302,10 @@ const server = http.createServer(async (req, res) => {
     // let whitespace or a non-string truthy value through (found by adversarial review) — so trim and
     // type-check, and the writer is never reached without a real name.
     const authorizedBy = (typeof body.authorizedBy === 'string' ? body.authorizedBy.trim() : '');
-    if (!authorizedBy) { res.writeHead(400, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'amnesty requires an explicit authorizedBy — packets are drafts, humans execute' })); }
+    if (!authorizedBy) {
+      bs('gate', 'Amnesty write REFUSED — no named human', 'HTTP 400: the human gate is code, not policy. The writer function was never called.', 'SIMULATED');
+      res.writeHead(400, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'amnesty requires an explicit authorizedBy — packets are drafts, humans execute' }));
+    }
     if (!a.executed) {
       // In-process writer = faithful mirror of the production PUT: mutates the learner row, preserves
       // the machine verdict beneath it (writtenBack.previousStatus) so the defect is never masked.
@@ -278,6 +318,7 @@ const server = http.createServer(async (req, res) => {
         return { simulated: true, written: true, previousStatus, newStatus: w.status };
       };
       a.executed = await executeAmnesty(a.packet, writer, { authorizedBy: authorizedBy.slice(0, 80) });
+      bs('action', `Amnesty executed by "${authorizedBy.slice(0, 40)}" — ${a.executed.written} verdict(s) restored`, 'Writes went to the SIMULATED mirror of the platform endpoint; each preserved the machine verdict beneath it, so the defect stays visible until truly fixed', 'SIMULATED');
       // Reversion guard — HONEST re-validation, not a re-read of our own write. Simulate the validator
       // being fixed and re-run by re-deriving each amnestied verdict from the learner's OWN observed
       // state vs the validator's expected state (ground truth), independent of the status amnesty just
@@ -325,7 +366,13 @@ const server = http.createServer(async (req, res) => {
     const labId = url.searchParams.get('lab');
     const lab = (catalog.labs || []).find((l) => l.labId === labId);
     if (!lab) return json(res, { error: 'unknown lab', labId });
+    const tDiag = Date.now();
     const report = analyzeLab(lab);
+    bs('engine', `Diagnosed "${report.title}" — ${report.findings.length} finding(s)`,
+      report.findings.length
+        ? report.findings.slice(0, 3).map((f) => `${f.subtype || f.type}: ${f.affectedLearners || 0} learners`).join(' · ') + ' — each asserted from expected-vs-observed contradiction, before any AI runs'
+        : 'no contradictions between authored spec and telemetry — lab is healthy',
+      'FIXTURE', Date.now() - tDiag);
     // Refine each actionable finding's fix via the LLM (grounded, draft-only, provenance). Cached per
     // (lab, finding) since the underlying evidence is static — avoids re-spending tokens on every reload.
     // Low/transient findings keep their deterministic draft (cheap + they're not defects).
@@ -363,6 +410,7 @@ const server = http.createServer(async (req, res) => {
     const ticket = 'ROCKY-' + String(Date.now()).slice(-5);
     const summary = supportSummary(); // auto-captured — user doesn't explain it
     try { fs.mkdirSync(path.dirname(REPORTS), { recursive: true }); fs.appendFileSync(REPORTS, JSON.stringify({ ticket, ts: new Date().toISOString(), reason: body.reason || 'escalated', summary }) + '\n'); } catch {}
+    bs('action', `Escalation ticket ${ticket} auto-built`, `Root cause "${summary.likelyRootCause}" + failing checks + error log attached — secrets REDACTED before anything leaves the box. The learner explained nothing.`, 'FIXTURE');
     return json(res, { ticket, summary });
   }
 
@@ -376,6 +424,8 @@ const server = http.createServer(async (req, res) => {
     }
     // Region fixed → the SKU/region deployment error (and the app-config failure downstream of it) no longer applies.
     ctx.deploymentActivityLog = (ctx.deploymentActivityLog || []).filter((e) => !(e.level === 'error' && /SkuNotAvailable|not available in location|AppSettingsApplyFailed/i.test((e.code || '') + ' ' + (e.message || ''))));
+    const stillFailing = (ctx.validations || []).filter((v) => v.status === 'failed').length;
+    bs('action', `Fix applied: resources recreated in ${target}`, `Validations re-checked: ${stillFailing} still failing${stillFailing ? ' (the escalated license issue stays red on purpose — Rocky never pretends)' : ' — all green, verified'}`, 'FIXTURE');
     return json(res, labState());
   }
 
@@ -383,8 +433,11 @@ const server = http.createServer(async (req, res) => {
   // LIVE_DATA or an explicit, labeled scenario simulation. Trace is returned to the caller for
   // transparency but never persisted server-side (it's fully redundant with what the client already has).
   if (p === '/api/say' && req.method === 'POST') {
-    if (!isConfigured()) return json(res, { message: null });
     const { message = '', kind = 'answer', scenario = false } = await readBody(req);
+    if (!isConfigured()) {
+      bs('ai', 'Rocky asked — AI model is OFF', `"${String(message).slice(0, 70)}" → no model configured; the UI falls back to the engine's deterministic evidence card. Nothing is invented.`, scenario ? 'SIMULATED' : '');
+      return json(res, { message: null });
+    }
     const useEvidence = LIVE_DATA || scenario;
     let findings = []; if (useEvidence) { try { findings = analyze(ctx).findings; } catch {} }
     const gate = LIVE_DATA ? '' : (scenario
@@ -424,15 +477,24 @@ const server = http.createServer(async (req, res) => {
         deploymentErrors: (ctx.deploymentActivityLog || []).filter((e) => e.level === 'error').map((e) => e.code),
       } : 'none',
     }; // returned to the caller only — never persisted server-side (see docs/rocky_complexity_audit.md)
+    const tSay = Date.now();
+    bs('engine', 'Evidence assembled for Rocky\'s answer', useEvidence
+      ? `Engine findings attached: ${findings.map((f) => f.type).join(', ') || 'none'} · failing checks + deploy errors included · the model can only NARRATE these facts, never invent verdicts`
+      : 'No live lab connected → the model is told it has NO evidence and must abstain', scenario ? 'SIMULATED' : '');
     try {
       const raw = await chat([{ role: 'user', content: usr }], { system: sys, json: true });
       let o; try { o = JSON.parse(raw); } catch { o = { message: (raw || '').trim() }; }
+      bs('ai', 'Model narrated the reply', `"${String(message).slice(0, 60)}" → answered strictly from the attached evidence`, scenario ? 'SIMULATED' : '', Date.now() - tSay);
       return json(res, { message: (o.message || '').toString().trim(), trace });
-    } catch (e) { return json(res, { message: null, trace }); }
+    } catch (e) {
+      bs('ai', 'Model call failed — honest degradation', `${String(e.message).slice(0, 90)} → UI shows the deterministic evidence card instead`, '', Date.now() - tSay);
+      return json(res, { message: null, trace });
+    }
   }
 
   if (p === '/api/inject' && req.method === 'POST') {
     const { type } = await readBody(req);
+    bs('learner', `Simulated incident injected: ${type}`, 'A deliberate failure added to the demo lab so the diagnosis flow can be shown end-to-end', 'FIXTURE');
     if (type === 'license' && !(ctx.validations || []).some((v) => v.validationId === 'V-010')) {
       ctx.deploymentActivityLog.push({ ts: new Date().toISOString(), stage: 'compute', level: 'error', code: 'MarketplacePurchaseRequired', message: "The Marketplace image requires license terms to be accepted for this subscription before deployment." });
       ctx.validations.push({ validationId: 'V-010', stepGuid: ctx.currentStep?.stepGuid || 'S-03', description: 'Marketplace license terms accepted', status: 'failed' });

@@ -27,7 +27,12 @@ in the story."
    Do NOT press Send. On stage you only press Enter.
 5. Put the projector on `/` (home) as your title card — its headline *"Labs that test, diagnose, and fix
    themselves — before a learner ever complains"* does the pre-show talking.
-6. Close anything showing `.env.local`.
+6. **Second screen (if you have one): open `/backstage.html` and click "✨ Clear".** Every click you make
+   anywhere in the demo narrates itself there in plain English — what the engine decided, what the AI
+   did, what a GATE refused, all tagged REAL/SIMULATED/MODELED with timings. Judges watching it see the
+   architecture prove itself live. (Single screen? Keep it as a tab and visit it once after the twist:
+   "and here's everything the system just did behind that.")
+7. Close anything showing `.env.local`.
 
 ---
 

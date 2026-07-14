@@ -284,6 +284,11 @@ async function validateStep(ev,guid){
   const stepEl=[...document.querySelectorAll('.step')][STEPS.findIndex(s=>s.guid===guid)];
   if(stepEl){stepEl.classList.add('open');const vw=stepEl.querySelector('.vwrap');if(vw)vw.innerHTML=fresh.map(v=>vrow(v,true)).join('');}
   const fails=fresh.filter(v=>v.status==='failed').length;
+  // narrate the click on the backstage feed (second screen)
+  const failDetail=fresh.filter(v=>v.status==='failed').map(v=>v.expected?`expected ${JSON.stringify(v.expected)}, observed ${JSON.stringify(v.observed)}`:v.description).join(' · ');
+  fetch('/api/backstage/note',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
+    kind:'learner', title:`Learner clicked Validate on step ${guid} → ${fails?fails+' check(s) FAILED':'all checks PASSED'}`,
+    detail: fails?failDetail.slice(0,230):'observed state matched the authored expectation', prov:'FIXTURE'})}).catch(()=>{});
   if(fails){setEmotion('detective');showBubble(`That check failed — ${fails} item${fails>1?'s':''} on this step. Click me, I can tell you why.`,6);}
   else if(fresh.length){setEmotion('celebrate');confetti();showBubble('This step checks out — nice work! 🎉',5);setTimeout(()=>{if(tgtName==='celebrate')setEmotion(anyFailing()?'concerned':'happy');},2600);}
 }

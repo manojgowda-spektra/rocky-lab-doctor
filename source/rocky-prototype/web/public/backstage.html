@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky · Backstage</title>
+<!--
+  BACKSTAGE — the demo's live X-ray. Open this on a SECOND screen while presenting: every click the
+  presenter makes anywhere in the product logs one plain-English card here (what happened, how the
+  engine decided, what's REAL vs SIMULATED, how long it took). Newest at the top — no scrolling needed
+  on a projector. Data: in-memory ring buffer on the server (/api/backstage), demo-only, never persisted.
+-->
+<style>
+  :root{--bg:#080b11;--panel:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--ink:#eaf2f6;--dim:#8b98a6;--dim2:#5f6b78;
+    --teal:#2ee6c8;--violet:#a78bfa;--blue:#6ba6ff;--orange:#ff9f45;--red:#ff5c72;--green:#5ef0a0;--yellow:#ffd93d;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:radial-gradient(1000px 600px at 80% -10%,rgba(167,139,250,.08),transparent 60%),var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:18px 22px 60px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .logo{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;background:linear-gradient(150deg,rgba(167,139,250,.25),rgba(167,139,250,.06));border:1px solid var(--line)}
+  h1{font-size:17px;margin:0;font-weight:750} .sub{font-size:12px;color:var(--dim)}
+  .spacer{flex:1}
+  .live{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--green);font-weight:700}
+  .live i{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .btn{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:600;font-family:inherit}
+  .btn:hover{border-color:var(--violet)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--dim);margin-bottom:14px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:8px;height:8px;border-radius:3px}
+  .ev{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-left-width:3px;border-radius:11px;padding:11px 14px;margin-bottom:9px;animation:slide .3s ease-out}
+  @keyframes slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .ev .kind{flex:none;font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:3px 8px;border-radius:5px;margin-top:2px;width:74px;text-align:center}
+  .ev.engine{border-left-color:var(--teal)} .ev.engine .kind{background:rgba(46,230,200,.15);color:var(--teal)}
+  .ev.ai{border-left-color:var(--violet)} .ev.ai .kind{background:rgba(167,139,250,.15);color:var(--violet)}
+  .ev.action{border-left-color:var(--blue)} .ev.action .kind{background:rgba(107,166,255,.15);color:var(--blue)}
+  .ev.gate{border-left-color:var(--red)} .ev.gate .kind{background:rgba(255,92,114,.16);color:var(--red)}
+  .ev.learner{border-left-color:var(--yellow)} .ev.learner .kind{background:rgba(255,217,61,.13);color:var(--yellow)}
+  .ev .body{flex:1;min-width:0}
+  .ev .title{font-size:14px;font-weight:700;line-height:1.35}
+  .ev .detail{font-size:12px;color:var(--dim);line-height:1.5;margin-top:2px}
+  .ev .meta{flex:none;text-align:right;font-family:var(--mono);font-size:10px;color:var(--dim2);margin-top:2px}
+  .ev .meta .prov{display:block;font-weight:800;letter-spacing:.4px;margin-bottom:3px}
+  .prov.REAL{color:var(--teal)} .prov.SIMULATED{color:var(--blue)} .prov.FIXTURE{color:var(--yellow)} .prov.MODELED{color:var(--violet)}
+  .empty{color:var(--dim2);text-align:center;padding:60px 0;font-size:14px;line-height:2}
+  .empty b{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">🎬</div>
+    <div><h1>Backstage — what's actually happening</h1>
+      <div class="sub">every card is a real action the system just took · open this on a second screen while demoing</div></div>
+    <div class="spacer"></div>
+    <span class="live"><i></i>LIVE</span>
+    <button class="btn" onclick="clearFeed()">✨ Clear (start of demo)</button>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--teal)"></i><b>ENGINE</b> — deterministic decisions (no AI)</span>
+    <span><i class="dot" style="background:var(--violet)"></i><b>AI</b> — the model narrating (never deciding)</span>
+    <span><i class="dot" style="background:var(--blue)"></i><b>ACTION</b> — something done, human-gated</span>
+    <span><i class="dot" style="background:var(--red)"></i><b>GATE</b> — a refusal protecting you</span>
+    <span><i class="dot" style="background:var(--yellow)"></i><b>LEARNER</b> — what the person on stage clicked</span>
+  </div>
+  <div id="feed"><div class="empty"><b>Waiting for the first action…</b><br>Click anything in the demo — a lab, Validate, Rocky, a monitor sweep — and watch it explain itself here.</div></div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+let since=0, started=false;
+function card(e){
+  const d=document.createElement('div');d.className='ev '+esc(e.kind);
+  const t=new Date(e.ts).toLocaleTimeString([], {hour12:false});
+  d.innerHTML=`<span class="kind">${esc(e.kind)}</span>
+    <div class="body"><div class="title">${esc(e.title)}</div>${e.detail?`<div class="detail">${esc(e.detail)}</div>`:''}</div>
+    <div class="meta">${e.prov?`<span class="prov ${esc(e.prov)}">${esc(e.prov)}</span>`:''}${t}${e.ms!=null?`<br>${e.ms}ms`:''}</div>`;
+  return d;
+}
+async function poll(){
+  try{
+    const r=await fetch('/api/backstage?since='+since).then(x=>x.json());
+    if(r.events.length){
+      if(!started){$('#feed').innerHTML='';started=true;}
+      const feed=$('#feed');
+      for(const e of r.events){feed.prepend(card(e));since=Math.max(since,e.id);}
+      while(feed.children.length>60)feed.removeChild(feed.lastChild); // projector doesn't scroll
+    }
+  }catch(e){}
+  setTimeout(poll,1000);
+}
+async function clearFeed(){await fetch('/api/backstage/clear',{method:'POST'});$('#feed').innerHTML='<div class="empty"><b>Cleared — ready for the demo.</b><br>Every click from now on narrates itself here.</div>';since=0;started=false;}
+poll();
+</script>
+</body>
+</html>
