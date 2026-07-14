@@ -1,6 +1,6 @@
 {
- "scannedAt": "2026-07-14T17:02:19.371Z",
- "root": "C:\\Users\\ManojGowda\\OneDrive - Spektra Systems LLC\\Desktop\\Labs",
+ "scannedAt": "2026-07-14T17:31:44.902Z",
+ "root": "C:/Users/ManojGowda/OneDrive - Spektra Systems LLC/Desktop/Labs",
  "repoCount": 8,
  "repos": [
   {
@@ -10,7 +10,7 @@
    "findingCount": 0,
    "byType": {},
    "findings": [],
-   "ms": 358,
+   "ms": 506,
    "git": {
     "branch": "fix/media-updates",
     "commit": "5d340fb",
@@ -610,7 +610,7 @@
      "severity": "medium"
     }
    ],
-   "ms": 288,
+   "ms": 385,
    "git": {
     "branch": "lab-upgrade-pr-qa",
     "commit": "5226596",
@@ -715,7 +715,7 @@
      "severity": "high"
     }
    ],
-   "ms": 405,
+   "ms": 599,
    "git": {
     "branch": "main",
     "commit": "58b1a7a",
@@ -729,7 +729,7 @@
    "findingCount": 0,
    "byType": {},
    "findings": [],
-   "ms": 357,
+   "ms": 505,
    "git": {
     "branch": "main",
     "commit": "8d554fb",
@@ -743,7 +743,7 @@
    "findingCount": 0,
    "byType": {},
    "findings": [],
-   "ms": 885,
+   "ms": 996,
    "git": {
     "branch": "March-2026",
     "commit": "b89787b",
@@ -804,7 +804,7 @@
      "severity": "medium"
     }
    ],
-   "ms": 597,
+   "ms": 879,
    "git": {
     "branch": "microsoft-app-modernization-v2",
     "commit": "0deaea6",
@@ -1110,7 +1110,7 @@
      "severity": "high"
     }
    ],
-   "ms": 1766,
+   "ms": 2872,
    "git": {
     "branch": "main",
     "commit": "8478be6",
@@ -1592,7 +1592,7 @@
      "severity": "high"
     }
    ],
-   "ms": 557,
+   "ms": 1102,
    "git": {
     "branch": "April-2026",
     "commit": "23851e9",
