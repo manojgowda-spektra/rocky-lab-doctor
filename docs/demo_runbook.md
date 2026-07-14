@@ -292,6 +292,15 @@ with the model off. Say: *"the AI narrates, the engine asserts — watch it run 
   percentage."
 - **"Show me a fix that actually merged."** — MCW#1 (Azure AD → Microsoft Entra ID) and ai-developer#2
   (the CI gate itself) are both merged, real GitHub PRs — open them.
+- **"Guides have screenshots — can it check those match the steps?"** — "Yes, two stages. Stage one is
+  designed and deterministic: OCR the text inside each screenshot and run the exact same
+  retirement/renaming registry over it — a screenshot still showing 'Azure AD' or a retired model gets
+  flagged the same trustworthy way. Stage two is AI vision comparing screenshot to step instruction —
+  raised as a human-review *suggestion*, never a hard claim, cached by image hash and run only on changed
+  images in PRs. We sequenced it after text checks deliberately: 133 findings at zero false positives
+  earned the trust budget for fuzzier checks. And it already half-works today: Rocky flagged the
+  ada-002 screenshot via its filename, and our fix PR notes the image needs recapture instead of blindly
+  renaming it — detection with judgment."
 
 ## 8. Objection Handling
 - **"This is just regex + a GPT wrapper."** — Concede the regex part fully: the scanner and the CI gate
