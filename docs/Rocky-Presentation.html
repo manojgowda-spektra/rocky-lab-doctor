@@ -5,210 +5,237 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Rocky — Presentation</title>
 <!--
-  Self-contained slide deck (no external assets). Present: open in any browser, press F for full screen,
-  → / Space to advance, ← to go back, P toggles the speaker note. Export to PDF: Ctrl/Cmd+P → Save as PDF
-  (each slide prints as one landscape page; keep "Background graphics" on). Content is the fact-verified
-  deck from workflow wf_b4e838a6-d75 (deckCheck: ok). Story per hat; provenance labelled on every slide.
+  Clean briefing deck. Fixed 1280×720 canvas scaled to fit the window (identical everywhere, never
+  overflows). Present: F = full screen, → / Space / click-right = next, ← = back, N = speaker notes,
+  Ctrl/Cmd+P = Save as PDF (one slide per page). Content is fact-verified; numbers set in monospace to
+  echo Rocky's "verified receipts" identity. AI chat is off (new model pending) — noted honestly.
 -->
 <style>
   :root{
-    --bg:#0b1020; --bg2:#0e1730; --card:#111c34; --ink:#eef3fb; --dim:#9fb0c8; --dim2:#6b7c96;
-    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.18);
-    --teal:#2ee6c8; --teal-ink:#04241f; --violet:#a78bfa; --blue:#6ba6ff; --amber:#ffcf5c; --red:#ff6b81; --green:#5ef0a0;
+    --paper:#f6f8f7; --ink:#13201c; --dim:#54655f; --faint:#8fa39c;
+    --accent:#0c7a68; --accent-2:#0a5f51; --wash:#0c7a6812; --line:#13201c1a; --line2:#13201c33;
+    --real:#0c7a68; --sim:#3a6ea5; --mixed:#9a6b00; --brick:#b0442c;
+    --sans:-apple-system,"Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
     --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,monospace;
-    --sans:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
   }
-  *{box-sizing:border-box} html,body{margin:0;height:100%}
-  body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
-  #stage{position:fixed;inset:0}
-  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
-    padding:6vh 8vw;background:
-      radial-gradient(1400px 800px at 82% -12%,rgba(46,230,200,.10),transparent 58%),
-      radial-gradient(1000px 700px at 6% 108%,rgba(167,139,250,.09),transparent 55%),
-      linear-gradient(160deg,var(--bg),var(--bg2));}
-  .slide.on{display:flex;animation:in .35s ease-out}
-  @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#0a0f0e;font-family:var(--sans);color:var(--ink);overflow:hidden}
+  #stage{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden}
+  #wrap{width:1280px;height:720px;position:relative;transform:scale(var(--s,1));transform-origin:center}
 
-  .eyebrow{font-family:var(--mono);font-size:1.05vw;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin-bottom:2.2vh}
-  h1{font-size:6.4vw;font-weight:800;letter-spacing:-.02em;line-height:1.02;margin:0}
-  h2{font-size:4.0vw;font-weight:800;letter-spacing:-.015em;line-height:1.08;margin:0 0 2.2vh;text-wrap:balance}
-  .sub{font-size:1.7vw;color:var(--dim);max-width:52ch;line-height:1.5}
-  .bullets{list-style:none;padding:0;margin:2vh 0 0;display:flex;flex-direction:column;gap:1.6vh;max-width:60ch}
-  .bullets li{position:relative;padding-left:2.2vw;font-size:1.75vw;line-height:1.45;color:var(--ink)}
-  .bullets li::before{content:"";position:absolute;left:0;top:.7em;width:.8vw;height:.8vw;border-radius:3px;background:var(--teal)}
+  .slide{position:absolute;inset:0;background:var(--paper);display:none;flex-direction:column;
+    padding:52px 92px 44px;overflow:hidden}
+  .slide.on{display:flex}
+  @media (prefers-reduced-motion: no-preference){ .slide.on{animation:rise .4s cubic-bezier(.2,.7,.3,1)} }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-  /* story layout */
-  .story{display:grid;grid-template-columns:1fr 1fr;gap:2.4vw;margin-top:1vh}
-  .story .scene{grid-column:1/-1;font-size:1.9vw;line-height:1.45;color:var(--ink);background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:14px;padding:2.2vh 2vw}
-  .story .scene b{color:var(--amber)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2.2vh 2vw}
-  .card .lbl{font-family:var(--mono);font-size:.95vw;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2);margin-bottom:1vh}
-  .card.does{border-left:4px solid var(--blue)} .card.does .lbl{color:var(--blue)}
-  .card.result{border-left:4px solid var(--teal)} .card.result .lbl{color:var(--teal)}
-  .card p{margin:0;font-size:1.55vw;line-height:1.45}
-  .card.result p b{color:var(--teal)}
+  /* header + footer rails */
+  .head{display:flex;align-items:center;gap:12px;flex:none;height:26px}
+  .mark{font-weight:800;font-size:15px;letter-spacing:.02em}
+  .mark span{color:var(--accent)}
+  .head .sec{margin-left:auto;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .foot{display:flex;align-items:center;gap:12px;flex:none;height:24px;font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .foot .num{letter-spacing:.05em}
+  .chip{margin-left:auto;font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.12em;padding:4px 10px;border-radius:6px;border:1px solid var(--line2)}
+  .chip.REAL{color:var(--real);background:var(--wash);border-color:#0c7a6840}
+  .chip.SIMULATED{color:var(--sim);background:#3a6ea512;border-color:#3a6ea540}
+  .chip.MIXED{color:var(--mixed);background:#9a6b0012;border-color:#9a6b0040}
+  .chip.NONE{visibility:hidden}
 
-  /* stat */
-  .stat{display:flex;flex-direction:column;align-items:flex-start;gap:1vh}
-  .stat .big{font-family:var(--mono);font-size:13vw;font-weight:800;line-height:.9;color:var(--teal);letter-spacing:-.02em}
-  .stat .lbl{font-size:2vw;color:var(--dim);max-width:40ch;line-height:1.4}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+  h1{font-size:52px;font-weight:800;letter-spacing:-.02em;line-height:1.06;max-width:24ch;text-wrap:balance}
+  .sub{font-size:24px;color:var(--dim);line-height:1.45;max-width:52ch;margin-top:16px}
+  .num{font-family:var(--mono);color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
 
-  /* section divider */
-  .slide.section h2{font-size:5.6vw}
-  .slide.section .sub{font-size:2vw}
-  .slide.section .eyebrow{color:var(--violet)}
+  /* title / section / closing — centered rhythm */
+  .slide.center .body{align-items:center;text-align:center}
+  .slide.center .sub{max-width:56ch}
+  .logo{width:88px;height:88px;border-radius:22px;display:grid;place-items:center;font-size:46px;
+    background:var(--wash);border:1px solid #0c7a6833;margin-bottom:26px}
+  .slide.title h1{font-size:96px} .slide.section h1{font-size:88px;color:var(--accent)}
+  .slide.closing h1{font-size:60px}
 
-  /* title */
-  .slide.title .brand{display:flex;align-items:center;gap:1.6vw;margin-bottom:2vh}
-  .slide.title .logo{width:7vw;height:7vw;border-radius:1.4vw;display:grid;place-items:center;font-size:3.6vw;background:linear-gradient(150deg,rgba(46,230,200,.28),rgba(46,230,200,.06));border:1px solid var(--line2)}
-  .slide.title h1{font-size:9vw}
-  .slide.closing h2{font-size:5vw}
+  /* three-jobs slide */
+  .jobs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;margin-top:8px}
+  .job{border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:14px;padding:26px 24px;background:#fff}
+  .job .w{font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .job h3{font-size:26px;font-weight:800;margin-bottom:8px}
+  .job p{font-size:17px;color:var(--dim);line-height:1.45}
+
+  /* story slide — calm vertical rhythm */
+  .hat{display:flex;align-items:center;gap:16px;margin-bottom:4px}
+  .hat .e{font-size:44px}
+  .hat .n{font-size:34px;font-weight:800;letter-spacing:-.01em}
+  .analogy{font-size:22px;color:var(--dim);font-style:italic;line-height:1.4;max-width:60ch;margin:6px 0 26px;
+    padding-left:16px;border-left:3px solid var(--line2)}
+  .result{font-size:34px;font-weight:750;line-height:1.28;max-width:44ch;letter-spacing:-.01em}
+  .does{font-size:18px;color:var(--faint);margin-top:18px;max-width:60ch;line-height:1.5}
+
+  /* stat slide */
+  .slide.stat .body{align-items:flex-start}
+  .big{font-family:var(--mono);font-size:172px;font-weight:800;color:var(--accent);line-height:.9;letter-spacing:-.03em}
+  .stat .lbl{font-size:26px;color:var(--dim);max-width:40ch;line-height:1.4;margin-top:16px}
+  .twoup{display:flex;gap:96px}
+  .twoup .big{font-size:118px}
+  .twoup .lbl{font-size:20px;margin-top:10px}
+
+  /* real vs simulated */
+  .rs{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:6px}
+  .rs .col{border:1px solid var(--line);border-radius:14px;padding:24px 26px;background:#fff}
+  .rs .col.real{border-top:3px solid var(--real)} .rs .col.sim{border-top:3px solid var(--sim)}
+  .rs h3{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+  .rs .col.real h3{color:var(--real)} .rs .col.sim h3{color:var(--sim)}
+  .rs ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .rs li{font-size:17px;line-height:1.4;padding-left:20px;position:relative;color:var(--ink)}
+  .rs li::before{content:"";position:absolute;left:0;top:.55em;width:7px;height:7px;border-radius:2px}
+  .rs .col.real li::before{background:var(--real)} .rs .col.sim li::before{background:var(--sim)}
 
   /* chrome */
-  .prov{position:absolute;top:4vh;right:5vw;font-family:var(--mono);font-size:.85vw;font-weight:800;letter-spacing:.1em;padding:.6vh 1vw;border-radius:7px;border:1px solid var(--line2)}
-  .prov.REAL{background:rgba(46,230,200,.14);color:var(--teal)} .prov.SIMULATED{background:rgba(107,166,255,.14);color:var(--blue)}
-  .prov.MIXED{background:rgba(255,207,92,.14);color:var(--amber)} .prov.NONE{display:none}
-  .hat{position:absolute;top:4vh;left:5vw;font-size:1.5vw;font-weight:700;color:var(--dim)}
-  .bar{position:fixed;left:0;bottom:0;height:5px;background:var(--teal);z-index:5;transition:width .3s}
-  .count{position:fixed;bottom:2.5vh;right:5vw;font-family:var(--mono);font-size:1vw;color:var(--dim2);z-index:5}
-  .note{position:fixed;left:0;right:0;bottom:0;background:rgba(4,8,18,.96);border-top:1px solid var(--line2);color:var(--ink);
-    padding:2.2vh 8vw;font-size:1.3vw;line-height:1.5;display:none;z-index:6}
-  .note.show{display:block}
-  .note .k{font-family:var(--mono);font-size:.85vw;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);display:block;margin-bottom:.8vh}
-  .help{position:fixed;bottom:2.5vh;left:5vw;font-size:.95vw;color:var(--dim2);z-index:5}
-  .help b{color:var(--dim)}
+  #bar{position:fixed;left:0;bottom:0;height:3px;background:var(--accent);z-index:30;width:0;transition:width .4s linear}
+  #hint{position:fixed;right:14px;bottom:10px;font-family:var(--mono);font-size:11px;color:#ffffff55;z-index:30}
+  #note{position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;background:#0b1512f2;color:#eaf2ee;
+    padding:22px 8vw;font-size:16px;line-height:1.55;border-top:2px solid var(--accent)}
+  #note.on{display:block}
+  #note .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:8px}
 
   @media print{
     @page{size:1280px 720px;margin:0}
-    body{overflow:visible}
-    #stage{position:static}
-    .slide{position:relative;display:flex!important;height:720px;width:1280px;page-break-after:always;animation:none}
-    .bar,.count,.note,.help{display:none!important}
-    .prov{font-size:11px}.hat{font-size:19px}
-    .eyebrow{font-size:13px}h1{font-size:82px}h2{font-size:52px}.sub{font-size:22px}
-    .bullets li{font-size:23px}.bullets li::before{width:10px;height:10px}
-    .story .scene{font-size:25px}.card p{font-size:20px}.card .lbl{font-size:12px}
-    .stat .big{font-size:170px}.stat .lbl{font-size:26px}
+    body{background:#fff;overflow:visible}
+    #stage{position:static;display:block}
+    #wrap{transform:none;width:1280px;height:720px}
+    .slide{display:flex!important;position:relative;page-break-after:always}
+    #bar,#hint,#note{display:none!important}
   }
 </style>
 </head>
 <body>
-<div id="stage"></div>
-<div class="bar" id="bar"></div>
-<div class="count" id="count"></div>
-<div class="help">← → move · <b>F</b> full screen · <b>P</b> speaker notes · <b>Ctrl/Cmd+P</b> → PDF</div>
-<div class="note" id="note"></div>
+<div id="stage"><div id="wrap"></div></div>
+<div id="bar"></div>
+<div id="hint">← →  ·  F full screen  ·  N notes  ·  Ctrl/Cmd+P → PDF</div>
+<div id="note"></div>
 <script>
-const SLIDES = [
- {kind:"title", eyebrow:"Company briefing · 2026", title:"Rocky", sub:"The reliability layer for hands-on cloud training labs — one honest engine, several hats, three jobs.", prov:"NONE",
-  note:"This is Rocky — a quality-control team that never sleeps, watching over our hands-on cloud labs. In a few minutes you'll see the problem it solves and the real results it's already found."},
- {kind:"content", title:"It's 2 a.m. and the lab won't work", sub:"A true-to-life moment for any learner", prov:"NONE",
-  bullets:["A learner is halfway through a cloud lab, following our step-by-step guide exactly.","A step fails. The instructions look right, so they assume it's their own fault.","It's the middle of the night. No instructor is awake. Nobody is watching.","They try random fixes, get frustrated, and quit — and we never even learn the guide was broken."],
-  note:"Picture a learner at 2 a.m. doing everything the guide says, and it still fails. They assume it's their fault and quit. The painful part: nobody on our side ever hears about it, so the guide stays broken for the next person. That silent failure is what Rocky catches."},
- {kind:"content", title:"One Rocky. Several hats. Three jobs.", sub:"The whole system in one picture", prov:"NONE",
-  bullets:["FIND — read every lab guide and watch every result to catch what's broken.","FIX — draft the repair, let a human approve it, prove it worked, and block it from coming back.","HELP — support the learner in the moment, with answers based on evidence, never guesses.","One system wearing different hats — Doctor, Scanner, Watcher, and more — always the same honest engine underneath."],
-  note:"Everything Rocky does fits three simple jobs: Find, Fix, Help. It's one system that wears different hats for each task. Hold those three words and the rest of the deck clicks into place."},
- {kind:"section", eyebrow:"Job 1", title:"FIND", sub:"Catch what's broken before a learner does", prov:"NONE",
-  note:"First job: finding problems. Rocky reads our lab guides and watches results, looking for anything that would trip up a learner."},
- {kind:"story", title:"The Doctor does the check-up", hat:"🩺 Doctor", prov:"REAL",
-  scene:"Like a <b>health inspector</b> who visits every kitchen in the chain and checks each against the rulebook — instead of waiting for someone to get sick.",
-  does:"Rocky reads through all our lab guides and diagnoses what's wrong, lab by lab — and says plainly when a lab is actually fine.",
-  result:"<b>133 real problems</b> found across <b>8 real production lab repos</b> (268 guide files). And <b>3 of the 8 came back completely clean</b> — Rocky says 'nothing wrong here' when nothing is.",
-  note:"The Doctor is a health inspector who checks every kitchen before anyone gets sick. Rocky read eight real repositories — 268 guide files — and found 133 genuine problems. Three came back perfectly clean. It doesn't cry wolf."},
- {kind:"story", title:"The Scanner reads the fine print", hat:"📄 Scanner", prov:"REAL",
-  scene:"Like a <b>recipe translated</b> into another language where the blank meant to say 'add salt to taste' was left as the literal words — so the cook follows it exactly and ruins the dish.",
-  does:"Rocky compares each translated guide against the original and spots where the personalized login details got lost in translation.",
-  result:"In the Japanese guide, all <b>4 slots</b> that fill in the learner's real username and password were missing — so a learner is literally told to type the placeholder <b>'RTI_username'</b> as their username. <b>16</b> of these credential-token losses found in total.",
-  note:"The one that sticks. Our English guide has slots that auto-fill each learner's real login. In the Japanese translation those slots were dropped — so the learner is told, word for word, to type 'RTI_username'. Of course it fails, and they'd never guess why. Rocky caught this plus 16 more. Real, on a real course."},
- {kind:"story", title:"The Watcher only speaks up when something changes", hat:"📡 Watcher", prov:"SIMULATED",
-  scene:"Like a good <b>security camera</b> that doesn't blare an alarm every time the fridge hums — it alerts you only when something actually changes, and tells you when the trouble is over.",
-  does:"Rocky watches the labs sweep after sweep: quiet when steady, loud the moment something new breaks, one alert (not a hundred) for a big outage, and it notices on its own when a lab recovers.",
-  result:"On the test timeline: a silent 'looks-passed-but-actually-broken' regression caught the moment it appeared, one outage folded into a <b>single alert covering 4 labs</b>, and recovery detected automatically — no false alarms in between.",
-  note:"The Watcher is a security camera that only beeps when something actually changes. Upfront: this timeline is a safe simulation — a practice environment — so we prove the logic before pointing it at live data. The recovery-detection is real; the timeline is the twin."},
- {kind:"content", title:"Rocky also forecasts what's about to break", sub:"Not just today's weather — tomorrow's", prov:"REAL",
-  bullets:["Rocky watches public sources: software 'expiry-date' lists and Azure's own update announcements.","Real example: 'Python 3.10 reaches end-of-life in about 118 days — and a number of your guides still rely on it.'","That turns a future outage into a calm, scheduled fix instead of a 2 a.m. surprise."],
-  note:"Beyond today's problems, Rocky reads the forecast — public expiry dates and Azure announcements. It can tell us Python 3.10 stops being supported in ~118 days and some guides still depend on it. A problem we fix calmly on a schedule instead of being surprised."},
- {kind:"stat", title:"The number that matters most", big:"133", lbl:"real problems found across 8 production lab repos — verified, not guessed", prov:"REAL",
-  note:"If you remember one number, make it this. 133 real problems, in guides our learners use right now, across eight repositories. Not hypotheticals — verifiable on GitHub."},
- {kind:"section", eyebrow:"Job 2", title:"FIX", sub:"Repair it safely — a human always approves", prov:"NONE",
-  note:"Finding is half the value. The second job is fixing them safely, so nothing changes without a person signing off."},
- {kind:"story", title:"The Fixer runs the repair crew's job board", hat:"🛠️ Fixer", prov:"MIXED",
-  scene:"Like a <b>repair crew</b> that gets a hundred tickets and, instead of chasing them one by one, groups them by root cause so a single fix closes dozens at once.",
-  does:"Rocky groups the 133 findings by underlying cause into a short, prioritized to-do list, then drafts the actual repair as a proposal a human reviews and approves.",
-  result:"133 findings grouped into <b>13 fix campaigns</b> — the top 3 cover <b>62%</b> of the work. <b>5 real pull requests</b> opened on GitHub; <b>2 already merged</b> by a human, including the safety gate itself.",
-  note:"A smart foreman with a job board. Instead of 133 random tickets, it groups them into 13 campaigns — the top three cover 62%. Then it drafts the repair. Five became real GitHub pull requests; two are already merged by a person. The grouping view is from our practice environment; the pull requests are completely real."},
- {kind:"story", title:"The Guardian is the appeals court", hat:"⚖️ Guardian", prov:"MIXED",
-  scene:"Like an <b>appeals court</b> for a student wrongly marked 'failed' by a glitchy auto-grader when they actually did the work right — the verdict can be overturned, but only a named judge signs the order.",
-  does:"Rocky reviews learners who failed because of a broken lab (not their own mistake) and can restore their result — but only after 5 strict checks and with a named human authorizing it.",
-  result:"In review, <b>8 learners</b> were eligible and <b>2 correctly excluded</b>. And the safety holds: with no human name attached, the system flatly <b>refuses</b> — it returns an error rather than quietly change a grade.",
-  note:"An appeals court. Sometimes a learner fails because the lab was broken, not them. Rocky can restore those results — but only after five checks and only when a real person signs by name. Eight qualified, two were turned down. And try it with no name attached: it refuses outright. Case data is simulated; that refusal is real and we demo it live."},
- {kind:"stat", title:"The door that slams on repeat mistakes", big:"4 sec", lbl:"to automatically block a planted bug from ever merging back in", prov:"REAL",
-  note:"Once we fix something, we don't want it sneaking back. We planted a known bug in a real repository. Rocky's safety gate caught and blocked it from merging in four seconds. That's how a fix stays fixed."},
- {kind:"stat", title:"Does it cry wolf?", big:"0 / 42", lbl:"false alarms in a hand-audited sample of Rocky's findings", prov:"REAL",
-  note:"A tool that cries wolf is worse than none. We hand-checked 42 findings — every one was genuine, zero false alarms. Separately, a family of 29 translation findings was re-checked with different tooling: 29 of 29 confirmed. When Rocky flags something, trust it."},
- {kind:"section", eyebrow:"Job 3", title:"HELP", sub:"Stand beside the learner in the moment", prov:"NONE",
-  note:"The third job: helping the learner when they're stuck, and helping support make sense of the noise."},
- {kind:"story", title:"The Listener runs a smart complaints desk", hat:"🎧 Listener", prov:"SIMULATED",
-  scene:"Like a <b>complaints desk</b> buried under a pile of tickets that are really the same few problems described a hundred different ways.",
-  does:"Rocky reads incoming support tickets and collapses them to the handful of real underlying incidents — so the team fixes causes, not symptoms.",
-  result:"<b>74 tickets collapsed into 24 root-cause incidents</b> — roughly a 3-to-1 cut in the noise.",
-  note:"A smart complaints desk. Support drowns in tickets that are secretly the same problem said many ways. Rocky groups them so the team fixes the cause once instead of answering 74 times. Here 74 collapsed to 24. This one's from our simulation for now."},
- {kind:"story", title:"The Companion is the waiter who won't let you order the bad dish", hat:"💬 Companion", prov:"SIMULATED",
-  scene:"It's 2 a.m. again. <b>'Priya'</b> is stuck — her deployment failed with a cryptic error. The tempting quick fix is to just pick a smaller machine, but that's wrong and costs her another hour.",
-  does:"The in-lab companion refuses the tempting-but-wrong shortcut and names the real cause: she deployed to the wrong region. When it can't verify something, it says 'I don't know' rather than guess.",
-  result:"In the demo, <b>22 of 43 learners</b> had hit that very wall — the wrong-region trap — and Rocky pointed each of them at the real fix instead of the tempting dead end.",
-  note:"The Companion sits in the lab with the learner. Priya's stuck at 2 a.m. The obvious guess — 'pick a smaller machine' — is wrong and wastes an hour. A good waiter won't let you order the dish that makes you sick. Rocky refuses it and points to the real cause: wrong region. And if unsure, it says 'I don't know'. One caveat: the live chat voice is off right now (a disabled billing subscription), so today it answers with a plain evidence card — by design, it degrades gracefully."},
- {kind:"content", title:"What's real today, and what's a safe practice run", sub:"We never fake green", prov:"MIXED",
-  bullets:["REAL: the 133 defects, the 8 repositories, the 5 pull requests (2 merged), the 4-second safety gate, the 0-in-42 false-alarm check, and the live end-of-life forecasts.","SIMULATED (clearly labeled): the live fleet dashboard, the support and appeals numbers, and the 2 a.m. Priya story — a digital twin, so we prove the logic without touching real learners.","HONEST CAVEATS: the AI chat is currently off (a disabled billing subscription) and the hosted app is paused for the same reason. Everything that doesn't need AI still works.","Connecting real CloudLabs data is a config change plus an approval — deliberately not done yet, on purpose."],
-  note:"Completely straight about what's real: the problems, repos, pull requests, safety gate, false-alarm check, forecasts — all real, all verifiable. The fleet dashboard, support and appeals figures, and Priya's story are a labeled digital twin — a flight simulator to prove the logic before it touches a real learner. Two caveats: chat is off (disabled billing subscription) and the hosted site is paused for the same reason. Our rule: the engine states facts, the AI narrates, and we never fake a green checkmark."},
- {kind:"closing", eyebrow:"One line", title:"Rocky: we never fake green", sub:"The reliability layer for hands-on cloud labs — it finds what's broken, fixes it with a human's approval, and helps the learner in the meantime.", prov:"NONE",
-  note:"Rocky in one line: the reliability layer for our hands-on labs. It finds what's broken, fixes it with a human's sign-off, and helps the learner while we do. It earns trust the hard way — the engine asserts, the AI narrates, and we never fake green. Thank you."},
+const S=[
+ {kind:"title", prov:"NONE",
+  logo:"🤖", eyebrow:"Company briefing", h1:"Rocky",
+  sub:"The reliability layer for hands-on cloud labs.  One engine · several hats · three jobs.",
+  note:"This is Rocky — a quality team that never sleeps, watching over our hands-on cloud labs. In a few minutes: the problem, and the real results it has already found."},
+
+ {kind:"content", sec:"The problem", prov:"NONE",
+  h1:"It's 2 a.m. The lab is broken. The learner blames themselves — and quits.",
+  sub:"We only find out later, from support tickets. The guide stays broken for the next person too.",
+  note:"Picture a learner at 2 a.m. doing exactly what the guide says, and it fails. They assume it's their fault and give up — and nobody on our side hears about it. That silent failure is what Rocky catches."},
+
+ {kind:"jobs", sec:"The idea", prov:"NONE", h1:"One Rocky. Three simple jobs.",
+  jobs:[["Find","Read every guide and watch every result to catch what's broken."],
+        ["Fix","Draft the repair, a human approves, prove it worked, block it from returning."],
+        ["Help","Stand with the learner in the moment — answers from evidence, never guesses."]],
+  note:"Everything Rocky does is one of three jobs: Find, Fix, Help. It's one system wearing different hats for each. Hold those three words and the rest is easy."},
+
+ {kind:"section", sec:"Job 1", prov:"NONE", eyebrow:"Job 1 of 3", h1:"Find",
+  sub:"Catch what's broken before a learner does.",
+  note:"First job: finding problems, by reading our guides and watching real results."},
+
+ {kind:"story", sec:"Find", prov:"REAL", e:"🩺", hat:"Doctor",
+  analogy:"Like a health inspector who checks every kitchen against the rulebook — instead of waiting for someone to get sick.",
+  result:`<span class="num">133</span> real problems found across <span class="num">8</span> live lab repos — and <span class="num">3</span> came back completely clean.`,
+  does:"It diagnoses each lab, and says plainly when a lab is actually fine. It doesn't cry wolf.",
+  note:"The Doctor is a health inspector who checks every kitchen before anyone gets sick. Rocky read eight real repositories and found 133 genuine problems — and three came back perfectly clean. When a lab is fine, it says so."},
+
+ {kind:"story", sec:"Find", prov:"REAL", e:"📄", hat:"Scanner",
+  analogy:"Like a recipe translated into another language where the blank for 'your name here' was left as the literal words — so people type them in.",
+  result:`In the Japanese guide, every login-detail slot was missing — so learners are told to type the placeholder <span class="num">“RTI_username”</span> as their username.`,
+  does:"16 of these lost-in-translation credential problems found — the step just fails, and the learner has no idea why.",
+  note:"The one that sticks. Our English guide auto-fills each learner's real login. In the Japanese translation those slots were dropped, so the learner is told to type 'RTI_username' word-for-word. Of course it fails. Rocky caught this plus 16 more — real, on a real course."},
+
+ {kind:"story", sec:"Find", prov:"SIMULATED", e:"📡", hat:"Watcher",
+  analogy:"Like a good security camera that doesn't blare every time the fridge hums — it alerts only when something changes, and tells you when it's over.",
+  result:`A silent break was caught the moment it appeared, one outage folded into <span class="num">1</span> alert across <span class="num">4</span> labs, and recovery was detected on its own.`,
+  does:"Shown on a safe practice timeline (a digital twin) — the detection logic is real; we prove it before pointing it at live data.",
+  note:"The Watcher only beeps when something actually changes. Upfront: this timeline is a safe simulation so we prove the logic before live data. The recovery-detection is real; the timeline it ran on is the twin."},
+
+ {kind:"stat", sec:"Find", prov:"REAL", big:"133", lbl:"real problems found in guides our learners use right now — verified, not guessed.",
+  note:"If you remember one number, make it this. 133 real problems across eight repositories — verifiable on GitHub, not hypotheticals."},
+
+ {kind:"section", sec:"Job 2", prov:"NONE", eyebrow:"Job 2 of 3", h1:"Fix",
+  sub:"Repair it safely — a human always approves.",
+  note:"Second job: fixing them, and doing it safely, so nothing changes without a person signing off."},
+
+ {kind:"story", sec:"Fix", prov:"MIXED", e:"🛠️", hat:"Fixer",
+  analogy:"Like a foreman who gets a hundred tickets and groups them by root cause, so one fix closes dozens at once.",
+  result:`<span class="num">133</span> findings grouped into <span class="num">13</span> fix campaigns. <span class="num">5</span> real pull requests opened; <span class="num">2</span> already merged by a person.`,
+  does:"The grouping view is from our practice environment; the pull requests on GitHub are completely real.",
+  note:"A smart foreman with a job board. Instead of 133 random tickets, thirteen campaigns — the top three cover 62%. Five became real GitHub pull requests; two are already merged by a person."},
+
+ {kind:"story", sec:"Fix", prov:"MIXED", e:"⚖️", hat:"Guardian",
+  analogy:"Like an appeals court for a student wrongly failed by a glitchy grader — the verdict can be overturned, but only a named judge signs the order.",
+  result:`It restores wrongly-failed learners — but with no human name attached, it <span class="num">refuses</span> outright, returning an error rather than quietly change a grade.`,
+  does:"Only after 5 strict checks and a named person authorizing it. In review, 8 learners qualified and 2 were correctly turned down.",
+  note:"An appeals court. Sometimes a learner failed because the lab was broken, not them. Rocky can restore results — but only after five checks and a named sign-off. Try it with no name: it refuses outright. That refusal is real; we demo it live."},
+
+ {kind:"twoup", sec:"Fix", prov:"REAL",
+  stats:[["4 sec","to automatically block a planted bug from ever merging back in"],
+         ["0 / 42","false alarms in a hand-audited sample of Rocky's findings"]],
+  note:"Two proofs. We planted a bug in a real repo — the safety gate blocked it in four seconds. And we hand-checked 42 findings: zero false alarms. When Rocky flags something, trust it."},
+
+ {kind:"section", sec:"Job 3", prov:"NONE", eyebrow:"Job 3 of 3", h1:"Help",
+  sub:"Stand beside the learner in the moment.",
+  note:"Third job: helping the learner right when they're stuck, and helping support cut through the noise."},
+
+ {kind:"story", sec:"Help", prov:"SIMULATED", e:"🎧", hat:"Listener",
+  analogy:"Like a complaints desk buried under tickets that are really the same few problems, described a hundred ways.",
+  result:`<span class="num">74</span> support tickets collapsed into <span class="num">24</span> real incidents — so the team fixes causes, not symptoms.`,
+  does:"Roughly a 3-to-1 cut in the noise. Shown on simulated tickets for now.",
+  note:"A smart complaints desk. Support drowns in tickets that are secretly the same problem. Rocky groups them so the team fixes the cause once instead of answering 74 times."},
+
+ {kind:"story", sec:"Help", prov:"SIMULATED", e:"💬", hat:"Companion",
+  analogy:"Like a waiter who won't let you order the dish that'll make you sick — Priya, stuck at 2 a.m., is about to try the tempting wrong fix.",
+  result:`Rocky refuses the shortcut and names the real cause — the wrong region. When it can't verify, it says <span class="num">“I don't know”</span> rather than guess.`,
+  does:"The live chat voice is off today (new model pending), so it answers with a plain evidence card — by design, it degrades gracefully instead of bluffing.",
+  note:"The Companion sits with the learner. The obvious guess — 'pick a smaller machine' — is wrong and wastes an hour. Rocky refuses it and points to the real cause: wrong region. And if unsure, it says 'I don't know'. The chat voice is off today; it shows an evidence card instead."},
+
+ {kind:"rs", sec:"Honesty", prov:"MIXED", h1:"What's real today — and what's a safe practice run",
+  real:["133 defects · 8 repositories","5 pull requests (2 merged)","4-second safety gate; 0-in-42 false alarms","Live end-of-life forecasts"],
+  sim:["The live fleet dashboard","Support & appeals numbers","The 2 a.m. Priya story","(A digital twin — proves the logic without touching real learners)"],
+  note:"Completely straight about what's real: the problems, repos, pull requests, gate, forecasts — all verifiable. The dashboard, support and appeals figures, and Priya's story are a labeled twin. Our rule: the engine states facts, the AI narrates, and we never fake a green checkmark."},
+
+ {kind:"closing", sec:"", prov:"NONE", logo:"🤖", h1:"We never fake green.",
+  sub:"Rocky finds what's broken, fixes it with a human's approval, and helps the learner in the meantime.",
+  note:"Rocky in one line: the reliability layer for our labs. It finds, fixes with a human's sign-off, and helps — and earns trust the hard way. The engine asserts, the AI narrates. Thank you."},
 ];
 
-const stage=document.getElementById('stage');
-function esc(s){return s;}
-function render(){
-  stage.innerHTML='';
-  SLIDES.forEach((s,i)=>{
-    const d=document.createElement('section');
-    d.className='slide '+s.kind+(i===0?' on':'');
-    let inner='';
-    if(s.hat) inner+=`<div class="hat">${s.hat}</div>`;
-    inner+=`<div class="prov ${s.prov}">${s.prov==='NONE'?'':s.prov}</div>`;
-    if(s.eyebrow) inner+=`<div class="eyebrow">${s.eyebrow}</div>`;
-    if(s.kind==='title'){inner+=`<div class="brand"><div class="logo">🤖</div><h1>${s.title}</h1></div><div class="sub">${s.sub}</div>`;}
-    else if(s.kind==='stat'){inner+=`<div class="eyebrow">${s.title}</div><div class="stat"><div class="big">${s.big}</div><div class="lbl">${s.lbl}</div></div>`;}
-    else if(s.kind==='story'){
-      inner+=`<h2>${s.title}</h2><div class="story"><div class="scene">${s.scene}</div>`+
-        `<div class="card does"><div class="lbl">What Rocky does</div><p>${s.does}</p></div>`+
-        `<div class="card result"><div class="lbl">The result</div><p>${s.result}</p></div></div>`;
-    } else {
-      inner+=`<h2>${s.title}</h2>`;
-      if(s.sub) inner+=`<div class="sub">${s.sub}</div>`;
-      if(s.bullets) inner+=`<ul class="bullets">${s.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`;
-    }
-    d.innerHTML=inner;
-    stage.appendChild(d);
-  });
+const wrap=document.getElementById('wrap'), bar=document.getElementById('bar'), noteEl=document.getElementById('note');
+function railHead(s){return `<div class="head"><span class="mark">Rocky<span>.</span></span><span class="sec">${s.sec||''}</span></div>`;}
+function railFoot(s,i){return `<div class="foot"><span class="num">${String(i+1).padStart(2,'0')} / ${String(S.length).padStart(2,'0')}</span><span class="chip ${s.prov}">${s.prov==='NONE'?'':s.prov}</span></div>`;}
+function bodyHtml(s){
+  if(s.kind==='title'||s.kind==='closing') return `<div class="body">${s.logo?`<div class="logo">${s.logo}</div>`:''}${s.eyebrow?`<div class="eyebrow">${s.eyebrow}</div>`:''}<h1>${s.h1}</h1>${s.sub?`<div class="sub">${s.sub}</div>`:''}</div>`;
+  if(s.kind==='section') return `<div class="body"><div class="eyebrow">${s.eyebrow||''}</div><h1>${s.h1}</h1>${s.sub?`<div class="sub">${s.sub}</div>`:''}</div>`;
+  if(s.kind==='jobs') return `<div class="body"><h1 style="font-size:44px;margin-bottom:26px">${s.h1}</h1><div class="jobs">${s.jobs.map(j=>`<div class="job"><div class="w">${j[0]}</div><h3>${j[0]}</h3><p>${j[1]}</p></div>`).join('')}</div></div>`;
+  if(s.kind==='content') return `<div class="body"><h1>${s.h1}</h1>${s.sub?`<div class="sub">${s.sub}</div>`:''}</div>`;
+  if(s.kind==='story') return `<div class="body"><div class="hat"><span class="e">${s.e}</span><span class="n">${s.hat}</span></div><div class="analogy">${s.analogy}</div><div class="result">${s.result}</div><div class="does">${s.does}</div></div>`;
+  if(s.kind==='stat') return `<div class="body"><div class="big">${s.big}</div><div class="lbl">${s.lbl}</div></div>`;
+  if(s.kind==='twoup') return `<div class="body"><div class="twoup">${s.stats.map(t=>`<div><div class="big">${t[0]}</div><div class="lbl">${t[1]}</div></div>`).join('')}</div></div>`;
+  if(s.kind==='rs') return `<div class="body"><h1 style="font-size:40px;margin-bottom:22px">${s.h1}</h1><div class="rs"><div class="col real"><h3>Real today</h3><ul>${s.real.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="col sim"><h3>Simulated (labeled)</h3><ul>${s.sim.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></div>`;
+  return '<div class="body"></div>';
 }
+wrap.innerHTML=S.map((s,i)=>`<section class="slide center-${(s.kind==='title'||s.kind==='section'||s.kind==='closing')?'y':'n'} ${s.kind} ${(s.kind==='title'||s.kind==='section'||s.kind==='closing')?'center':''}">${railHead(s)}${bodyHtml(s)}${railFoot(s,i)}</section>`).join('');
+const slides=[...wrap.children];
 let cur=0;
-function show(n){
-  cur=Math.max(0,Math.min(SLIDES.length-1,n));
-  [...stage.children].forEach((el,i)=>el.classList.toggle('on',i===cur));
-  document.getElementById('bar').style.width=((cur+1)/SLIDES.length*100)+'%';
-  document.getElementById('count').textContent=(cur+1)+' / '+SLIDES.length;
-  const note=document.getElementById('note');
-  if(note.classList.contains('show')) note.innerHTML=`<span class="k">Say this</span>${SLIDES[cur].note||''}`;
-}
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--s',s);}
+addEventListener('resize',fit);fit();
+function show(n){cur=Math.max(0,Math.min(S.length-1,n));slides.forEach((el,i)=>el.classList.toggle('on',i===cur));
+  bar.style.width=((cur+1)/S.length*100)+'%';
+  if(noteEl.classList.contains('on'))noteEl.innerHTML=`<span class="k">Say this</span>${S[cur].note||''}`;}
 addEventListener('keydown',e=>{
-  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){show(cur+1);e.preventDefault();}
-  else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);}
-  else if(e.key==='Home'){show(0);} else if(e.key==='End'){show(SLIDES.length-1);}
-  else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
-  else if(e.key==='p'||e.key==='P'){const n=document.getElementById('note');n.classList.toggle('show');if(n.classList.contains('show'))n.innerHTML=`<span class="k">Say this</span>${SLIDES[cur].note||''}`;}
+  if(['ArrowRight',' ','PageDown'].includes(e.key)){show(cur+1);e.preventDefault();}
+  else if(['ArrowLeft','PageUp'].includes(e.key))show(cur-1);
+  else if(e.key==='Home')show(0); else if(e.key==='End')show(S.length-1);
+  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+  else if(e.key==='n'||e.key==='N'||e.key==='p'||e.key==='P'){noteEl.classList.toggle('on');if(noteEl.classList.contains('on'))noteEl.innerHTML=`<span class="k">Say this</span>${S[cur].note||''}`;}
 });
-addEventListener('click',e=>{if(e.clientX>innerWidth*0.5)show(cur+1);else show(cur-1);});
-render();show(0);
+addEventListener('click',e=>{if(e.target.closest('#note'))return;show(e.clientX>innerWidth*0.5?cur+1:cur-1);});
+show(0);
 </script>
 </body>
 </html>
