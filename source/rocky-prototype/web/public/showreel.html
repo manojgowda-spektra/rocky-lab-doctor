@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — Auto Demo (hands-free)</title>
+<!--
+  AUTO-DIRECTOR showreel. Plays the REAL product pages inside an iframe and drives them on a timer
+  (calling each page's own global functions / clicking real buttons — same-origin), with a narration
+  caption bar. Hands-free: you press Snagit Record, click Start, and it runs ~3.5 min then ends.
+  It resets all demo state at Start so the take is pristine. Every scene carries a REAL/SIMULATED tag.
+  AI chat is intentionally skipped (model off) — the companion beat shows the deterministic evidence card.
+-->
+<style>
+  :root{--bg:#070a16;--ink:#eef3fb;--dim:#9fb0c8;--teal:#2ee6c8;--blue:#6ba6ff;--amber:#ffcf5c;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:var(--sans)}
+  #frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#0b1020}
+  /* caption bar */
+  #cap{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:22px 6vw 30px;
+    background:linear-gradient(to top,rgba(4,7,14,.96),rgba(4,7,14,.82) 70%,transparent);color:var(--ink);
+    display:flex;align-items:flex-end;gap:18px;min-height:120px;transition:opacity .3s}
+  #cap .txt{flex:1;font-size:clamp(18px,2.3vw,32px);font-weight:650;line-height:1.35;text-wrap:balance}
+  #cap .txt b{color:var(--teal)}
+  #cap .tag{flex:none;font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.1em;padding:6px 11px;border-radius:7px;border:1px solid rgba(255,255,255,.2);margin-bottom:4px}
+  .tag.REAL{background:rgba(46,230,200,.16);color:var(--teal)} .tag.SIMULATED{background:rgba(107,166,255,.16);color:var(--blue)} .tag.MIXED{background:rgba(255,207,92,.16);color:var(--amber)} .tag.NONE{display:none}
+  #wm{position:fixed;top:16px;left:20px;z-index:11;font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:#ffffff77;display:flex;align-items:center;gap:8px}
+  #wm .rec{width:10px;height:10px;border-radius:50%;background:#ff5c72;animation:blink 1.2s steps(1) infinite}
+  @keyframes blink{50%{opacity:.25}}
+  #pbar{position:fixed;top:0;left:0;height:4px;background:var(--teal);z-index:12;width:0;transition:width .4s linear}
+  /* cards (title/section/closing render as full overlays, no iframe) */
+  #card{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+    padding:8vh 10vw;background:radial-gradient(1400px 800px at 80% -10%,rgba(46,230,200,.12),transparent 58%),radial-gradient(1000px 700px at 8% 110%,rgba(167,139,250,.10),transparent 55%),linear-gradient(160deg,#0b1020,#0e1730)}
+  #card.on{display:flex}
+  #card .logo{width:96px;height:96px;border-radius:24px;display:grid;place-items:center;font-size:52px;background:linear-gradient(150deg,rgba(46,230,200,.28),rgba(46,230,200,.06));border:1px solid rgba(255,255,255,.18);margin-bottom:24px}
+  #card h1{font-size:clamp(40px,7vw,96px);font-weight:800;letter-spacing:-.02em;margin:0}
+  #card h2{font-size:clamp(28px,4vw,56px);font-weight:800;margin:0}
+  #card .s{font-size:clamp(18px,2.2vw,28px);color:var(--dim);max-width:60ch;margin-top:18px;line-height:1.5}
+  #card .eyebrow{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:18px}
+  /* start gate */
+  #gate{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+    background:radial-gradient(1200px 800px at 50% 40%,#14224a,#070a16 72%);padding:8vh 10vw;color:var(--ink)}
+  #gate h1{font-size:44px;margin:0 0 6px} #gate .s{color:var(--dim);font-size:18px;max-width:60ch;line-height:1.6}
+  #gate ol{text-align:left;max-width:52ch;font-size:18px;line-height:2;color:var(--ink);margin:26px 0}
+  #gate kbd{font-family:var(--mono);background:#0b1020;border:1px solid #33507e;border-radius:6px;padding:2px 8px;font-size:15px}
+  #startBtn{cursor:pointer;border:none;background:var(--teal);color:#04241f;font-weight:800;font-size:22px;padding:16px 40px;border-radius:14px;font-family:inherit}
+  #startBtn:hover{filter:brightness(1.07)}
+  #count{font-size:120px;font-weight:800;color:var(--teal);font-family:var(--mono)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+  <iframe id="frame" title="Rocky demo"></iframe>
+  <div id="card"></div>
+  <div id="wm" class="hidden"><span class="rec"></span>ROCKY · AUTO-DEMO</div>
+  <div id="pbar"></div>
+  <div id="cap" class="hidden"><div class="txt" id="capTxt"></div><div class="tag NONE" id="capTag"></div></div>
+
+  <div id="gate">
+    <h1>🤖 Rocky — Auto Demo</h1>
+    <div class="s">This plays the real product by itself, with captions, so you can record it hands-free. ~3.5 minutes.</div>
+    <ol>
+      <li>In <b>Snagit</b>: press <kbd>PrtScn</kbd> → choose <b>Video</b> → select this screen → <b>Record</b> (3-2-1).</li>
+      <li>Come back here and click <b>Start the demo</b> below.</li>
+      <li>When it finishes, press <kbd>PrtScn</kbd> again to stop Snagit.</li>
+    </ol>
+    <div class="s" style="margin-bottom:22px">Tip: press <kbd>F11</kbd> for full screen first. AI chat is off today (new model tomorrow) — the companion beat shows Rocky's deterministic evidence instead, which is on-message.</div>
+    <button id="startBtn">▶ Start the demo</button>
+    <div id="count" class="hidden"></div>
+  </div>
+
+<script>
+const B=location.origin;
+const frame=document.getElementById('frame'), card=document.getElementById('card'),
+      cap=document.getElementById('cap'), capTxt=document.getElementById('capTxt'), capTag=document.getElementById('capTag'),
+      pbar=document.getElementById('pbar'), wm=document.getElementById('wm');
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+function setCap(html,tag){capTxt.innerHTML=html;capTag.className='tag '+(tag||'NONE');capTag.textContent=tag&&tag!=='NONE'?tag:'';}
+async function nav(url){ // load a real page into the iframe, resolve on load (with fallback)
+  return new Promise((resolve)=>{
+    let done=false; const go=()=>{if(!done){done=true;resolve();}};
+    frame.onload=go; frame.src=url; setTimeout(go,4000);
+  });
+}
+const cw=()=>{try{return frame.contentWindow;}catch(e){return null;}};
+const cd=()=>{try{return frame.contentDocument;}catch(e){return null;}};
+function tryClick(id){try{const el=cd().getElementById(id);if(el){el.click();return true;}}catch(e){}return false;}
+function call(fn,...a){try{const w=cw();if(w&&typeof w[fn]==='function'){w[fn](...a);return true;}}catch(e){}return false;}
+
+function showCard(html){card.innerHTML=html;card.classList.add('on');}
+function hideCard(){card.classList.remove('on');}
+
+// ---- the storyboard, driven automatically ----
+const SCENES=[
+ {dur:7000, card:`<div class="logo">🤖</div><div class="eyebrow">Auto demo</div><h1>Rocky</h1><div class="s">The reliability layer for hands-on cloud labs — it finds what's broken, fixes it with a human's approval, and helps the learner. Here it is, working.</div>`},
+ {dur:6500, card:`<div class="eyebrow">The problem</div><h2>It's 2 a.m. and the lab won't work</h2><div class="s">A learner follows our guide exactly. A step fails. They assume it's their fault, get stuck, and quit — and we never even learn the guide was broken.</div>`},
+ // sim environment
+ {url:'/cloudlabs-sim.html', tag:'SIMULATED', dur:7000, cap:`This is the learner's screen — a CloudLabs lab. Three checks are <b>red</b>. Rocky lives in the corner.`},
+ {tag:'SIMULATED', dur:12000, cap:`She asks Rocky <b>"why is it failing?"</b> — the AI voice is off today, so Rocky shows the hard evidence: wrong <b>region</b>, not a smaller VM. It never guesses.`,
+   run:async()=>{ call('openPanel'); await sleep(700); call('ask','My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?'); }},
+ // doctor + live scan
+ {url:'/labdoctor.html', tag:'MIXED', dur:7000, cap:`Zoom out to the whole fleet: <b>3 of 12 labs failing, 142 learners</b> — found from telemetry, before a single ticket.`},
+ {tag:'REAL', dur:9000, cap:`Rocky scans our <b>real production repos</b>, live…`,
+   run:async()=>{ await sleep(600); if(!tryClick('rescanBtn')) {} }},
+ {tag:'REAL', dur:7000, cap:`<b>133 real problems</b> across 8 repos — and 3 came back completely clean. It says "nothing wrong here" when nothing is.`},
+ {tag:'SIMULATED', dur:9000, cap:`Priya's lab: <b>22 learners</b> deployed to the wrong region. Rocky already drafted the fix — a human approves it.`,
+   run:async()=>{ call('selectLab','ODL-DEMO-0001'); }},
+ // the twist
+ {tag:'SIMULATED', dur:11000, cap:`The one that should scare you: <b>100% completion — and it's broken.</b> The check was silently passing 23 of 24 learners whose work was wrong. No ticket ever catches this.`,
+   run:async()=>{ call('selectLab','ODL-DEMO-0006'); }},
+ // watcher
+ {url:'/monitor.html', tag:'SIMULATED', dur:5000, cap:`Rocky keeps watching — and only speaks when something <b>changes</b>.`,
+   run:async()=>{ await sleep(500); tryClick('reset'); }},
+ {tag:'SIMULATED', dur:16000, cap:`Sweep by sweep: silence… the silent break caught… four labs folding into <b>one</b> incident… steady, so silence… and <b>recovery, detected automatically</b>.`,
+   run:async()=>{ for(let i=0;i<6;i++){ tryClick('adv'); await sleep(2200);} }},
+ // guardian gate
+ {url:'/amnesty.html', tag:'SIMULATED', dur:6000, cap:`When a broken check wrongly <b>fails</b> good learners, Rocky can restore their grades — under a human gate.`},
+ {tag:'SIMULATED', dur:8500, cap:`Watch the gate: <b>"Try without a name"</b> → refused, live. It's enforced in code, not policy.`,
+   run:async()=>{ await sleep(500); tryClick('noAuthBtn'); }},
+ // receipts
+ {url:'/receipts.html', tag:'REAL', dur:11000, cap:`What's <b>real</b>: 133 defects, 8 repos, 5 pull requests (2 merged), a bad change blocked by CI in <b>4 seconds</b>. Zero false alarms in 42 audited.`},
+ // close
+ {dur:9000, card:`<div class="eyebrow">One line</div><h2>Rocky: we never fake green</h2><div class="s">It finds what's broken, fixes it with a human's approval, and helps the learner in the meantime. The engine asserts; the AI narrates.</div>`},
+ {dur:5000, card:`<div class="logo">🤖</div><h2>Thank you</h2><div class="s" style="color:#6b7c96">Recording can stop now — press PrtScn.</div>`},
+];
+
+async function runShow(){
+  document.getElementById('gate').classList.add('hidden');
+  wm.classList.remove('hidden'); cap.classList.remove('hidden');
+  // pristine state for the take
+  try{ await Promise.all(['reset','monitor/reset','amnesty/reset','backstage/clear'].map(p=>fetch(B+'/api/'+p,{method:'POST'}))); }catch(e){}
+  const total=SCENES.reduce((s,x)=>s+x.dur,0); let elapsed=0;
+  for(const sc of SCENES){
+    if(sc.card){ hideCardFrame(true); showCard(sc.card); cap.classList.add('hidden'); }
+    else{
+      cap.classList.remove('hidden'); hideCard(); hideCardFrame(false);
+      if(sc.url){ await nav(B+sc.url); await sleep(900); }
+      setCap(sc.cap||'', sc.tag);
+      if(sc.run){ try{ await sc.run(); }catch(e){} }
+    }
+    // advance the progress bar smoothly across this scene (linear CSS transition = scene duration)
+    pbar.style.transition='width '+sc.dur+'ms linear';
+    pbar.style.width=((elapsed+sc.dur)/total*100)+'%';
+    await sleep(sc.dur);
+    elapsed+=sc.dur;
+  }
+  // end
+  showCard(`<div class="logo">🤖</div><h2>Rocky</h2><div class="s">Demo complete.</div>`);
+  wm.classList.add('hidden');
+}
+function hideCardFrame(hideFrame){ frame.style.visibility=hideFrame?'hidden':'visible'; }
+
+// start gate: countdown then run
+document.getElementById('startBtn').onclick=async()=>{
+  const c=document.getElementById('count'); const btn=document.getElementById('startBtn');
+  btn.classList.add('hidden'); c.classList.remove('hidden');
+  for(const n of ['3','2','1']){ c.textContent=n; await sleep(800); }
+  c.classList.add('hidden');
+  runShow();
+};
+</script>
+</body>
+</html>

@@ -185,6 +185,8 @@ async function waitForServer(ms = 20000) {
     // 8c. Backstage feed: page serves, events accumulated from this very preflight run, clear works
     const bsPage = await fetch(BASE + '/backstage.html');
     ok('Backstage page serves', bsPage.status === 200 && (await bsPage.text()).includes('Backstage'));
+    const showreel = await fetch(BASE + '/showreel.html');
+    ok('Auto-demo (showreel) page serves', showreel.status === 200 && (await showreel.text()).includes('Auto Demo'));
     const bsFeed = await get('/api/backstage');
     ok('Backstage feed captured this preflight\'s own actions', Array.isArray(bsFeed.events) && bsFeed.events.length > 5 && bsFeed.events.some((e) => e.kind === 'engine') && bsFeed.events.some((e) => e.kind === 'gate'), `${bsFeed.events.length} events (engine+gate seen)`);
 
