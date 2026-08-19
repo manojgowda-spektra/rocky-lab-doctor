@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — Presenter Console</title>
+<!--
+  PRESENTER CONSOLE. Open this on YOUR screen (laptop), put demo.html on the projector.
+  Syncs over BroadcastChannel('rocky-demo') — same browser, same origin, zero setup.
+  Shows: current segment, the words to say (big), time left, what's next, and remote controls.
+-->
+<style>
+  :root{--bg:#0b0f1c;--panel:#111730;--ink:#eef3fb;--dim:#9fb0c8;--teal:#2ee6c8;--blue:#6ba6ff;--amber:#ffcf5c;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+  #wrap{display:flex;flex-direction:column;height:100vh;padding:22px 26px;gap:14px}
+  #top{display:flex;align-items:center;gap:16px}
+  #top .brand{font-family:var(--mono);font-size:13px;color:var(--dim)} #top .brand b{color:var(--teal)}
+  #segT{font-size:22px;font-weight:800}
+  #tag{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.1em;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.2)}
+  .tag-REAL{background:rgba(46,230,200,.16);color:var(--teal)} .tag-SIMULATED{background:rgba(107,166,255,.16);color:var(--blue)} .tag-MIXED{background:rgba(255,207,92,.16);color:var(--amber)} .tag-NONE{display:none}
+  #clk{margin-left:auto;font-family:var(--mono);font-size:40px;font-weight:800;color:var(--teal);min-width:120px;text-align:right}
+  #clk.low{color:var(--amber)}
+  #paused{display:none;font-family:var(--mono);font-size:12px;font-weight:800;color:var(--amber);letter-spacing:.12em}
+  #paused.on{display:block}
+  #say{flex:1;background:var(--panel);border:1px solid #24304f;border-radius:16px;padding:26px 30px;overflow-y:auto;
+    font-size:clamp(20px,2.6vh,30px);line-height:1.55;font-weight:550}
+  #next{background:#0d1226;border:1px solid #1c2542;border-radius:12px;padding:12px 18px;color:var(--dim);font-size:15px}
+  #next b{color:var(--ink)}
+  #bar{display:flex;gap:10px}
+  #bar button{flex:1;cursor:pointer;font-family:inherit;font-weight:800;font-size:16px;border:none;border-radius:10px;padding:14px}
+  #bPause{background:var(--amber);color:#3a2c00} #bPrev,#bNext,#bReplay{background:#1b2547;color:var(--ink);border:1px solid #2c3a66}
+  #bar button:hover{filter:brightness(1.12)}
+  #idle{position:fixed;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:var(--bg);text-align:center;padding:10vw}
+  #idle h1{margin:0} #idle .s{color:var(--dim);max-width:52ch;line-height:1.6}
+  .hidden{display:none!important}
+  #prog{height:4px;background:#1b2547;border-radius:2px;overflow:hidden}
+  #prog i{display:block;height:100%;background:var(--teal);width:0}
+</style>
+</head>
+<body>
+<div id="idle">
+  <h1>🎙️ Presenter console</h1>
+  <div class="s">Waiting for the demo… Open <b>demo.html</b> in another window of this same browser
+  (it's the projector screen), press <b>Start</b>, and this console will light up with your script,
+  the countdown, and remote controls.</div>
+</div>
+<div id="wrap" class="hidden">
+  <div id="top">
+    <span class="brand">ROCKY <b>·</b> PRESENTER</span>
+    <span id="segT">—</span>
+    <span id="tag" class="tag-NONE"></span>
+    <span id="paused">⏸ PAUSED</span>
+    <span id="clk">0:00</span>
+  </div>
+  <div id="prog"><i id="progI"></i></div>
+  <div id="say">—</div>
+  <div id="next">Next: —</div>
+  <div id="bar">
+    <button id="bPrev">← Prev</button>
+    <button id="bPause">⏯ Pause / Resume</button>
+    <button id="bReplay">↻ Replay segment</button>
+    <button id="bNext">Next →</button>
+  </div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const chan=('BroadcastChannel' in window)?new BroadcastChannel('rocky-demo'):null;
+let lastI=-1, sceneTitles=[];
+if(chan){
+  chan.onmessage=(e)=>{const m=e.data||{};
+    if(m.type!=='state') return;
+    $('#idle').classList.add('hidden'); $('#wrap').classList.remove('hidden');
+    $('#segT').textContent=String(m.i+1).padStart(2,'0')+'/'+String(m.n).padStart(2,'0')+' — '+(m.t||'');
+    $('#tag').className='tag-'+(m.tag||'NONE'); $('#tag').textContent=(m.tag&&m.tag!=='NONE')?m.tag:'';
+    if(m.i!==lastI){ $('#say').textContent=m.say||''; $('#say').scrollTop=0; lastI=m.i; }
+    const s=Math.ceil((m.left||0)/1000);
+    const clk=$('#clk'); clk.textContent=m.held?'→ ready':(Math.floor(s/60)+':'+String(s%60).padStart(2,'0'));
+    clk.classList.toggle('low', s<=8 && !m.held);
+    $('#paused').classList.toggle('on', !!m.paused);
+    $('#progI').style.width=(m.dur? ((m.dur-m.left)/m.dur*100):0)+'%';
+    $('#next').innerHTML='Next: <b>'+((m.i+1<m.n)?('segment '+String(m.i+2).padStart(2,'0')):'end — Q&A')+'</b>';
+  };
+  chan.postMessage({type:'hello'});
+  setInterval(()=>{ if(lastI<0) chan.postMessage({type:'hello'}); },1500);
+}
+const cmd=(c)=>chan&&chan.postMessage({type:'cmd',cmd:c});
+$('#bPause').onclick=()=>cmd('pause');
+$('#bPrev').onclick=()=>cmd('prev');
+$('#bNext').onclick=()=>cmd('next');
+$('#bReplay').onclick=()=>cmd('replay');
+addEventListener('keydown',(e)=>{
+  if(e.key===' '){cmd('pause');e.preventDefault();}
+  else if(e.key==='ArrowRight')cmd('next');
+  else if(e.key==='ArrowLeft')cmd('prev');
+  else if(e.key==='r'||e.key==='R')cmd('replay');
+});
+</script>
+</body>
+</html>

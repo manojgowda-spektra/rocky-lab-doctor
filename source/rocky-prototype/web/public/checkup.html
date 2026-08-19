@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky · Checkup</title>
+<!--
+  GUIDE CHECKUP — "hand me any lab guide and watch."
+  Drop .md guide files (or pick a whole lab folder) and the SAME deterministic engine that
+  scanned the 8 production repos scans the upload, live: retired/deprecated tokens, renamed
+  products, EOL runtimes; with a folder: broken/case-mismatched asset links; with two language
+  folders: inject-token loss. Checks that can't run on what was uploaded are reported as
+  SKIPPED, never guessed. Files are scanned in memory and not stored.
+-->
+<style>
+  :root{--bg:#0b0f1c;--panel:#111730;--panel2:#0d1226;--ink:#eef3fb;--dim:#9fb0c8;--teal:#2ee6c8;
+    --blue:#6ba6ff;--amber:#ffcf5c;--red:#ff5c72;--line:#24304f;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:26px 30px 60px;max-width:1100px;margin-inline:auto}
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:26px;margin:0}
+  h1 span{color:var(--dim);font-weight:600;font-size:.65em}
+  .badge{font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.12em;padding:4px 10px;border-radius:6px;background:rgba(46,230,200,.14);color:var(--teal);border:1px solid rgba(46,230,200,.4)}
+  .sub{color:var(--dim);font-size:14px;margin-bottom:18px;max-width:74ch;line-height:1.5}
+  #drop{border:2px dashed #33507e;border-radius:16px;padding:38px 26px;text-align:center;transition:all .15s;background:var(--panel2)}
+  #drop.hot{border-color:var(--teal);background:rgba(46,230,200,.06)}
+  #drop .big{font-size:19px;font-weight:700;margin-bottom:6px}
+  #drop .s{color:var(--dim);font-size:13.5px;margin-bottom:16px}
+  .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  button{cursor:pointer;font-family:inherit;font-weight:800;font-size:15px;border:none;border-radius:10px;padding:12px 20px}
+  #pickFiles{background:var(--teal);color:#04241f}
+  #pickDir{background:#1b2547;color:var(--ink);border:1px solid #2c3a66}
+  button:hover{filter:brightness(1.1)}
+  #busy{display:none;margin:20px 0;font-family:var(--mono);color:var(--teal)}
+  #busy .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--teal);border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #summary{display:none;margin:22px 0 14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+  #summary .row{display:flex;gap:26px;flex-wrap:wrap;font-size:15px}
+  #summary b{font-family:var(--mono);color:var(--teal);font-size:19px}
+  #summary .bad b{color:var(--red)}
+  #clean{display:none;margin:20px 0;background:rgba(46,230,200,.08);border:1px solid rgba(46,230,200,.4);border-radius:14px;padding:26px;text-align:center}
+  #clean .t{font-size:22px;font-weight:800;color:var(--teal)}
+  #clean .s{color:var(--dim);font-size:14px;margin-top:6px}
+  #skips{display:none;margin:10px 0;color:var(--amber);font-size:13px;line-height:1.6}
+  .file{margin:16px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .file .fh{padding:10px 18px;background:var(--panel2);font-family:var(--mono);font-size:13px;color:var(--dim);border-bottom:1px solid var(--line)}
+  .file .fh b{color:var(--ink)}
+  .fnd{padding:14px 18px;border-bottom:1px solid #1a2440}
+  .fnd:last-child{border-bottom:none}
+  .chip{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.08em;padding:3px 9px;border-radius:6px;margin-right:10px}
+  .c-DEPRECATED_DEPENDENCY,.c-RETIRED_SKU{background:rgba(255,92,114,.14);color:var(--red);border:1px solid rgba(255,92,114,.4)}
+  .c-RENAMED_PRODUCT{background:rgba(255,207,92,.13);color:var(--amber);border:1px solid rgba(255,207,92,.4)}
+  .c-EOL_RUNTIME{background:rgba(255,140,66,.14);color:#ff8c42;border:1px solid rgba(255,140,66,.4)}
+  .c-BROKEN_ASSET_LINK{background:rgba(255,92,114,.14);color:var(--red);border:1px solid rgba(255,92,114,.4)}
+  .c-ASSET_CASE_MISMATCH{background:rgba(107,166,255,.14);color:var(--blue);border:1px solid rgba(107,166,255,.4)}
+  .c-INJECT_TOKEN_LOSS{background:rgba(255,92,114,.18);color:var(--red);border:1px solid rgba(255,92,114,.5)}
+  .fnd .ln{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .fnd .tk{font-family:var(--mono);font-size:14px;margin:6px 0 2px}
+  .fnd .tk .from{color:var(--red)} .fnd .tk .to{color:var(--teal)}
+  .fnd .note{font-size:13.5px;color:var(--dim);line-height:1.5;max-width:80ch}
+  .fnd .ex{font-family:var(--mono);font-size:12px;color:#7c8db0;background:var(--panel2);border-radius:8px;padding:6px 10px;margin-top:8px;overflow-x:auto;white-space:pre}
+  .hidden{display:none!important}
+  a{color:var(--blue)} .foot{margin-top:26px;font-size:12.5px;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Rocky <span>· Checkup</span></h1>
+  <span class="badge">REAL — SAME ENGINE AS THE REPO SCAN</span>
+</header>
+<div class="sub">Don't take our word for it — <b>bring your own lab guide</b>. Drop any guide below and the
+same deterministic engine that found 133 defects in our 8 production repos scans it live. Files are
+scanned in memory, never stored. Checks that can't run on what you upload are listed as skipped — never guessed.</div>
+
+<div id="drop">
+  <div class="big">Drag lab guide files here</div>
+  <div class="s">.md guide files — or scan a whole lab folder to also verify images, path casing, and translations</div>
+  <div class="btns">
+    <button id="pickFiles">📄 Pick guide files</button>
+    <button id="pickDir">📁 Scan a whole lab folder</button>
+  </div>
+  <input type="file" id="inFiles" multiple accept=".md,.markdown,text/markdown" class="hidden"/>
+  <input type="file" id="inDir" webkitdirectory class="hidden"/>
+</div>
+
+<div id="busy"><span class="spin"></span>scanning…</div>
+<div id="summary"><div class="row" id="sumRow"></div></div>
+<div id="clean"><div class="t">✔ No issues found — this guide is clean.</div>
+  <div class="s">Same checks, honestly applied: when nothing is wrong, Rocky says so. (3 of our own 8 repos came back clean too.)</div></div>
+<div id="skips"></div>
+<div id="results"></div>
+
+<div class="foot">One engine, two entry points: this page and the <a href="/labdoctor.html">fleet repo scan</a> share the
+same check code (<span style="font-family:var(--mono)">labdoctor/scan-real.js</span>). Every event is also logged to <a href="/backstage.html">backstage</a>.</div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+const drop=$('#drop');
+const TYPE_NAMES={DEPRECATED_DEPENDENCY:'DEPRECATED',RETIRED_SKU:'RETIRED SKU',RENAMED_PRODUCT:'RENAMED PRODUCT',
+  EOL_RUNTIME:'END-OF-LIFE RUNTIME',BROKEN_ASSET_LINK:'BROKEN IMAGE',ASSET_CASE_MISMATCH:'PATH CASE MISMATCH',INJECT_TOKEN_LOSS:'LOST CREDENTIAL TOKEN'};
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+$('#pickFiles').onclick=()=>$('#inFiles').click();
+$('#pickDir').onclick=()=>$('#inDir').click();
+$('#inFiles').onchange=(e)=>handle([...e.target.files].map(f=>({file:f,path:f.name})));
+$('#inDir').onchange=(e)=>handle([...e.target.files].map(f=>({file:f,path:f.webkitRelativePath||f.name})));
+// A drop anywhere OUTSIDE the zone must never navigate the browser away from the demo page.
+window.addEventListener('dragover',(e)=>e.preventDefault());
+window.addEventListener('drop',(e)=>e.preventDefault());
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,(e)=>{e.preventDefault();drop.classList.add('hot');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,(e)=>{e.preventDefault();drop.classList.remove('hot');}));
+drop.addEventListener('drop',async(e)=>{ handle(await collectDropped(e.dataTransfer)); });
+
+// Dropped FOLDERS must be traversed (dataTransfer.files hands a directory over as one unreadable
+// blob) — webkitGetAsEntry + readEntries recursion, with the 100-entries-per-call quirk handled.
+async function collectDropped(dt){
+  const items=[...(dt.items||[])].map(it=>it.webkitGetAsEntry&&it.webkitGetAsEntry()).filter(Boolean);
+  if(!items.length) return [...dt.files].map(f=>({file:f,path:f.name}));
+  const out=[];
+  async function walk(entry,prefix){
+    if(out.length>4000) return;
+    if(entry.isFile){
+      const f=await new Promise((res)=>entry.file(res,()=>res(null)));
+      if(f) out.push({file:f,path:prefix+entry.name});
+    } else if(entry.isDirectory){
+      const reader=entry.createReader();
+      while(true){
+        const batch=await new Promise((res)=>reader.readEntries(res,()=>res([])));
+        if(!batch.length) break;
+        for(const en of batch) await walk(en,prefix+entry.name+'/');
+      }
+    }
+  }
+  for(const en of items) await walk(en,'');
+  return out;
+}
+
+const SKIP_DIRS=['.git','node_modules','.devcontainer','.vscode','.github','.storybook','dist','build','__pycache__','archived','archive']; // mirrors the scanner
+const isSkipped=(p)=>p.split('/').some(s=>SKIP_DIRS.includes(s));
+const isMd=(p)=>/\.(md|markdown)$/i.test(p);
+const isMedia=(p)=>/\.(png|jpg|jpeg|gif|svg|webp)$/i.test(p);
+
+async function handle(entries){
+  if(!entries||!entries.length) return;
+  $('#busy').style.display='block'; $('#summary').style.display='none'; $('#clean').style.display='none';
+  $('#skips').style.display='none'; $('#results').innerHTML='';
+  // Filter to RELEVANT files first (guides + media, minus scanner-skipped dirs). Guides carry
+  // content (heavy) → capped at 500; media entries are PATH-ONLY (bytes each) → send them ALL,
+  // because a truncated image inventory would make the engine falsely call images broken.
+  const relevant=entries.map(e=>({...e,path:e.path.replace(/\\/g,'/')}))
+    .filter(e=>!isSkipped(e.path) && (isMd(e.path)||isMedia(e.path)));
+  const mdsAll=relevant.filter(e=>isMd(e.path));
+  const mediaAll=relevant.filter(e=>!isMd(e.path)).slice(0,20000);
+  const totalRelevant=mdsAll.length;
+  const batch=mdsAll.slice(0,500);
+  const files=[]; let unreadable=0;
+  for(const e of batch){
+    let content=null; try{ content=await e.file.text(); }catch(_){}
+    if(content===null){ unreadable++; files.push({path:e.path, unreadable:true}); }
+    else files.push({path:e.path, content});
+  }
+  for(const e of mediaAll) files.push({path:e.path}); // inventory only — verifies image refs & casing
+  const body=JSON.stringify({files});
+  if(body.length>8*1024*1024){
+    $('#busy').style.display='none';
+    $('#results').innerHTML='<div class="fnd">This upload is over the 8 MB scan limit — pick just the lab\'s guide folder (e.g. the Labguide subfolder) instead of the whole repo.</div>';
+    return;
+  }
+  let rep=null;
+  try{ rep=await fetch('/api/checkup',{method:'POST',headers:{'Content-Type':'application/json'},body}).then(r=>r.json()); }catch(_){}
+  $('#busy').style.display='none';
+  if(!rep||rep.error){ $('#results').innerHTML='<div class="fnd">Could not scan — '+esc((rep&&rep.error)||'server unreachable')+'</div>'; return; }
+  rep._truncated = totalRelevant>batch.length ? totalRelevant : 0;
+  render(rep);
+}
+
+function render(rep){
+  $('#summary').style.display='block';
+  $('#sumRow').innerHTML=
+    `<div><b>${rep.files}</b> file${rep.files===1?'':'s'} received</div>`+
+    `<div><b>${rep.mdFiles}</b> guide${rep.mdFiles===1?'':'s'} scanned</div>`+
+    `<div class="${rep.findingCount?'bad':''}"><b>${rep.findingCount}</b> finding${rep.findingCount===1?'':'s'}</div>`+
+    `<div><b>${rep.ms}ms</b> scan time</div>`;
+  const notes=(rep.skipped||[]).slice();
+  if(rep._truncated) notes.unshift(`Large folder: scanned the first 500 of ${rep._truncated} guide files (image inventory kept complete) — for a full pass, upload one lab at a time.`);
+  if(notes.length){ $('#skips').style.display='block'; $('#skips').innerHTML=notes.map(s=>'⚠ '+esc(s)).join('<br>'); }
+  if(!rep.mdFiles){ // never call a scan with zero guides "clean" — that would be a lie
+    $('#results').innerHTML='<div class="fnd">No guide (.md) files were received — drop guide files directly, or use <b>Scan a whole lab folder</b>.</div>';
+    return;
+  }
+  if(!rep.findingCount){ $('#clean').style.display='block'; return; }
+  const byFile=new Map();
+  for(const f of rep.findings){ if(!byFile.has(f.file))byFile.set(f.file,[]); byFile.get(f.file).push(f); }
+  let html='';
+  for(const [file,fnds] of byFile){
+    html+=`<div class="file"><div class="fh"><b>${esc(file)}</b> — ${fnds.length} finding${fnds.length===1?'':'s'}</div>`;
+    for(const f of fnds){
+      html+=`<div class="fnd"><span class="chip c-${esc(f.type)}">${TYPE_NAMES[f.type]||esc(f.type)}</span><span class="ln">line ${f.line}</span>`+
+        `<div class="tk"><span class="from">${esc(f.token||'')}</span>${f.replacement?` → <span class="to">${esc(f.replacement)}</span>`:''}</div>`+
+        `<div class="note">${esc(f.note||'')}</div>`+
+        (f.excerpt?`<div class="ex">${esc(f.excerpt)}</div>`:'')+`</div>`;
+    }
+    html+='</div>';
+  }
+  $('#results').innerHTML=html;
+}
+</script>
+</body>
+</html>

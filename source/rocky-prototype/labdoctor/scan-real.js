@@ -265,4 +265,7 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { scanRepo, TOKENS, checkLocalization, trueCaseOf, injectCounts };
+// checkTokens / IMG_RE / MEDIA_EXT / SKIP_DIRS are exported so the upload checkup
+// (labdoctor/checkup.js) runs the IDENTICAL detection logic and exclusion rules as the
+// repo scan — one engine, two entry points.
+module.exports = { scanRepo, TOKENS, checkLocalization, trueCaseOf, injectCounts, checkTokens, IMG_RE, MEDIA_EXT, SKIP_DIRS };

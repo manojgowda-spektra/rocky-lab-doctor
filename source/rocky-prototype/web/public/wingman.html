@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Presenter notes</title>
+<!--
+  WINGMAN LISTENER — runs on the PRESENTER'S PC, hidden behind the fullscreen demo window.
+  Uses the browser's built-in speech recognition (Edge/Chrome; audio is processed by the
+  browser's cloud speech service) to transcribe what's said in the room, POSTs each final
+  phrase to /api/wingman/heard, where a deterministic matcher over copilot-kb.json picks the
+  best answers. Read the answers on your PHONE at /wingman-view.html (URL shown below) —
+  the one screen a full-screen share can never show.
+  TIP: presenters naturally repeat a question before answering ("So the question is…") —
+  that repeat is exactly what Wingman transcribes best, even with headphones on.
+-->
+<style>
+  :root{--bg:#0b0f1c;--panel:#111730;--ink:#eef3fb;--dim:#9fb0c8;--teal:#2ee6c8;--blue:#6ba6ff;--amber:#ffcf5c;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:20px 24px}
+  h1{font-size:20px;margin:0 0 4px} .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  #phone{background:var(--panel);border:1px solid #24304f;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:14px}
+  #phone .u{font-family:var(--mono);color:var(--teal);font-size:15px}
+  #ctl{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  button{cursor:pointer;font-family:inherit;font-weight:800;font-size:15px;border:none;border-radius:10px;padding:11px 18px}
+  #micBtn{background:var(--teal);color:#04241f} #micBtn.on{background:var(--amber);color:#3a2c00}
+  #status{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  #status b{color:var(--teal)}
+  select{background:var(--panel);color:var(--ink);border:1px solid #2c3a66;border-radius:8px;padding:9px;font-family:inherit}
+  #typed{display:flex;gap:8px;margin-bottom:14px}
+  #typed input{flex:1;background:var(--panel);border:1px solid #2c3a66;border-radius:10px;color:var(--ink);padding:11px 14px;font-size:15px;font-family:inherit}
+  #typed button{background:#1b2547;color:var(--ink);border:1px solid #2c3a66}
+  #interim{min-height:22px;color:var(--dim);font-style:italic;font-size:14px;margin-bottom:10px}
+  .ev{background:var(--panel);border:1px solid #24304f;border-radius:12px;padding:12px 16px;margin-bottom:10px}
+  .ev .q{font-weight:700;font-size:15px}
+  .ev .meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:6px}
+  .sg{border-left:3px solid var(--teal);padding:8px 12px;margin-top:8px;background:#0d1226;border-radius:0 8px 8px 0}
+  .sg .a{font-size:14.5px;line-height:1.45}
+  .sg .n{font-family:var(--mono);font-size:12px;color:var(--teal);margin-top:4px}
+  .sg .s{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:2px}
+  .sg.ai{border-color:var(--blue)} .sg.ai .n{color:var(--blue)}
+  .none{color:var(--dim);font-size:13px;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>🎧 Wingman — listener (keep this on the PC, behind the demo)</h1>
+<div class="sub">It hears the room, matches questions against Rocky's knowledge base, and puts the answer on your phone.
+Repeat each question out loud ("So the question is…") — that's what it transcribes, even with headphones.</div>
+
+<div id="phone">📱 <b>Open on your phone (same Wi-Fi):</b> <span class="u" id="phoneUrl">loading…</span>
+  <span id="kbinfo" style="color:var(--dim)"></span></div>
+
+<div id="ctl">
+  <button id="micBtn">🎙️ Start listening</button>
+  <select id="lang"><option value="en-IN" selected>English (India)</option><option value="en-US">English (US)</option></select>
+  <span id="status">mic off</span>
+</div>
+
+<div id="typed">
+  <input id="q" placeholder="…or type a question and press Enter (backup if voice misses)"/>
+  <button id="askBtn">Ask</button>
+</div>
+
+<div id="interim"></div>
+<div id="log"></div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+const log=$('#log'), interim=$('#interim'), statusEl=$('#status');
+
+fetch('/api/wingman/info').then(r=>r.json()).then(i=>{
+  $('#phoneUrl').textContent=(i.phoneUrls&&i.phoneUrls[0])||'no LAN address found — use a second monitor with /wingman-view.html';
+  $('#kbinfo').textContent=`  ·  ${i.kbEntries} answers loaded  ·  AI drafts: ${i.llmConfigured?'ON':'off (deterministic only)'}`;
+});
+
+function render(ev){
+  const d=document.createElement('div'); d.className='ev';
+  const sgs=(ev.suggestions||[]).map(s=>`<div class="sg"><div class="a">${esc(s.a)}</div>${s.n?`<div class="n">${esc(s.n)}</div>`:''}${s.src?`<div class="s">verify: ${esc(s.src)}</div>`:''}</div>`).join('');
+  d.innerHTML=`<div class="meta">${new Date(ev.ts).toLocaleTimeString()} · ${esc(ev.source||'voice')}</div><div class="q">“${esc(ev.text)}”</div>${sgs||'<div class="none">no confident match — answer from the Q&A armor, or say “let me verify and come back”.</div>'}`;
+  log.prepend(d);
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function send(text,source){
+  if(!text.trim())return;
+  const r=await fetch('/api/wingman/heard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,source})}).then(x=>x.json()).catch(()=>null);
+  if(r&&r.ok)render({ts:new Date().toISOString(),text,source,suggestions:r.suggestions});
+}
+$('#askBtn').onclick=()=>{send($('#q').value,'typed');$('#q').value='';};
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){send($('#q').value,'typed');$('#q').value='';}});
+
+// ---- speech recognition (browser built-in; requires the mic permission once) ----
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const FATAL_MIC=['not-allowed','service-not-allowed','audio-capture']; // don't loop on these
+let rec=null, listening=false, restartTimer=null, restartDelay=400;
+function startRec(){
+  if(!SR){statusEl.innerHTML='<b>speech recognition not available</b> — use the typed box';return;}
+  rec=new SR(); rec.lang=$('#lang').value; rec.continuous=true; rec.interimResults=true;
+  rec.onresult=(e)=>{
+    restartDelay=400; // healthy session → reset the backoff
+    let fin='', inter='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal)fin+=t+' '; else inter+=t;
+    }
+    interim.textContent=inter?('hearing: '+inter):'';
+    if(fin.trim())send(fin.trim(),'voice');
+  };
+  rec.onerror=(e)=>{
+    if(FATAL_MIC.includes(e.error)){ stopRec(); statusEl.innerHTML='<b style="color:var(--amber)">mic blocked ('+e.error+')</b> — allow the microphone for this site, or use the typed box'; return; }
+    statusEl.textContent='mic: '+e.error+' (auto-restarting)';
+  };
+  rec.onend=()=>{ if(listening){ clearTimeout(restartTimer);
+    restartDelay=Math.min(restartDelay*1.6,5000); // backoff so a flaky service can't hot-loop
+    restartTimer=setTimeout(()=>{ if(!listening)return; try{rec.start();}catch(_){}} ,restartDelay); } };
+  try{rec.start();}catch(_){}
+  listening=true; $('#micBtn').textContent='⏸ Stop listening'; $('#micBtn').classList.add('on');
+  statusEl.innerHTML='<b>listening</b> — leave this window behind the demo';
+}
+function stopRec(){ clearTimeout(restartTimer); listening=false; try{rec&&rec.stop();}catch(_){} $('#micBtn').textContent='🎙️ Start listening'; $('#micBtn').classList.remove('on'); statusEl.textContent='mic off'; interim.textContent=''; }
+$('#micBtn').onclick=()=>listening?stopRec():startRec();
+$('#lang').onchange=()=>{ if(listening){stopRec();startRec();} };
+</script>
+</body>
+</html>

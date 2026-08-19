@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — Live Demo Director</title>
+<!--
+  LIVE DEMO DIRECTOR (presenter-paced, ~10 minutes).
+  Unlike showreel.html (hands-free recording), this is built for a LIVE room:
+  - Drives the REAL product pages in an iframe on a timed rail (same-origin calls / real button clicks)
+  - Manoj talks over it using the synced script (presenter.html or docs/demo_speaking_script.md)
+  - SPACE pauses everything (questions welcome), arrows jump segments, R replays a segment
+  - Every scene carries an honest REAL / SIMULATED / MIXED tag — the no-doubt anchor
+  - AI chat is intentionally not used (the Azure subscription holding the model is disabled;
+    a new model is being wired in): the Companion beat shows the deterministic evidence card,
+    which is the on-message honest fallback. AZURE_OPENAI_* is commented out in .env.local
+    ("# DEMO-OFF #") so the card appears instantly — restore those lines when the new key lands.
+-->
+<style>
+  :root{--bg:#070a16;--ink:#eef3fb;--dim:#9fb0c8;--teal:#2ee6c8;--blue:#6ba6ff;--amber:#ffcf5c;--red:#ff5c72;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:var(--sans)}
+  #frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#0b1020}
+  /* caption bar (audience) — short headline only; the presenter carries the story */
+  #cap{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:18px 5vw 24px;
+    background:linear-gradient(to top,rgba(4,7,14,.95),rgba(4,7,14,.8) 70%,transparent);color:var(--ink);
+    display:flex;align-items:flex-end;gap:16px;min-height:96px;transition:opacity .3s}
+  #cap .txt{flex:1;font-size:clamp(17px,2vw,28px);font-weight:650;line-height:1.3;text-wrap:balance}
+  #cap .txt b{color:var(--teal)}
+  #cap .tag{flex:none;font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.1em;padding:6px 11px;border-radius:7px;border:1px solid rgba(255,255,255,.2);margin-bottom:4px}
+  .tag.REAL{background:rgba(46,230,200,.16);color:var(--teal)} .tag.SIMULATED{background:rgba(107,166,255,.16);color:var(--blue)} .tag.MIXED{background:rgba(255,207,92,.16);color:var(--amber)} .tag.NONE{display:none}
+  /* header rail: brand left, segment badge + countdown right (subtle; keeps presenter synced to the script) */
+  #hud{position:fixed;top:0;left:0;right:0;z-index:11;display:flex;justify-content:space-between;align-items:center;
+    padding:12px 20px;font-family:var(--mono);font-size:13px;color:#ffffff88;pointer-events:none}
+  #hud .brand b{color:var(--teal)}
+  #hud .seg{display:flex;gap:14px;align-items:center}
+  #hud .seg .n{font-weight:800;letter-spacing:.08em}
+  #hud .seg .clk{min-width:42px;text-align:right;color:#ffffff66}
+  #paused{position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:13;display:none;
+    font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:.14em;color:var(--amber);
+    background:rgba(255,207,92,.12);border:1px solid rgba(255,207,92,.4);padding:7px 16px;border-radius:8px}
+  #paused.on{display:block}
+  #pbar{position:fixed;top:0;left:0;height:4px;background:var(--teal);z-index:12;width:0}
+  /* full-screen story cards (no iframe) */
+  #card{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+    padding:8vh 10vw;background:radial-gradient(1400px 800px at 80% -10%,rgba(46,230,200,.12),transparent 58%),radial-gradient(1000px 700px at 8% 110%,rgba(167,139,250,.10),transparent 55%),linear-gradient(160deg,#0b1020,#0e1730);color:var(--ink)}
+  #card.on{display:flex}
+  #card .logo{width:96px;height:96px;border-radius:24px;display:grid;place-items:center;font-size:52px;background:linear-gradient(150deg,rgba(46,230,200,.28),rgba(46,230,200,.06));border:1px solid rgba(255,255,255,.18);margin-bottom:24px}
+  #card h1{font-size:clamp(40px,7vw,96px);font-weight:800;letter-spacing:-.02em;margin:0}
+  #card h2{font-size:clamp(28px,4vw,56px);font-weight:800;margin:0}
+  #card .s{font-size:clamp(18px,2.2vw,28px);color:var(--dim);max-width:60ch;margin-top:18px;line-height:1.5}
+  #card .eyebrow{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:18px}
+  /* start gate */
+  #gate{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+    background:radial-gradient(1200px 800px at 50% 40%,#14224a,#070a16 72%);padding:6vh 8vw;color:var(--ink)}
+  #gate h1{font-size:42px;margin:0 0 6px} #gate .s{color:var(--dim);font-size:17px;max-width:64ch;line-height:1.6}
+  #gate .keys{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin:24px 0 28px;font-size:16px}
+  #gate .keys div{display:flex;align-items:center;gap:8px;color:var(--ink)}
+  #gate kbd{font-family:var(--mono);background:#0b1020;border:1px solid #33507e;border-radius:6px;padding:3px 10px;font-size:14px}
+  #startBtn,#stepBtn{cursor:pointer;border:none;background:var(--teal);color:#04241f;font-weight:800;font-size:19px;padding:16px 28px;border-radius:14px;font-family:inherit}
+  #startBtn:hover,#stepBtn:hover{filter:brightness(1.07)}
+  #presLink{margin-top:18px;font-size:14px}
+  #presLink a{color:var(--blue)}
+  #count{font-size:120px;font-weight:800;color:var(--teal);font-family:var(--mono)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+  <iframe id="frame" title="Rocky live demo"></iframe>
+  <div id="card"></div>
+  <div id="hud" class="hidden">
+    <div class="brand">ROCKY <b>·</b> LIVE DEMO</div>
+    <div class="seg"><span class="n" id="segN">01/17</span><span class="clk" id="segClk">0:00</span></div>
+  </div>
+  <div id="paused">⏸ PAUSED — space to resume</div>
+  <div id="pbar"></div>
+  <div id="cap" class="hidden"><div class="txt" id="capTxt"></div><div class="tag NONE" id="capTag"></div></div>
+
+  <div id="gate">
+    <h1>🤖 Rocky — Live Demo (~10 min)</h1>
+    <div class="s">Drives the real product on a timed rail while you present. Your words are on the
+      <b>presenter console</b> (second window) and in <b>docs/demo_speaking_script.md</b>.
+      The badge top-right shows which segment you're in — it matches the script numbers.</div>
+    <div class="keys">
+      <div><kbd>Space</kbd> pause / resume</div>
+      <div><kbd>→</kbd> next segment</div>
+      <div><kbd>←</kbd> previous</div>
+      <div><kbd>R</kbd> replay segment</div>
+      <div><kbd>F11</kbd> full screen</div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+      <button id="stepBtn">👣 One-by-one — each screen waits for you (→ to go on)</button>
+      <button id="startBtn" style="background:#1b2547;color:#eef3fb;border:1px solid #2c3a66">▶ Auto — it advances by itself (~10 min)</button>
+    </div>
+    <div id="presLink" class="s">This window is the one you <b>share / project</b>. The <a href="/presenter.html" target="_blank" rel="opener">presenter console ↗</a> goes on a second screen — optional in One-by-one mode (the corner here says "→ ready" when a screen is done).</div>
+    <div id="count" class="hidden"></div>
+  </div>
+
+<script>
+const B=location.origin;
+const $=(s)=>document.querySelector(s);
+const frame=$('#frame'), card=$('#card'), cap=$('#cap'), capTxt=$('#capTxt'), capTag=$('#capTag'),
+      pbar=$('#pbar'), hud=$('#hud'), segN=$('#segN'), segClk=$('#segClk'), pausedEl=$('#paused');
+const chan=('BroadcastChannel' in window)?new BroadcastChannel('rocky-demo'):null;
+
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+const cw=()=>{try{return frame.contentWindow;}catch(e){return null;}};
+const cd=()=>{try{return frame.contentDocument;}catch(e){return null;}};
+function tryClick(id){try{const el=cd().getElementById(id);if(el){el.click();return true;}}catch(e){}return false;}
+function call(fn,...a){try{const w=cw();if(w&&typeof w[fn]==='function'){w[fn](...a);return true;}}catch(e){}return false;}
+function setCap(html,tag){capTxt.innerHTML=html||'';capTag.className='tag '+(tag||'NONE');capTag.textContent=(tag&&tag!=='NONE')?tag:'';}
+function showCard(html){card.innerHTML=html;card.classList.add('on');frame.style.visibility='hidden';cap.classList.add('hidden');}
+function showFrame(){card.classList.remove('on');frame.style.visibility='visible';cap.classList.remove('hidden');}
+async function nav(url,force){ // load a real page; skip reload if already there (unless forced by a manual jump)
+  const want=B+url;
+  if(!force && frame.src===want) return;
+  await new Promise((resolve)=>{let done=false;const go=()=>{if(!done){done=true;resolve();}};frame.onload=go;frame.src=want;setTimeout(go,4500);});
+  await waitMs(800);
+}
+
+/* ================= SEGMENTS =================
+   dur = milliseconds on the rail. cap = short audience caption. say = presenter's lines
+   (mirrored on presenter console; full script in docs/demo_speaking_script.md).
+   run(u) receives abortable, pause-aware helpers — SPACE freezes mid-action, and any
+   segment jump instantly kills the old scene's automation (no stray clicks on stage). */
+const SCENES=[
+ {t:'Cold open', dur:31000, tag:'NONE',
+  card:`<div class="logo">🤖</div><div class="eyebrow">Live demo</div><h1>Rocky</h1><div class="s">The reliability layer for hands-on cloud labs.</div>`,
+  say:`Good morning. This is Rocky — the reliability layer for our hands-on cloud labs. For the next ten minutes or so, the product will drive itself on screen while I explain what you're seeing. Everything is labeled: a green tag means real and verifiable, blue means a labeled simulation, and amber means both are on screen — labeled which is which. We never pass one off as the other.`},
+
+ {t:'The 2 a.m. problem', dur:27000, tag:'NONE',
+  card:`<div class="eyebrow">The problem</div><h2>It's 2 a.m. and the lab won't work</h2><div class="s">The learner follows the guide exactly. A step fails. They blame themselves and quit — and we never find out.</div>`,
+  say:`Start with the problem. A learner is doing our lab at 2 a.m. They follow the guide exactly — and a step fails. They assume it's their fault, and they quit. We never hear about it, and the same broken step fails the next learner too. Labs rot silently: the cloud changes underneath them even when nobody edits the guide.`},
+
+ {t:'The learner’s screen', dur:30000, url:'/cloudlabs-sim.html', tag:'SIMULATED',
+  cap:`The learner's screen — a CloudLabs lab. Three checks are <b>red</b>. Rocky lives in the corner.`,
+  say:`This is that learner's screen — a simulated CloudLabs environment, and it's labeled simulated, top right. The lab guide is on the left, her VM on the right, and three validation checks have gone red. Notice the little robot in the corner — that's Rocky, sitting inside the lab with her.`},
+
+ {t:'Ask Rocky — evidence, not guesses', dur:43000, url:'/cloudlabs-sim.html', tag:'SIMULATED',
+  cap:`She asks <b>"should I pick a smaller VM?"</b> — Rocky refuses the tempting wrong fix and shows the real cause: <b>wrong region</b>.`,
+  say:`She asks the obvious question: "deployment keeps failing — should I just pick a smaller VM?" Watch the answer. Rocky says no — and shows evidence: the real cause is the wrong region, not the VM size. That tempting shortcut would have wasted her hour. One honest note: the conversational AI is off today — the subscription holding the language model is disabled while we move to a new one — so what you see is Rocky's deterministic evidence card. That's by design: when any part is unavailable, Rocky degrades to plain evidence. It never bluffs.`,
+  run:async(u)=>{ u.call('openPanel'); await u.wait(900); u.call('ask','My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?'); }},
+
+ {t:'Backstage — nothing hidden', dur:26000, url:'/backstage.html', tag:'MIXED',
+  cap:`Backstage: every event Rocky just processed, in plain English — each one tagged <b>REAL</b> or <b>SIMULATED</b>.`,
+  say:`Before we go further — this is Rocky's backstage. Every event you just watched is in this feed, in plain English, and every line is tagged with where it came from — real, simulated, fixture, or modeled. I'm showing you this early because the theme of this demo is trust: nothing on this screen is hidden from you.`},
+
+ {t:'The fleet view', dur:25000, url:'/labdoctor.html', tag:'SIMULATED',
+  cap:`Zoom out: <b>3 of 12 labs failing · 142 learners affected</b> — flagged from results, not tickets.`,
+  say:`Now zoom out from one learner to the whole fleet. This dashboard runs on our labeled digital twin — twelve labs, and Rocky has flagged three as failing, with 142 learners affected. Not from support tickets — from the results themselves. The fleet data is simulated so we can prove the logic safely; what comes next is not.`},
+
+ {t:'LIVE scan of real repos', dur:45000, url:'/labdoctor.html', tag:'REAL',
+  cap:`Scanning our <b>8 real production repos</b> — live, right now…`,
+  say:`This part is real, and it's happening live right now — not a screenshot. Rocky is re-scanning eight of our actual production lab repositories, 268 guide files, as we watch. There it is: 133 real problems. And just as important — three of those eight repos came back completely clean. Rocky says "nothing wrong here" when nothing is wrong. A tool that flags everything is useless; the clean verdicts are why you can trust the 133. ⭐ (LIVE EXAMPLE now: press Space, Alt-Tab to Notepad, break the lab — full moves in the script. Resume from this console.)`,
+  run:async(u)=>{ await u.wait(1200); await u.clickRetry('rescanBtn',10); }},
+
+ {t:'Bring your own lab', dur:55000, url:'/checkup.html', tag:'REAL',
+  cap:`Don't take our word for it — <b>drop any lab guide</b> here and the <b>same engine</b> scans it, live.`,
+  say:`And you don't have to take my word about our repos — this page accepts ANY lab guide. Watch — the same engine, live: the retired AI model, at its exact line. It even compares translations — this is the Japanese guide that silently lost its login tokens. And a clean guide? It says clean. Bring your own lab after this call — that's the fastest way to believe it. 🖐 (Drag from Demo-Uploads: Challenge-05.md → then 'Scan a whole lab folder' → RTIAD-mini → then clean-lab-guide.md. The rail waits in one-by-one mode.)`},
+
+ {t:'The finding that stings', dur:30000, url:'/labdoctor.html', tag:'REAL',
+  cap:`In the <b>Japanese</b> guide, every login placeholder was lost in translation — learners are told to literally type <b>"RTI_username"</b>.`,
+  say:`One real finding, because it's unforgettable. Our English guides auto-fill each learner's real login. In the Japanese translation those placeholders were dropped — so a Japanese learner is literally instructed to type the words "RTI underscore username" as their username. Sign-in fails and they'll never know why. A human proofreader skims right past this. Rocky found sixteen of these, across five languages.`},
+
+ {t:'Priya’s lab — fix drafted', dur:28000, url:'/labdoctor.html', tag:'SIMULATED',
+  cap:`Her lab: <b>22 learners</b> deployed to the wrong region. Rocky drafted the fix — <b>a human approves it</b>.`,
+  say:`Back to our 2 a.m. learner. Her lab shows 22 people hit the same wall — wrong region. Rocky has already drafted the one-line fix that pins it. And here's the safety rule: Rocky never applies anything by itself. Every fix becomes a pull request that a human reviews and merges. Draft, approve, verify — in that order, always.`,
+  run:async(u)=>{ await u.wait(400); u.call('selectLab','ODL-DEMO-0001'); }},
+
+ {t:'The lying checkmark', dur:43000, url:'/labdoctor.html', tag:'SIMULATED',
+  cap:`The scary one: <b>100% completion — and it's broken.</b> The check passed 23 of 24 learners whose work was actually wrong.`,
+  say:`Now the one that should genuinely worry us. This lab reports one hundred percent completion. Everything green. And it is broken. Its own validation check was silently passing learners whose storage was still publicly exposed — twenty-three of twenty-four "passed" a security lab while leaving the door wide open. No ticket will ever catch that, because nobody complains about passing. Rocky catches it by refusing to trust the checkmark — it compares what the check claims against what actually happened, and flags the contradiction. This scenario runs on the twin so we can prove the logic safely.`,
+  run:async(u)=>{ await u.wait(400); u.call('selectLab','ODL-DEMO-0006'); }},
+
+ {t:'From 133 problems to 13 decisions', dur:30000, url:'/campaigns.html', tag:'REAL',
+  cap:`The Fixer groups <b>133 findings into 13 campaigns</b> by root cause — the top 3 cover <b>62%</b>. 5 real PRs, 2 merged.`,
+  say:`Finding 133 problems is useless if it lands as 133 tickets. Rocky's Fixer groups them by shared root cause into thirteen campaigns — and the top three cover sixty-two percent of everything. This has already produced five real pull requests on our GitHub; two are merged. And when Rocky projects the impact of a fix, those numbers are always labeled "modeled" — we don't claim credit before a merge.`},
+
+ {t:'The Watcher — sweep by sweep', dur:52000, url:'/monitor.html', tag:'SIMULATED',
+  cap:`Continuous watching: alerts only on <b>change</b> — one silent break caught, four labs folded into <b>one</b> incident, and <b>recovery detected automatically</b>.`,
+  say:`Testing a lab once is a photo. This is the movie. The Watcher sweeps continuously, and — like a good security camera — it only speaks when something changes. Watch the sweeps: quiet… quiet… there — a silent break, caught the moment it appears. Then four labs fail together and Rocky folds them into one incident instead of four alarms. Then steady state — silence again. And at the end, notice: recovery is detected automatically. Nobody told it the lab was fixed; it verified that itself. This timeline is the labeled twin — the detection logic is the real code.`,
+  run:async(u)=>{ await u.wait(600); u.click('reset'); await u.wait(1400); for(let i=0;i<6;i++){ u.click('adv'); await u.wait(6200);} }},
+
+ {t:'The Guardian — refusal, live', dur:40000, url:'/amnesty.html', tag:'MIXED',
+  cap:`Restoring wrongly-failed learners needs <b>5 gates + a named human</b>. Simulated cases — but watch the <b>real gate</b>: no name → <b>refused, live</b>.`,
+  say:`When a broken check wrongly fails good learners, Rocky can restore their verdicts — but that's the most dangerous power in the system, so it sits behind five gates and a named human authorizer. And rather than tell you that, I'll prove it: the demo is about to request the restore without naming a human… there — refused, live, with an explicit error. That refusal is enforced in code, not in a policy document. The case data here is simulated; the gate you just saw refuse is the real engine.`,
+  run:async(u)=>{ await u.wait(20000); u.scroll('.execbar'); await u.wait(1500); u.click('noAuthBtn'); }},
+
+ {t:'Receipts', dur:38000, url:'/receipts.html', tag:'REAL',
+  cap:`Every claim, receipted: <b>133 defects · 8 repos · 5 PRs (2 merged) · CI gate blocked a planted bug in 4s · 0/42 false alarms</b>.`,
+  say:`Let's end on what's real and checkable today. 133 defects across 8 production repos — on disk. Five pull requests on GitHub, two merged by humans. We deliberately planted a bad change in a real repo, and Rocky's CI gate blocked it from merging in four seconds — that's prevention, not just detection. And we hand-audited a sample of its findings: zero false alarms in forty-two. Every number on this page is checkable — pick any finding, open the file on GitHub.`},
+
+ {t:'Close', dur:41000, tag:'NONE',
+  card:`<div class="eyebrow">One line</div><h2>We never fake green</h2><div class="s">Rocky finds what's broken, fixes it with a human's approval, and helps the learner in the meantime. The engine asserts; the AI narrates.</div>`,
+  say:`So: one system, three jobs. It finds what's broken — including checks that lie. It fixes with a human's approval — and it's built to verify the fix actually landed, which you watched it do on the twin. And it helps the learner in the moment, honestly. The design rule under all of it: the engine asserts, the AI narrates — and we never fake green. Next step is small and safe: a two-week support shadow-pilot, measuring one number — how much faster we find root cause. Thank you — questions welcome.`},
+
+ {t:'Thanks / Q&A', dur:8000, tag:'NONE', hold:true,
+  card:`<div class="logo">🤖</div><h2>Thank you</h2><div class="s">Questions welcome — everything shown is either verifiable or labeled simulated.</div>`,
+  say:`(Hold for questions — this card stays up. Press ← to revisit any screen, e.g. Receipts. The Q&A armor is at the end of the script.)`},
+];
+
+/* ============ pause-aware engine ============ */
+let paused=false, jump=0, idx=0, running=false, sceneLeft=0, runToken=0, stepMode=false;
+function waitMs(ms){ // plain settle wait used by nav(); pause-aware, aborts on jump
+  return new Promise(res=>{let left=ms;const t=setInterval(()=>{if(jump){clearInterval(t);res();return;}
+    if(!paused){left-=100;if(left<=0){clearInterval(t);res();}}},100);});
+}
+function makeUtils(tok){ // scene-scoped helpers: any jump/replay REJECTS pending waits and
+  const alive=()=>tok===runToken;                    // disarms clicks — no stray actions on stage
+  return {
+    wait:(ms)=>new Promise((res,rej)=>{let left=ms;const t=setInterval(()=>{
+      if(!alive()){clearInterval(t);rej(new Error('scene-superseded'));return;}
+      if(!paused){left-=100;if(left<=0){clearInterval(t);res();}}},100);}),
+    click:(id)=>{ if(alive()) tryClick(id); },
+    call:(fn,...a)=>{ if(alive()) call(fn,...a); },
+    scroll:(sel)=>{ if(alive()){ try{ cd().querySelector(sel)?.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} } },
+    clickRetry:async function(id,tries){ for(let k=0;k<(tries||8);k++){ if(!alive())return;
+      if(tryClick(id))return; await this.wait(500);} },
+  };
+}
+function broadcast(){ if(!chan) return;
+  const sc=SCENES[idx]||{};
+  chan.postMessage({type:'state',i:idx,n:SCENES.length,t:sc.t,say:sc.say,tag:sc.tag,dur:sc.dur,left:sceneLeft,paused,running,held:(stepMode||!!sc.hold)&&sceneLeft<=0});
+}
+if(chan) chan.onmessage=(e)=>{const m=e.data||{};
+  if(m.type==='cmd'&&running){ if(m.cmd==='pause')togglePause(); else if(m.cmd==='next')requestJump(1); else if(m.cmd==='prev')requestJump(-1); else if(m.cmd==='replay')requestJump(2); }
+  if(m.type==='hello') broadcast();
+};
+function togglePause(){paused=!paused;pausedEl.classList.toggle('on',paused);broadcast();}
+function requestJump(dir){ // jumping always auto-resumes: a paused rail + a jump would tear captions vs page
+  if(paused){paused=false;pausedEl.classList.remove('on');}
+  jump=dir;
+}
+
+async function playScene(i,forceNav){
+  const sc=SCENES[i];
+  const tok=++runToken; // supersede any still-running automation from a previous scene
+  sceneLeft=sc.dur;     // set BEFORE broadcast so the presenter clock never flashes a stale 0:00
+  segN.textContent=String(i+1).padStart(2,'0')+'/'+String(SCENES.length).padStart(2,'0');
+  if(sc.card){ showCard(sc.card); }
+  else{ showFrame(); await nav(sc.url,forceNav); setCap(sc.cap,sc.tag); }
+  window.focus(); // reclaim keyboard from the iframe so pause/jump keys keep working
+  broadcast();
+  // tell Wingman which segment is live, so the phone view shows the say-line too (fire & forget)
+  try{ fetch(B+'/api/wingman/scene',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({i,n:SCENES.length,t:sc.t,say:sc.say,tag:sc.tag})}).catch(()=>{}); }catch(e){}
+  if(sc.run){ sc.run(makeUtils(tok)).catch(()=>{}); } // parallel with the clock; pause-aware, abortable
+  // clock — the final scene HOLDS (Q&A mode); in one-by-one mode EVERY scene holds after its
+  // on-screen actions finish, until the presenter presses → (no time pressure, explain freely)
+  const t0=SCENES.slice(0,i).reduce((s,x)=>s+x.dur,0), total=SCENES.reduce((s,x)=>s+x.dur,0);
+  const holds=sc.hold||stepMode;
+  while(sceneLeft>0 || holds){
+    if(jump) return;
+    if(!paused && sceneLeft>0){ sceneLeft-=100;
+      if(holds && sceneLeft<=0) sceneLeft=0;
+      pbar.style.width=(((t0+(sc.dur-sceneLeft))/total)*100)+'%';
+      const s=Math.ceil(sceneLeft/1000);
+      segClk.textContent=(holds&&s<=0)?(sc.hold?'Q&A':'→ ready'):(Math.floor(s/60)+':'+String(s%60).padStart(2,'0'));
+      if(sceneLeft%1000<100) broadcast();
+    }
+    if(holds && sceneLeft<=0 && !paused){ segClk.textContent=sc.hold?'Q&A':'→ ready'; }
+    await sleep(100);
+  }
+}
+
+async function runShow(){
+  running=true; paused=false; pausedEl.classList.remove('on'); hud.classList.remove('hidden');
+  try{ await Promise.all(['reset','monitor/reset','amnesty/reset','backstage/clear','wingman/clear'].map(p=>fetch(B+'/api/'+p,{method:'POST'}))); }catch(e){}
+  idx=0; jump=0;
+  while(true){ // the show never dead-ends: the final scene holds for Q&A and ← can revisit anything
+    await playScene(idx, false);
+    const j=jump; jump=0; // capture-and-clear so a press landing during primeJump isn't swallowed
+    if(j===-1){ idx=Math.max(0,idx-1); await primeJump(); }
+    else if(j===2){ await primeJump(); }                       // replay same idx
+    else idx=Math.min(idx+1, SCENES.length-1);                 // natural or 'next' (clamped on the last)
+  }
+}
+async function primeJump(){ // manual jumps force a fresh page load so the scene re-runs cleanly
+  const sc=SCENES[idx];
+  if(sc && sc.url){ frame.src='about:blank'; await sleep(150); }
+}
+
+addEventListener('keydown',(e)=>{
+  if(!running) return;
+  if(e.key===' '){togglePause();e.preventDefault();}
+  else if(e.key==='ArrowRight'){requestJump(1);}
+  else if(e.key==='ArrowLeft'){requestJump(-1);}
+  else if(e.key==='r'||e.key==='R'){requestJump(2);}
+});
+
+async function begin(step){
+  stepMode=step;
+  const c=document.getElementById('count');
+  document.getElementById('startBtn').classList.add('hidden');
+  document.getElementById('stepBtn').classList.add('hidden');
+  c.classList.remove('hidden');
+  for(const n of ['3','2','1']){ c.textContent=n; await sleep(800); }
+  document.getElementById('gate').classList.add('hidden');
+  runShow();
+}
+document.getElementById('startBtn').onclick=()=>begin(false);
+document.getElementById('stepBtn').onclick=()=>begin(true);
+</script>
+</body>
+</html>

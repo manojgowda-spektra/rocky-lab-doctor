@@ -134,7 +134,7 @@ Rocky's real competitive advantage is not that it finds problems; it is that lea
 The evidence that this discipline holds up:
 - **0 out of 42** false positives in the hand-audited scanner sample (and 29/29 on the localization re-audit).
 - **104 automated tests passing** across **17 test files**.
-- A **53-check preflight** runs before any live demo, so what you see on stage is verified first.
+- A **57-check preflight** runs before any live demo, so what you see on stage is verified first.
 - The digital twin has already earned its keep: adversarial simulation against it uncovered **2 real bugs in Rocky's own engine.**
 
 ---
@@ -149,7 +149,7 @@ The evidence that this discipline holds up:
 | The CI prevention gate | **REAL** | Blocked a planted regression in 4 seconds |
 | Change-intelligence feeds (EOL / Azure Updates) | **REAL** | Public data feeds |
 | Intent extraction (Scholar) | **REAL** | 2-guide pilot, ~129 facts, 100% quote-anchored |
-| Automated test suite & preflight | **REAL** | 104 tests / 17 files; 53-check preflight |
+| Automated test suite & preflight | **REAL** | 104 tests / 17 files; 57-check preflight |
 | The human-approval gate refusing when no human is named | **REAL** | Live-provable (returns an explicit refusal) |
 | Fleet health & learner counts (dashboards) | **SIMULATED** | 12-lab digital twin, labeled on every screen |
 | The false-pass & region-drift scenarios | **SIMULATED** | Twin scenarios that prove the engine's logic |

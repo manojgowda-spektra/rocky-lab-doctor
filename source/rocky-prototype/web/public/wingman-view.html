@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — Wingman</title>
+<!--
+  WINGMAN PHONE VIEW — open this on your PHONE (same Wi-Fi) or a second monitor.
+  Shows: (top) what to say for the current demo segment, (below) the latest question the
+  listener heard + the suggested answers. Polls the server — no mic, no interaction needed.
+  This screen is physically invisible to a screen share: it isn't on the shared computer.
+-->
+<style>
+  :root{--bg:#0b0f1c;--panel:#111730;--ink:#eef3fb;--dim:#9fb0c8;--teal:#2ee6c8;--blue:#6ba6ff;--amber:#ffcf5c;
+    --mono:ui-monospace,Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:14px}
+  #seg{background:var(--panel);border:1px solid #24304f;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  #seg .h{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  #seg .n{font-family:var(--mono);font-weight:800;color:var(--teal);font-size:14px}
+  #seg .t{font-weight:800;font-size:15px}
+  #seg .tag{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;border:1px solid #ffffff33}
+  .tag.REAL{color:var(--teal)} .tag.SIMULATED{color:var(--blue)} .tag.MIXED{color:var(--amber)} .tag.NONE{display:none}
+  #say{font-size:17px;line-height:1.5}
+  #qwrap{margin-top:6px}
+  .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--dim);margin:14px 4px 6px;text-transform:uppercase}
+  #heard{background:#0d1226;border:1px solid #1c2542;border-radius:12px;padding:12px 14px;font-size:16px;font-weight:700}
+  #heard .meta{font-family:var(--mono);font-size:11px;color:var(--dim);font-weight:400;margin-bottom:4px}
+  .sg{background:var(--panel);border:1px solid #24304f;border-left:4px solid var(--teal);border-radius:12px;padding:12px 14px;margin-top:8px}
+  .sg .a{font-size:17px;line-height:1.5}
+  .sg .n{font-family:var(--mono);font-size:13px;color:var(--teal);margin-top:6px}
+  .sg .s{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px}
+  .sg.ai{border-left-color:var(--blue)} .sg.ai .badge{color:var(--blue)}
+  .sg .badge{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--teal);margin-bottom:4px}
+  #idle{color:var(--dim);text-align:center;padding:30px 10px;font-size:15px;line-height:1.6}
+  .none{color:var(--amber);font-size:14px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="seg" style="display:none">
+  <div class="h"><span class="n" id="segN"></span><span class="t" id="segT"></span><span class="tag NONE" id="segTag"></span></div>
+  <div id="say"></div>
+</div>
+<div id="qwrap" style="display:none">
+  <div class="lbl">Latest question heard</div>
+  <div id="heard"></div>
+  <div id="answers"></div>
+</div>
+<div id="idle">🎧 Wingman connected.<br>Waiting for the demo and the first question…<br><span style="font-size:12px">(keep the phone plugged in & screen awake)</span></div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+let last=0, lastQ=null, aiFor=null;
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+async function tick(){
+  try{
+    const r=await fetch('/api/wingman/feed?since='+last).then(x=>x.json());
+    if(r.scene){
+      $('#seg').style.display='block'; $('#idle').style.display='none';
+      $('#segN').textContent=String((r.scene.i??0)+1).padStart(2,'0')+'/'+(r.scene.n||16);
+      $('#segT').textContent=r.scene.t||'';
+      $('#segTag').className='tag '+(r.scene.tag||'NONE'); $('#segTag').textContent=(r.scene.tag&&r.scene.tag!=='NONE')?r.scene.tag:'';
+      $('#say').textContent=r.scene.say||'';
+    }
+    if(typeof r.last==='number' && r.last<last) last=0; // server restarted → resync the cursor
+    for(const ev of (r.events||[])){
+      last=Math.max(last,ev.id);
+      // only question-shaped (or typed) events replace the panel — the presenter's own
+      // narration is filtered server-side, this is the belt to that suspenders
+      if(ev.kind==='q' && (ev.isQuestion || ev.source==='typed' || (ev.suggestions||[]).length)){ lastQ=ev; aiFor=null; renderQ(); }
+      if(ev.kind==='ai' && lastQ && ev.qId===lastQ.id){ aiFor=ev; renderQ(); }
+    }
+  }catch(_){}
+  setTimeout(tick,1200);
+}
+function renderQ(){
+  if(!lastQ)return;
+  $('#qwrap').style.display='block'; $('#idle').style.display='none';
+  $('#heard').innerHTML=`<div class="meta">${new Date(lastQ.ts).toLocaleTimeString()} · ${esc(lastQ.source||'voice')}</div>“${esc(lastQ.text)}”`;
+  const sg=(lastQ.suggestions||[]).map((s,i)=>`<div class="sg"><div class="badge">${i===0?'BEST MATCH':'ALSO RELEVANT'}</div><div class="a">${esc(s.a)}</div>${s.n?`<div class="n">${esc(s.n)}</div>`:''}${s.src?`<div class="s">verify: ${esc(s.src)}</div>`:''}</div>`).join('');
+  const ai=aiFor?`<div class="sg ai"><div class="badge">AI DRAFT (check numbers before saying)</div><div class="a">${esc(aiFor.text)}</div></div>`:'';
+  $('#answers').innerHTML=(sg||'<div class="none">No confident match — use the Q&A armor sheet, or say: “Good question — let me verify that and come back to you.”</div>')+ai;
+  window.scrollTo({top:0});
+}
+tick();
+// keep the screen awake if the browser allows it
+if('wakeLock' in navigator){ navigator.wakeLock.request('screen').catch(()=>{}); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') navigator.wakeLock.request('screen').catch(()=>{}); }); }
+</script>
+</body>
+</html>

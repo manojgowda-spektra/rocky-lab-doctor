@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Rocky — Live Demo</title>
+<!--
+  THE GUIDED DEMO — one clean flow on one screen, presenter-driven:
+    1 SELECT   pick a real sample lab (one click) or upload/drop any guide
+    2 DIAGNOSE the same engine that scanned the 8 production repos finds the issues, live
+    3 FIX      click Fix → before/after diff per issue; non-automatable issues get an honest
+               suggestion; nothing ever touches the original file (drafts only)
+    4 VERIFY   re-scan the FIXED copy live → before/after counts prove the difference
+  A live ENGINE ACTIVITY panel narrates every step in plain English (the "what is it doing"
+  window). Honesty rules preserved: REAL badge on real content, fixes are drafts a human
+  approves, checks that can't run are 'skipped', never guessed.
+-->
+<style>
+  :root{
+    --bg:#0a0e1a;--panel:#10162b;--panel2:#0c1122;--line:#20294a;--line2:#2c3a66;
+    --ink:#edf2fb;--dim:#93a3c2;--faint:#5f6f92;
+    --teal:#2ee6c8;--teal-dk:#0d8f79;--blue:#6ba6ff;--amber:#ffcf5c;--red:#ff5c72;--green:#3ddc84;
+    --mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:"Segoe UI",system-ui,Roboto,sans-serif}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+  body{display:flex;flex-direction:column}
+  a{color:var(--blue)}
+
+  /* ===== header ===== */
+  header{display:flex;align-items:center;gap:16px;padding:14px 26px;border-bottom:1px solid var(--line);flex:none}
+  .logo{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:20px;
+    background:linear-gradient(150deg,rgba(46,230,200,.25),rgba(46,230,200,.05));border:1px solid rgba(46,230,200,.35)}
+  header h1{font-size:17px;margin:0;font-weight:800}
+  header h1 span{color:var(--dim);font-weight:600}
+  .live{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--teal)}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 1.6s ease infinite}
+  @keyframes pulse{50%{opacity:.3}}
+
+  /* ===== stepper ===== */
+  #steps{display:flex;gap:0;padding:16px 26px 0;flex:none}
+  .step{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:3px solid var(--line);color:var(--faint);font-weight:700;font-size:13.5px;cursor:default}
+  .step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line2)}
+  .step.on{color:var(--ink);border-bottom-color:var(--teal)}
+  .step.on .n{background:var(--teal);color:#04241f;border-color:var(--teal)}
+  .step.done{color:var(--dim);border-bottom-color:var(--teal-dk)}
+  .step.done .n{background:var(--teal-dk);color:#eafff9;border-color:var(--teal-dk)}
+
+  /* ===== main split: stage | activity ===== */
+  #main{flex:1;display:flex;min-height:0}
+  #stage{flex:1;overflow-y:auto;padding:22px 26px 40px;min-width:0}
+  #act{width:390px;flex:none;border-left:1px solid var(--line);display:flex;flex-direction:column;background:var(--panel2)}
+  #act .ah{padding:12px 18px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--dim);display:flex;gap:8px;align-items:center}
+  #act .ah b{color:var(--teal)}
+  #actLog{flex:1;overflow-y:auto;padding:10px 14px;font-family:var(--mono);font-size:12px;line-height:1.7}
+  .al{margin-bottom:2px;display:flex;gap:8px;align-items:baseline;animation:fadein .3s}
+  @keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
+  .al .t{color:var(--faint);flex:none;font-size:10.5px}
+  .al .k{flex:none;font-weight:800;font-size:10px;letter-spacing:.06em;padding:1px 6px;border-radius:4px}
+  .k.ENGINE{background:rgba(46,230,200,.13);color:var(--teal)} .k.FIX{background:rgba(255,207,92,.13);color:var(--amber)}
+  .k.VERIFY{background:rgba(61,220,132,.13);color:var(--green)} .k.INFO{background:rgba(107,166,255,.13);color:var(--blue)}
+  .al .m{color:var(--dim);word-break:break-word}
+  .al .m b{color:var(--ink)}
+
+  /* ===== cards & shared ===== */
+  .h2{font-size:21px;font-weight:800;margin:6px 0 4px}
+  .sub{color:var(--dim);font-size:14px;margin-bottom:18px;max-width:78ch;line-height:1.5}
+  .badge{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:6px;border:1px solid}
+  .b-REAL{color:var(--teal);border-color:rgba(46,230,200,.45);background:rgba(46,230,200,.1)}
+  .b-BROKEN{color:var(--red);border-color:rgba(255,92,114,.45);background:rgba(255,92,114,.1)}
+  .b-CLEAN{color:var(--green);border-color:rgba(61,220,132,.45);background:rgba(61,220,132,.1)}
+  button{cursor:pointer;font-family:inherit;font-weight:800;border:none;border-radius:10px;font-size:14px}
+  button:hover{filter:brightness(1.1)}
+  .primary{background:var(--teal);color:#04241f;padding:12px 22px;font-size:15px}
+  .ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line2);padding:11px 18px}
+  .hidden{display:none!important}
+
+  /* stage 1: select */
+  .selgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:18px}
+  .lab{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:all .15s}
+  .lab:hover{border-color:var(--teal);transform:translateY(-2px)}
+  .lab .lt{font-weight:800;font-size:15px;margin:10px 0 6px}
+  .lab .ld{color:var(--dim);font-size:13px;line-height:1.45}
+  #dropzone{border:2px dashed var(--line2);border-radius:14px;padding:26px;text-align:center;color:var(--dim);font-size:14px;transition:all .15s}
+  #dropzone.hot{border-color:var(--teal);background:rgba(46,230,200,.05)}
+  #dropzone b{color:var(--ink)}
+
+  /* stage 2: findings */
+  .sumline{display:flex;gap:26px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin-bottom:16px;font-size:14px}
+  .sumline b{font-family:var(--mono);font-size:19px;color:var(--teal)} .sumline .bad b{color:var(--red)}
+  .fcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+  .fhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.07em;padding:3px 9px;border-radius:6px;border:1px solid}
+  .c-red{color:var(--red);border-color:rgba(255,92,114,.4);background:rgba(255,92,114,.09)}
+  .c-amber{color:var(--amber);border-color:rgba(255,207,92,.4);background:rgba(255,207,92,.09)}
+  .c-blue{color:var(--blue);border-color:rgba(107,166,255,.4);background:rgba(107,166,255,.09)}
+  .floc{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .fnote{color:var(--dim);font-size:13.5px;line-height:1.5;margin:8px 0;max-width:82ch}
+  .fex{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 11px;overflow-x:auto;white-space:pre;color:#a7b7d6}
+  .fixbtn{margin-left:auto;background:var(--amber);color:#3a2c00;padding:8px 16px;font-size:13px}
+  .sugbtn{margin-left:auto;background:var(--panel2);color:var(--amber);border:1px solid rgba(255,207,92,.4);padding:8px 16px;font-size:13px}
+  /* diff */
+  .diff{margin-top:10px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  .dl{padding:5px 11px;white-space:pre-wrap;word-break:break-word}
+  .dl.minus{background:rgba(255,92,114,.1);color:#ffb3bf} .dl.minus::before{content:"−  ";color:var(--red)}
+  .dl.plus{background:rgba(61,220,132,.1);color:#b8f5d3} .dl.plus::before{content:"+  ";color:var(--green)}
+  .fixed-tag{font-family:var(--mono);font-size:10.5px;font-weight:800;color:var(--green);letter-spacing:.08em}
+  .sugg{margin-top:10px;background:rgba(255,207,92,.07);border:1px solid rgba(255,207,92,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--dim)}
+  .sugg b{color:var(--amber)}
+  #fixbar{position:sticky;bottom:0;display:flex;gap:12px;align-items:center;background:linear-gradient(to top,var(--bg) 60%,transparent);padding:16px 0 6px}
+
+  /* stage 4: verify */
+  .ba{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;margin:18px 0}
+  .bacol{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;text-align:center}
+  .bacol .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--dim);margin-bottom:8px}
+  .bacol .num{font-family:var(--mono);font-size:52px;font-weight:800}
+  .bacol.before .num{color:var(--red)} .bacol.after .num{color:var(--green)}
+  .bacol .s{color:var(--dim);font-size:12.5px;margin-top:6px}
+  .baarrow{font-size:30px;color:var(--teal)}
+  #verdict{border-radius:14px;padding:20px 24px;text-align:center;font-size:17px;font-weight:700;margin-bottom:16px}
+  #verdict.good{background:rgba(61,220,132,.09);border:1px solid rgba(61,220,132,.4);color:var(--green)}
+  #verdict.warn{background:rgba(255,207,92,.09);border:1px solid rgba(255,207,92,.4);color:var(--amber)}
+  .honest{color:var(--faint);font-size:12.5px;line-height:1.55;border-left:3px solid var(--line2);padding-left:12px;margin-top:14px;max-width:80ch}
+
+  /* next steps */
+  .nextgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:14px}
+  .next{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;transition:all .15s}
+  .next:hover{border-color:var(--blue);transform:translateY(-2px)}
+  .next .nt{font-weight:800;font-size:14px;color:var(--ink)} .next .nd{color:var(--dim);font-size:12px;margin-top:4px;line-height:1.4}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🤖</div>
+  <h1>Rocky <span>· the reliability layer for hands-on labs</span></h1>
+  <div class="live"><span class="dot"></span>LIVE — REAL ENGINE, REAL GUIDES</div>
+</header>
+
+<div id="steps">
+  <div class="step on" id="st1"><span class="n">1</span>Select a lab</div>
+  <div class="step" id="st2"><span class="n">2</span>Diagnose</div>
+  <div class="step" id="st3"><span class="n">3</span>Fix</div>
+  <div class="step" id="st4"><span class="n">4</span>Verify — before / after</div>
+</div>
+
+<div id="main">
+  <div id="stage">
+
+    <!-- ============ STAGE 1: SELECT ============ -->
+    <section id="s1">
+      <div class="h2">Choose what Rocky should examine</div>
+      <div class="sub">These are <b>real guides from our production labs</b> (staged copies — originals untouched).
+        Or drop any lab guide of your own: same engine either way.</div>
+      <div class="selgrid" id="samples"><!-- sample cards injected --></div>
+      <div id="dropzone">…or <b>drag any lab guide here</b> (.md files or a whole lab folder)
+        <div style="margin-top:12px"><button class="ghost" id="pickFiles">📄 Pick files</button>
+        <button class="ghost" id="pickDir" style="margin-left:8px">📁 Pick a lab folder</button></div>
+        <input type="file" id="inFiles" multiple accept=".md,.markdown" class="hidden"/>
+        <input type="file" id="inDir" webkitdirectory class="hidden"/>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 2: DIAGNOSE ============ -->
+    <section id="s2" class="hidden">
+      <div class="h2" id="diagTitle">Diagnosing…</div>
+      <div class="sub" id="diagSub"></div>
+      <div class="sumline" id="diagSum"></div>
+      <div id="findings"></div>
+      <div id="fixbar" class="hidden">
+        <button class="primary" id="fixAll">🛠 Fix everything fixable</button>
+        <button class="ghost" id="goVerify">Verify →</button>
+        <button class="ghost" id="startOver">↻ Start over</button>
+        <span style="color:var(--faint);font-size:12.5px">Fixes are drafts on an in-memory copy — the original file is never touched.</span>
+      </div>
+      <div id="cleanMsg" class="hidden">
+        <div id="verdictClean" style="border-radius:14px;padding:22px;text-align:center;background:rgba(61,220,132,.09);border:1px solid rgba(61,220,132,.4)">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">✔ Nothing wrong with this lab.</div>
+          <div style="color:var(--dim);font-size:13.5px;margin-top:6px">Same checks, honestly applied — Rocky says clean when it's clean. (3 of our 8 production repos are clean too.)</div>
+        </div>
+        <div style="margin-top:16px"><button class="ghost" id="backFromClean">← Try another lab</button></div>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 4: VERIFY ============ -->
+    <section id="s4" class="hidden">
+      <div class="h2">The difference — before and after</div>
+      <div class="sub">Rocky doesn't claim the fix worked — it <b>re-runs the same scan on the fixed copy</b> and shows you.</div>
+      <div class="ba">
+        <div class="bacol before"><div class="lbl">BEFORE</div><div class="num" id="beforeN">—</div><div class="s" id="beforeS"></div></div>
+        <div class="baarrow">→</div>
+        <div class="bacol after"><div class="lbl">AFTER (re-scanned live)</div><div class="num" id="afterN">—</div><div class="s" id="afterS"></div></div>
+      </div>
+      <div id="verdict"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="primary" id="download">⬇ Download the fixed guide</button>
+        <button class="ghost" id="restart">↻ Run another lab</button>
+      </div>
+      <div class="honest">Honesty note: the fixes were applied to an in-memory copy — the original guide is untouched.
+        In production this exact draft becomes a pull request that a <b>human reviews and merges</b>; Rocky has already
+        produced 5 real pull requests this way (2 merged). Issues needing human judgment (like restoring translated
+        credential tokens) stay as suggestions — Rocky never guesses.</div>
+      <div class="h2" style="margin-top:26px;font-size:17px">The bigger picture — in order</div>
+      <div class="nextgrid">
+        <a class="next" href="/labdoctor.html" target="_blank"><div class="nt">🩺 Fleet dashboard</div><div class="nd">All 8 repos + the digital-twin fleet — 133 findings at a glance</div></a>
+        <a class="next" href="/campaigns.html" target="_blank"><div class="nt">🛠 Fix campaigns</div><div class="nd">133 findings grouped into 13 root causes — top 3 cover 62%</div></a>
+        <a class="next" href="/monitor.html" target="_blank"><div class="nt">📡 The Watcher</div><div class="nd">Continuous sweeps — alerts only on change, detects recovery</div></a>
+        <a class="next" href="/amnesty.html" target="_blank"><div class="nt">⚖️ The Guardian</div><div class="nd">Restores wrongly-failed learners — refuses without a named human</div></a>
+        <a class="next" href="/receipts.html" target="_blank"><div class="nt">🧾 Receipts</div><div class="nd">Every claim, checkable: PRs, CI gate, audits</div></a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============ ACTIVITY PANEL ============ -->
+  <aside id="act">
+    <div class="ah"><b>●</b> ENGINE ACTIVITY — what Rocky is doing, live</div>
+    <div id="actLog"></div>
+  </aside>
+</div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TYPE_META={
+  DEPRECATED_DEPENDENCY:{name:'RETIRED / DEPRECATED',cls:'c-red',fixable:true},
+  RETIRED_SKU:{name:'RETIRED SKU',cls:'c-red',fixable:true},
+  RENAMED_PRODUCT:{name:'RENAMED PRODUCT',cls:'c-amber',fixable:true},
+  EOL_RUNTIME:{name:'END-OF-LIFE RUNTIME',cls:'c-amber',fixable:true},
+  ASSET_CASE_MISMATCH:{name:'PATH CASE MISMATCH',cls:'c-blue',fixable:true},
+  BROKEN_ASSET_LINK:{name:'BROKEN IMAGE',cls:'c-red',fixable:false,
+    sugg:'Add the missing image to the lab\'s media folder, or correct the path in the guide. Rocky won\'t guess which image was intended.'},
+  INJECT_TOKEN_LOSS:{name:'LOST CREDENTIAL TOKEN',cls:'c-red',fixable:false,
+    sugg:'Restore the <inject key="…"> tokens from the English source into the translation. A translator must place them — Rocky flags exactly which keys are missing, but won\'t rewrite translated sentences.'},
+};
+
+// ---------- state ----------
+let FILES=[];        // [{path, content}] original
+let FIXED=[];        // in-memory fixed copy
+let REPORT=null;     // before report
+let LABEL='';        // what's loaded
+let fixedCount=0, suggCount=0;
+let gen=0;           // generation counter: any reset/new-lab invalidates in-flight scans (no stale repaints)
+let busy=false;      // ignore sample double-clicks while a load/scan is in flight
+
+// ---------- activity log ----------
+function log(kind,msg){
+  const d=document.createElement('div'); d.className='al';
+  const ts=new Date().toLocaleTimeString('en-GB');
+  d.innerHTML=`<span class="t">${ts}</span><span class="k ${kind}">${kind}</span><span class="m">${msg}</span>`;
+  const el=$('#actLog'); el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+const wait=(ms)=>new Promise(r=>setTimeout(r,ms));
+
+// ---------- stepper ----------
+function setStep(n){
+  [1,2,3,4].forEach(i=>{const el=$('#st'+i);el.classList.toggle('on',i===n);el.classList.toggle('done',i<n);});
+}
+function show(stage){ ['s1','s2','s4'].forEach(id=>$('#'+id).classList.add('hidden')); $('#'+stage).classList.remove('hidden'); $('#stage').scrollTop=0; }
+
+// tell the Wingman phone which stage we're on (best-effort)
+function tellPhone(t,say){ try{ fetch('/api/wingman/scene',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({i:0,n:4,t,say,tag:'REAL'})}).catch(()=>{});}catch(e){} }
+
+// ---------- stage 1: select ----------
+fetch('/api/demo/samples').then(r=>r.json()).then(j=>{
+  $('#samples').innerHTML=(j.samples||[]).map(s=>
+    `<div class="lab" data-id="${esc(s.id)}"><span class="badge b-${esc(s.badge)}">${esc(s.badge)}</span><span class="badge b-REAL" style="margin-left:6px">REAL GUIDE</span>
+     <div class="lt">${esc(s.title)}</div><div class="ld">${esc(s.desc)}</div></div>`).join('');
+  document.querySelectorAll('.lab').forEach(el=>el.onclick=()=>loadSample(el.dataset.id));
+});
+log('INFO','Ready. Select a lab, or drop any guide — same engine either way.');
+tellPhone('1 · Select a lab','Pick one of the real sample guides, or drag any lab guide in. Same deterministic engine that scanned the 8 production repos.');
+
+async function loadSample(id){
+  if(busy) return; // ignore double-clicks / second card while loading
+  busy=true;
+  log('ENGINE',`Loading sample lab <b>${esc(id)}</b> (staged copy of the real guide)…`);
+  const j=await fetch('/api/demo/samples?id='+encodeURIComponent(id)).then(r=>r.json()).catch(()=>null);
+  if(!j||j.error){ log('INFO','Could not load sample: '+esc((j&&j.error)||'server unreachable')); busy=false; return; }
+  LABEL=j.title; FILES=j.files;
+  diagnose();
+}
+
+// upload paths (same hardened logic as checkup)
+const SKIP=['.git','node_modules','.devcontainer','.vscode','.github','.storybook','dist','build','__pycache__','archived','archive'];
+const isSkip=(p)=>p.split('/').some(s=>SKIP.includes(s));
+const isMd=(p)=>/\.(md|markdown)$/i.test(p); const isMedia=(p)=>/\.(png|jpg|jpeg|gif|svg|webp)$/i.test(p);
+$('#pickFiles').onclick=()=>$('#inFiles').click();
+$('#pickDir').onclick=()=>$('#inDir').click();
+$('#inFiles').onchange=(e)=>fromEntries([...e.target.files].map(f=>({file:f,path:f.name})));
+$('#inDir').onchange=(e)=>fromEntries([...e.target.files].map(f=>({file:f,path:f.webkitRelativePath||f.name})));
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>e.preventDefault());
+const dz=$('#dropzone');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('hot');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('hot');}));
+dz.addEventListener('drop',async(e)=>{ fromEntries(await collectDropped(e.dataTransfer)); });
+async function collectDropped(dt){
+  const items=[...(dt.items||[])].map(it=>it.webkitGetAsEntry&&it.webkitGetAsEntry()).filter(Boolean);
+  if(!items.length) return [...dt.files].map(f=>({file:f,path:f.name}));
+  const out=[];
+  async function walk(entry,prefix){
+    if(out.length>4000) return;
+    if(entry.isFile){ const f=await new Promise(res=>entry.file(res,()=>res(null))); if(f) out.push({file:f,path:prefix+entry.name}); }
+    else if(entry.isDirectory){ const rd=entry.createReader();
+      while(true){ const batch=await new Promise(res=>rd.readEntries(res,()=>res([]))); if(!batch.length)break;
+        for(const en of batch) await walk(en,prefix+entry.name+'/'); } }
+  }
+  for(const en of items) await walk(en,'');
+  return out;
+}
+async function fromEntries(entries){
+  if(busy) return;
+  if(!entries||!entries.length) return;
+  const rel=entries.map(e=>({...e,path:e.path.replace(/\\/g,'/')})).filter(e=>!isSkip(e.path)&&(isMd(e.path)||isMedia(e.path)));
+  if(!rel.some(e=>isMd(e.path))){ log('INFO','No guide (.md) files in that drop — pick guide files or a lab folder.'); return; }
+  busy=true;
+  log('ENGINE',`Received <b>${rel.length}</b> file(s) from you — reading guides…`);
+  // Guides carry content (heavy) → capped at 500. Media entries are PATH-ONLY (bytes each) →
+  // send them ALL: a truncated image inventory would make the engine falsely call images broken.
+  const mds=rel.filter(e=>isMd(e.path));
+  const media=rel.filter(e=>!isMd(e.path)).slice(0,20000);
+  if(mds.length>500) log('INFO',`Large upload: reading the first 500 of ${mds.length} guides (image inventory kept complete).`);
+  const files=[];
+  for(const e of mds.slice(0,500)){
+    let c=null; try{c=await e.file.text();}catch(_){}
+    files.push(c===null?{path:e.path,unreadable:true}:{path:e.path,content:c});
+  }
+  for(const e of media) files.push({path:e.path});
+  const nMd=Math.min(mds.length,500);
+  LABEL='Your upload ('+nMd+' guide file'+(nMd===1?'':'s')+')';
+  FILES=files; diagnose();
+}
+
+// ---------- stage 2: diagnose ----------
+async function diagnose(){
+  const g=++gen; // supersede any in-flight scan from a previous lab
+  setStep(2); show('s2');
+  $('#diagTitle').textContent='Diagnosing: '+LABEL;
+  $('#diagSub').textContent='Running the same deterministic checks that found 133 issues in production — no AI in the decision loop.';
+  $('#findings').innerHTML=''; $('#diagSum').innerHTML=''; $('#fixbar').classList.add('hidden'); $('#cleanMsg').classList.add('hidden');
+  tellPhone('2 · Diagnose',"Rocky is scanning the guide with the exact same checks used on the 8 production repos. Say: 'no AI decides here — every finding is an exact match at a known file and line.'");
+  const mdCount=FILES.filter(f=>isMd(f.path)&&typeof f.content==='string').length;
+  log('ENGINE',`Scanning <b>${mdCount}</b> guide file(s): retired models · renamed products · EOL runtimes · asset links · translation tokens…`);
+  await wait(600); // let the audience see the activity line before results land
+  const rep=await fetch('/api/checkup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:FILES})}).then(r=>r.json()).catch(()=>null);
+  busy=false;
+  if(g!==gen) return; // a newer lab/reset superseded this scan — drop it silently
+  if(!rep||rep.error){ // recoverable on stage: back to Select with one click already done
+    log('INFO','Scan failed: '+esc((rep&&rep.error)||'server unreachable')+' — returning to Select; click the lab again to retry.');
+    setStep(1); show('s1'); return; }
+  if(!rep.mdFiles){ // e.g. every file was locked/cloud-only — never show "clean" for an unread lab
+    log('INFO','No guide could actually be read (locked or still syncing) — nothing was scanned. Back to Select.');
+    setStep(1); show('s1'); return; }
+  REPORT=rep;
+  log('ENGINE',`Scan complete in <b>${rep.ms}ms</b> — <b>${rep.findingCount}</b> issue(s) in ${rep.mdFiles} guide(s).`);
+  (rep.skipped||[]).forEach(s=>log('INFO','Skipped (not guessed): '+esc(s)));
+  $('#diagSum').innerHTML=
+    `<div><b>${rep.mdFiles}</b> guides scanned</div>`+
+    `<div class="${rep.findingCount?'bad':''}"><b>${rep.findingCount}</b> issues found</div>`+
+    `<div><b>${rep.ms}ms</b> scan time</div>`+
+    `<div style="margin-left:auto"><span class="badge b-REAL">REAL — SAME CHECKS AS THE PRODUCTION SCAN</span></div>`;
+  if(!rep.findingCount){ $('#cleanMsg').classList.remove('hidden');
+    log('VERIFY','Verdict: CLEAN — Rocky reports nothing when nothing is wrong.');
+    tellPhone('2 · Clean','This guide is clean — say: a tool that flags everything is useless; the clean verdict is why you can trust the findings.');
+    return; }
+  // findings cards
+  for(const [idx,f] of rep.findings.entries()){
+    const meta=TYPE_META[f.type]||{name:f.type,cls:'c-blue',fixable:false};
+    const el=document.createElement('div'); el.className='fcard'; el.id='f'+idx;
+    el.innerHTML=`<div class="fhead"><span class="chip ${meta.cls}">${esc(meta.name)}</span>
+      <span class="floc">${esc(f.file)} · line ${f.line}</span>
+      ${meta.fixable
+        ? `<button class="fixbtn" data-i="${idx}">🛠 Fix</button>`
+        : `<button class="sugbtn" data-i="${idx}">💡 Suggest</button>`}</div>
+      <div class="fnote">${esc(f.note||'')}</div>
+      ${f.excerpt?`<div class="fex">${esc(f.excerpt)}</div>`:''}
+      <div class="slot"></div>`;
+    $('#findings').appendChild(el);
+  }
+  document.querySelectorAll('.fixbtn').forEach(b=>b.onclick=()=>fixOne(+b.dataset.i,b));
+  document.querySelectorAll('.sugbtn').forEach(b=>b.onclick=()=>suggestOne(+b.dataset.i,b));
+  $('#fixbar').classList.remove('hidden');
+  setStep(3);
+  tellPhone('3 · Fix',"Click Fix on the retired-model issue. Say: 'Rocky drafts the exact change — old line red, new line green. Nothing touches the original file; in production this becomes a pull request a human approves.'");
+}
+
+// ---------- stage 3: fix ----------
+// Replacement is stricter than detection ON PURPOSE: the scanner flags longer variants of a
+// token as the same deprecated family (gpt-35-turbo-16k), but a DRAFT must never rewrite an
+// identifier it doesn't fully match — so we require the token to stand alone (no [\w-] on
+// either side). Anything left unfixed stays flagged on the verify re-scan — honest, not mangled.
+function applyTokenFix(content,token,replacement){
+  const re=new RegExp('(?<![\\w-])'+token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\w-])','gi');
+  return content.replace(re,replacement);
+}
+// Does this token appear inside an image reference? Renaming a path implies renaming the file —
+// that's a reviewer action, so the draft discloses it instead of hiding it.
+function touchesImageRef(content,token){
+  const t=token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return new RegExp('!\\[[^\\]]*\\]\\([^)]*'+t+'[^)]*\\)','i').test(content);
+}
+function ensureFixed(){ if(!FIXED.length) FIXED=FILES.map(f=>({...f})); }
+function fixOne(i,btn){
+  const f=REPORT.findings[i]; const meta=TYPE_META[f.type]||{};
+  if(!f.replacement){ suggestOne(i,btn); return; }
+  ensureFixed();
+  const tf=FIXED.find(x=>x.path===f.file);
+  if(!tf||typeof tf.content!=='string'){ log('INFO','Cannot fix: file content unavailable.'); return; }
+  // Some engine notes offer alternatives ("text-embedding-3-large / text-embedding-3-small") —
+  // a DRAFT must pick ONE concrete successor (we pick the same one the real merged PR used),
+  // otherwise the fixed guide would carry a slash-pair into paths and config values.
+  const applied=String(f.replacement).includes('/')
+    ? String(f.replacement).split('/').map(s=>s.trim()).filter(Boolean).pop()
+    : f.replacement;
+  // BEFORE must come from the ORIGINAL upload, not the working copy — an earlier fix of the
+  // same token would otherwise make the red and green lines identical (looks like a bug).
+  const of=FILES.find(x=>x.path===f.file);
+  const beforeLine=(((of&&of.content)||'').split(/\r?\n/)[f.line-1]||f.excerpt||'').trim();
+  const imgRef=touchesImageRef(tf.content,f.token);
+  log('FIX',`Drafting fix for <b>${esc(f.token)}</b> → <b>${esc(applied)}</b> in ${esc(f.file)}…`);
+  tf.content=applyTokenFix(tf.content,f.token,applied);
+  const afterLine=(tf.content.split(/\r?\n/)[f.line-1]||'').trim();
+  const card=$('#f'+i);
+  card.querySelector('.slot').innerHTML=
+    `<div class="diff"><div class="dl minus">${esc(beforeLine||f.token)}</div><div class="dl plus">${esc(afterLine||applied)}</div></div>
+     <div style="margin-top:8px" class="fixed-tag">✔ FIX DRAFTED — every occurrence in this guide · original untouched · a human approves before it ships</div>`+
+    (imgRef?`<div class="sugg" style="margin-top:8px"><b>Reviewer note (disclosed, not hidden):</b> this rename also touches an image reference — the screenshot file itself must be renamed to match. That's exactly what the human review of this draft is for.</div>`:'');
+  if(imgRef) log('FIX','Note: the rename touches an image reference — the screenshot file needs the same rename; flagged for the reviewer.');
+  btn.disabled=true; btn.textContent='✔ Drafted'; btn.style.background='var(--teal-dk)'; btn.style.color='#eafff9';
+  fixedCount++;
+  log('FIX',`Fix drafted (all occurrences of <b>${esc(f.token)}</b> in the copy). Original file untouched.`);
+}
+function suggestOne(i,btn){
+  const f=REPORT.findings[i]; const meta=TYPE_META[f.type]||{};
+  const card=$('#f'+i);
+  card.querySelector('.slot').innerHTML=`<div class="sugg"><b>Suggestion (needs a human):</b> ${esc(meta.sugg||('Review '+f.file+' line '+f.line+' — this class of issue needs human judgment.'))}</div>`;
+  btn.disabled=true; btn.textContent='💡 Suggested';
+  suggCount++;
+  log('FIX',`Suggestion issued for <b>${esc(TYPE_META[f.type]?TYPE_META[f.type].name:f.type)}</b> — this one needs human judgment; Rocky won't guess.`);
+}
+$('#fixAll').onclick=()=>{ document.querySelectorAll('.fixbtn:not(:disabled)').forEach(b=>b.click()); document.querySelectorAll('.sugbtn:not(:disabled)').forEach(b=>b.click()); };
+$('#goVerify').onclick=()=>verify();
+$('#startOver').onclick=()=>reset();
+$('#backFromClean').onclick=()=>{ reset(); };
+
+// ---------- stage 4: verify ----------
+async function verify(){
+  const g=++gen; // supersede: a reset/new lab during the re-scan drops this result
+  const before=REPORT?REPORT.findingCount:0; // snapshot — REPORT may be reset mid-flight
+  setStep(4); show('s4');
+  ensureFixed();
+  log('VERIFY','Re-running the SAME scan on the fixed copy — Rocky proves, it doesn\'t promise…');
+  tellPhone('4 · Verify',"Say: 'Rocky doesn't claim the fix worked — it re-runs the same scan on the fixed copy. Before: "+before+" issues. Watch the after.'");
+  $('#beforeN').textContent=before;
+  $('#beforeS').textContent='issues on first scan';
+  $('#afterN').textContent='…'; $('#afterS').textContent='re-scanning live';
+  const snapshot=FIXED.map(f=>({...f}));
+  await wait(700);
+  const rep2=await fetch('/api/checkup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:snapshot})}).then(r=>r.json()).catch(()=>null);
+  if(g!==gen) return; // superseded — don't paint stale results
+  if(!rep2||rep2.error){ log('INFO','Verify scan failed: '+esc((rep2&&rep2.error)||'server unreachable')+' — click Verify again.'); return; }
+  $('#afterN').textContent=rep2.findingCount;
+  // Split what remains truthfully: fixable-but-not-drafted vs genuinely-needs-a-human.
+  const remFixable=(rep2.findings||[]).filter(f=>(TYPE_META[f.type]||{}).fixable).length;
+  const remHuman=rep2.findingCount-remFixable;
+  $('#afterS').textContent=rep2.findingCount===0?'issues remain — clean':(remFixable?remFixable+' not yet drafted'+(remHuman?' · '+remHuman+' need a human':''):'remaining (need human judgment)');
+  log('VERIFY',`Re-scan complete in <b>${rep2.ms}ms</b>: <b>${before} → ${rep2.findingCount}</b>.`);
+  const v=$('#verdict');
+  if(rep2.findingCount===0){
+    v.className='good';
+    v.textContent=(rep2.skipped&&rep2.skipped.length)
+      ? '✔ Verified clean on every check that ran — anything skipped is listed in the activity panel, never guessed.'
+      : '✔ Verified clean — every drafted fix confirmed by re-scan. This is the same guide, healthy.';
+    log('VERIFY','Verdict: CLEAN on every check that ran. The difference is proven, not promised.');
+  } else {
+    v.className='warn';
+    const parts=[`${fixedCount} fix(es) verified`];
+    if(remFixable) parts.push(`${remFixable} fixable issue(s) not yet drafted — go back and click Fix`);
+    if(remHuman) parts.push(`${remHuman} issue(s) need a human (Rocky refuses to guess translations or missing images)`);
+    v.textContent=parts.join(' · ');
+    log('VERIFY',remHuman?'Remaining human-judgment issues are deliberate — honesty over automation.':'Fixable issues remain undrafted — the presenter can go back and fix them.');
+  }
+  tellPhone('4 · Before/After',`Before ${before} → After ${rep2.findingCount}. Say: 'that's the closed loop — find, fix as a draft, human approves, verify by re-scanning. We never fake green.'`);
+}
+$('#download').onclick=()=>{
+  ensureFixed();
+  const md=FIXED.filter(f=>isMd(f.path)&&typeof f.content==='string');
+  const one=md.length===1?md[0]:null;
+  const blob=new Blob([one?one.content:md.map(f=>'\n\n<!-- ===== '+f.path+' ===== -->\n\n'+f.content).join('')],{type:'text/markdown'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=one?('FIXED-'+one.path.split('/').pop()):'FIXED-guides.md'; a.click();
+  log('INFO','Fixed copy downloaded — ready to open as a pull request.');
+};
+$('#restart').onclick=()=>reset();
+function reset(){
+  gen++; busy=false; // invalidate any in-flight scan/verify so nothing stale repaints
+  FILES=[];FIXED=[];REPORT=null;LABEL='';fixedCount=0;suggCount=0;
+  setStep(1); show('s1');
+  log('INFO','Reset. Select the next lab.');
+  tellPhone('1 · Select a lab','Back to the start — pick the next lab or invite the audience to hand you one.');
+}
+</script>
+</body>
+</html>

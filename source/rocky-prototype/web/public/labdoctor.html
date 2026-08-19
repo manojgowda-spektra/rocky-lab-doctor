@@ -311,6 +311,7 @@ async function selectLab(id, autoHeal, autoProbe){
     rep._approved={}; CACHE[id]=rep;
   }
   renderDetail(CACHE[id]);
+  d.scrollIntoView({behavior:'smooth', block:'start'}); // detail lives below the fold — bring it on screen (essential when the demo director drives this page)
   if(autoHeal) previewImpact(CACHE[id]);
   if(autoProbe) runLint(CACHE[id]);
 }

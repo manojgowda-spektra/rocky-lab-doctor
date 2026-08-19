@@ -506,7 +506,7 @@ function placePanel(){if(!W)return;let left,top;
   left=Math.max(10,Math.min(left,W-290));top=Math.max(10,Math.min(top,H-330));
   panel.style.left=left+'px';panel.style.top=top+'px';}
 function openPanel(){panelOpen=true;placePanel();panel.classList.add('open');if(tgtName==='neutral'||tgtName==='curious')setEmotion('happy');
-  setTimeout(()=>$('#pinput').focus(),120);
+  if(window.self===window.top) setTimeout(()=>$('#pinput').focus(),120); // don't steal focus when driven inside the demo iframe (keeps the presenter's pause/jump keys alive)
   const log=$('#plog');if(!log.dataset.greeted){log.dataset.greeted=1;addMsg('rk',"Hey! I'm Rocky — I can see this lab's checks and logs. What do you need? 🙂");}}
 function closePanel(){panelOpen=false;dragging=false;panel.classList.remove('open');}
 let dragging=false,dragOff={x:0,y:0};

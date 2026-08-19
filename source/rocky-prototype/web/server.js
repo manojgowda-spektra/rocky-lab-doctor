@@ -17,7 +17,8 @@ const { createCaseLedger } = require('../ledger/ledger');
 const { buildCampaignPlan } = require('../labdoctor/campaigns');
 const { buildAmnestyPacket, executeAmnesty, reconcileAmnesty } = require('../action/amnesty');
 const { redact } = require('../src/redact');
-const { isConfigured, provider, chat } = require('../src/llm');
+const { isConfigured, provider, chat, askLLM } = require('../src/llm');
+const { checkupScan } = require('../labdoctor/checkup');
 
 const PORT = Number(process.env.PORT || process.env.ROCKY_PORT || 5173); // App Service injects PORT
 const LIVE_DATA = process.env.ROCKY_LIVE === '1'; // false on the fixture demo — gates Rocky from asserting mock data as the user's real, verified state
@@ -131,6 +132,75 @@ function bs(kind, title, detail, prov, ms) {
   if (backstage.length > 300) backstage.splice(0, backstage.length - 300);
 }
 
+// ---- WINGMAN — the presenter's silent Q&A copilot -------------------------------------------
+// wingman.html (on the presenter's PC) transcribes the room's questions via the browser's speech
+// recognition and POSTs them here; a DETERMINISTIC keyword matcher over copilot-kb.json returns
+// suggested answers instantly (no AI key needed — on-message: the engine asserts). The phone view
+// (wingman-view.html) polls /feed so the answers live on a screen the share can never show.
+// If an LLM key is configured later, /heard ALSO drafts a free-form answer, clearly tagged 'ai'.
+// One normalization pipeline for BOTH transcripts and KB phrases: lowercase, expand contractions
+// (with or without the apostrophe — speech transcripts drop it), strip punctuation, and apply a
+// minimal plural stem so "hallucinates"/"invents" match "hallucinate"/"invent a problem".
+const wingStem = (w) => (w.length >= 4 ? (w.endsWith('ies') ? w.slice(0, -3) + 'y' : (!w.endsWith('ss') && w.endsWith('s') ? w.slice(0, -1) : w)) : w);
+const wingNorm = (s) => {
+  let t = String(s || '').toLowerCase()
+    .replace(/\b(does|do|is|are|was|were|did|has|have|had|would|should|could|wo|ca)n'?t\b/g, '$1 not')
+    .replace(/\bwon'?t\b/g, 'will not').replace(/\bcan'?t\b/g, 'can not')
+    .replace(/\b(what|it|that|there)'?s\b/g, '$1 is')
+    .replace(/[^a-z0-9\s-]/g, ' ');
+  return ' ' + t.split(/\s+/).filter(Boolean).map(wingStem).join(' ') + ' ';
+};
+const KB = (() => {
+  try {
+    const entries = JSON.parse(fs.readFileSync(path.join(__dirname, 'copilot-kb.json'), 'utf8')).entries || [];
+    // Normalize phrases/keywords through the SAME pipeline as transcripts, so apostrophes etc.
+    // can't silently kill a phrase ("chat doesn't work" must match "chat doesn t work").
+    for (const e of entries) {
+      e._ph = (e.ph || []).map((p) => wingNorm(p));
+      e._kw = (e.kw || []).map((k) => wingNorm(k).trim());
+    }
+    return entries;
+  } catch { return []; }
+})();
+const wing = { feed: [], id: 0, scene: null };
+function wingPush(ev) {
+  // NOTE: wing.id is NEVER reset (clear only empties the feed) — ids stay monotonic so the
+  // phone view's since-cursor and late AI drafts can't collide across a mid-session clear.
+  wing.feed.push({ id: ++wing.id, ts: new Date().toISOString(), ...ev });
+  if (wing.feed.length > 120) wing.feed.splice(0, wing.feed.length - 120);
+  return wing.feed[wing.feed.length - 1];
+}
+function wingMatch(text) {
+  const norm = wingNorm(text); // space-padded → phrase hits are word-bounded ('aws' ≠ 'flaws')
+  const tokens = new Set(norm.split(/\s+/).filter(Boolean));
+  const scored = [];
+  for (const e of KB) {
+    let score = 0;
+    for (const ph of e._ph || []) if (norm.includes(ph)) score += 3;
+    for (const kw of e._kw || []) if (tokens.has(kw)) score += 1;
+    if (score >= 2) scored.push({ score, id: e.id, a: e.a, n: e.n || '', src: e.src || '' });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 3);
+}
+// Crude but effective question detector: keeps the presenter's own narration from flooding the
+// phone's Q&A panel. Interrogative word early on, "question" anywhere, or an inverted opener.
+function wingIsQuestion(text) {
+  const t = wingNorm(text).trim().split(/\s+/);
+  if (t.slice(0, 8).some((w) => ['what', 'why', 'how', 'when', 'where', 'who', 'which', 'question'].includes(w))) return true;
+  return ['can', 'could', 'would', 'should', 'does', 'do', 'did', 'is', 'are', 'will', 'was', 'were'].includes(t[0]);
+}
+function lanUrls() {
+  const os = require('os');
+  const out = [];
+  for (const [name, addrs] of Object.entries(os.networkInterfaces() || {})) {
+    for (const a of addrs || []) {
+      if (a.family === 'IPv4' && !a.internal) out.push(`http://${a.address}:${PORT}/wingman-view.html`);
+    }
+  }
+  return out;
+}
+
 let ctx, convo, catalog;
 async function init() {
   ctx = await new FixtureContextProvider(path.join(__dirname, '..', 'fixtures', 'lab-context.json')).getContext();
@@ -138,8 +208,10 @@ async function init() {
   catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'lab-catalog.json'), 'utf8'));
 }
 
-const readBody = (req) => new Promise((resolve) => {
-  let b = ''; req.on('data', (c) => (b += c)); req.on('end', () => { try { resolve(JSON.parse(b || '{}')); } catch { resolve({}); } });
+const readBody = (req, cap = 16384) => new Promise((resolve) => {
+  let b = '';
+  req.on('data', (c) => { b += c; if (b.length > cap) { try { req.destroy(); } catch {} resolve({}); } }); // default 16 KB — chat-sized payloads; /api/checkup passes a larger cap for uploaded guides
+  req.on('end', () => { try { resolve(JSON.parse(b || '{}')); } catch { resolve({}); } });
 });
 
 function findingsSummary() {
@@ -206,6 +278,83 @@ const server = http.createServer(async (req, res) => {
     return json(res, { ok: true });
   }
   if (p === '/api/backstage/clear' && req.method === 'POST') { backstage.length = 0; return json(res, { ok: true }); }
+
+  // ---- WINGMAN routes (presenter Q&A copilot; see block above) ----
+  if (p === '/api/wingman/info') {
+    return json(res, { kbEntries: KB.length, phoneUrls: lanUrls(), llmConfigured: isConfigured() });
+  }
+  if (p === '/api/wingman/scene' && req.method === 'POST') {
+    const b = await readBody(req);
+    wing.scene = { i: Number(b.i) || 0, n: Number(b.n) || 16, t: String(b.t || '').slice(0, 120), say: String(b.say || '').slice(0, 900), tag: String(b.tag || '').slice(0, 12), ts: new Date().toISOString() };
+    return json(res, { ok: true });
+  }
+  if (p === '/api/wingman/heard' && req.method === 'POST') {
+    const b = await readBody(req);
+    const text = String(b.text || '').slice(0, 600);
+    const source = b.source === 'typed' ? 'typed' : 'voice'; // allowlist — this field is rendered on the phone
+    if (!text.trim()) return json(res, { ok: false });
+    const suggestions = wingMatch(text);
+    const isQuestion = source === 'typed' || wingIsQuestion(text);
+    // Presenter narration guard: voice snippets that are neither question-shaped nor matched
+    // are dropped (pure noise); question-shaped no-matches still surface (→ "use the armor").
+    if (source === 'voice' && !isQuestion && !suggestions.length) return json(res, { ok: true, skipped: true, suggestions: [] });
+    const ev = wingPush({ kind: 'q', text, source, isQuestion, suggestions });
+    // Optional AI draft — strictly additive, clearly tagged, never blocks the deterministic answer.
+    if (isConfigured() && b.wantAi !== false && isQuestion) {
+      askLLM(
+        'You are Rocky\'s presenter assistant during a live demo. Answer the audience question in 2-3 short spoken sentences the presenter can read aloud. Be honest: real numbers are 133 defects/8 repos/268 files, 5 PRs (2 merged), 0/42 false alarms, 4s CI block; fleet dashboards and learner stories are a labeled digital twin. Never invent numbers. If unsure say what is verified and what is not.',
+        text
+      ).then((ans) => { if (ans) wingPush({ kind: 'ai', qId: ev.id, text: String(ans).slice(0, 700) }); }).catch(() => {});
+    }
+    return json(res, { ok: true, id: ev.id, suggestions, isQuestion });
+  }
+  if (p === '/api/wingman/feed') {
+    const since = Number(url.searchParams.get('since') || 0);
+    return json(res, { scene: wing.scene, events: wing.feed.filter((e) => e.id > since), last: wing.id });
+  }
+  // clear empties the feed but PRESERVES the id counter (see wingPush) — resetting it would
+  // strand any phone view whose since-cursor is ahead of the new ids (silent Q&A death).
+  if (p === '/api/wingman/clear' && req.method === 'POST') { wing.feed.length = 0; wing.scene = null; return json(res, { ok: true }); }
+
+  // ---- DEMO SAMPLE LABS — one-click "select a lab" for the guided demo (demo.html).
+  // Serves staged copies of REAL guides from Demo-Uploads/ so the presenter never needs a
+  // file dialog. Same content, same pipeline (/api/checkup) as an upload.
+  if (p === '/api/demo/samples') {
+    const base = path.join(__dirname, '..', '..', '..', 'Demo-Uploads');
+    const SAMPLES = [
+      { id: 'challenge05', title: 'AI-Developer · Challenge 05', desc: 'A real production guide — tells learners to deploy a retired AI model', badge: 'BROKEN', files: ['Challenge-05.md'] },
+      { id: 'rtiad', title: 'RTIAD Workshop · Lab 1 (EN + JA)', desc: 'A real guide pair — the Japanese translation lost its credential tokens', badge: 'BROKEN', files: ['RTIAD-mini/English/Labguide/Lab-1---April-2026.md', 'RTIAD-mini/Japanese/Labguide/Lab-1---April-2026.md'] },
+      { id: 'clean', title: 'CAF Infra Security · Intro', desc: 'A real guide with nothing wrong — Rocky should say so', badge: 'CLEAN', files: ['clean-lab-guide.md'] },
+    ];
+    const id = url.searchParams.get('id');
+    if (!id) return json(res, { samples: SAMPLES.map(({ id, title, desc, badge }) => ({ id, title, desc, badge })) });
+    const s = SAMPLES.find((x) => x.id === id);
+    if (!s) return json(res, { error: 'unknown sample' }, 404);
+    try {
+      const files = s.files.map((f) => ({ path: f, content: fs.readFileSync(path.join(base, f), 'utf8') }));
+      return json(res, { id: s.id, title: s.title, files });
+    } catch (e) { return json(res, { error: 'sample files missing — re-run START_DEMO staging' }, 500); }
+  }
+
+  // ---- GUIDE CHECKUP — upload any lab guide (or folder), same engine scans it live ----
+  if (p === '/api/checkup' && req.method === 'POST') {
+    const b = await readBody(req, 8 * 1024 * 1024);
+    // 25k entries: media entries are path-only (~40 bytes) so a complete image inventory is cheap;
+    // guide CONTENT volume is already bounded by the 8MB body cap and the client's 500-guide cap.
+    const raw = Array.isArray(b.files) ? b.files.slice(0, 25000) : [];
+    const files = raw.map((f) => ({
+      path: String(f.path || '').slice(0, 400),
+      content: typeof f.content === 'string' ? f.content.slice(0, 2 * 1024 * 1024) : undefined,
+    })).filter((f) => f.path);
+    if (!files.length) return json(res, { error: 'no files received (or the upload exceeded the 8 MB limit — try just the Labguide subfolder)' }, 400);
+    const t0 = Date.now();
+    let rep;
+    try { rep = checkupScan(files); }
+    catch (e) { return json(res, { error: 'scan failed: ' + (e && e.message || 'unknown') }, 500); }
+    bs('engine', `Guide checkup: scanned ${rep.mdFiles} uploaded guide file${rep.mdFiles === 1 ? '' : 's'}`,
+      `${rep.findingCount} finding${rep.findingCount === 1 ? '' : 's'} — same deterministic checks as the repo scan, zero AI calls`, 'REAL', Date.now() - t0);
+    return json(res, rep);
+  }
 
   // ---- LAB DOCTOR — autonomous lab QA over the catalog ----
   if (p === '/api/labhealth/catalog') {
@@ -525,7 +674,7 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-function json(res, obj) { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); }
+function json(res, obj, code = 200) { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); }
 
 // A throw anywhere in the async request handler must never kill the demo server.
 process.on('unhandledRejection', (e) => console.error('[rocky] unhandled rejection:', e && e.message ? e.message : e));
