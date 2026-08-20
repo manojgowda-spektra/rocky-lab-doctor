@@ -40,7 +40,9 @@ const FACTS = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirna
 // Build stamp — lets check-ready.js prove the server on :5173 is THIS checkout, not a stale one.
 const BUILD = (() => {
   let commit = null;
-  try { commit = require('child_process').execSync('git rev-parse --short HEAD', { cwd: __dirname, timeout: 3000 }).toString().trim(); } catch {}
+  // stdio 'pipe' on stderr: outside a git checkout (e.g. a copy running on a lab VM) git prints
+  // "fatal: not a git repository" — harmless, but it must not be the first thing on screen.
+  try { commit = require('child_process').execSync('git rev-parse --short HEAD', { cwd: __dirname, timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch {}
   return { version: require('../package.json').version, commit, startedAt: new Date().toISOString() };
 })();
 
