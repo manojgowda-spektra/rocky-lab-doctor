@@ -4,6 +4,41 @@ All notable changes to the Rocky project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-19 — 🧭 The presentation rework: one flow, six acts
+The prototype worked but couldn't be presented: 18 pages, 5 overlapping scripts, 4 entry points.
+Rebuilt the demo surface around ONE start-to-end flow (full audit: 11-agent parallel review of
+every page/doc/module + CloudLabs docs research).
+- **The Six-Act flow** — home (act map) → ① stuck learner (cloudlabs-sim, SIM) → ② engine live
+  (demo, REAL) → ③ fleet (labdoctor, REAL) → ④ campaigns (REAL) → ⑤ watcher (monitor, SIM,
+  skippable) → ⑥ receipts + the ask (REAL). `web/public/nav.js` renders a shared act strip on
+  every flow page (current act, provenance badge, one Next button) so the flow cannot drift per page.
+- **home.html rebuilt** as the presenter's map: one CTA, the act list, live REAL numbers, legend,
+  optional extras. The old marketing spine/hats/views (21 links, demo.html unreachable) is gone.
+- **Retired from the demo surface** (moved to `web/attic/`, fully preserved): rocky.html (companion
+  lives in cloudlabs-sim; its apply-fix/escalate absorbed there), checkup.html (subset of demo.html),
+  showreel.html, wingman.html + wingman-view.html (fragile voice copilot → replaced by printable
+  /qa.html from the same KB), support.html (simulated numbers; punchline moved into Act 4).
+  Legacy launchers (start-*.bat/ps1) → `source/rocky-prototype/attic/`.
+- **Anti-contradiction number system** — `web/facts.json` (+ `/api/facts`) is the single source for
+  static claims (5 PRs/2 merged, 112 tests, 0/42 audit, 4s CI); every scan-derived number is read
+  live from the scan APIs on every page (home, demo, receipts, wingman prompt). check-ready.js now
+  asserts internal consistency (totals = Σ repos; clean-repo count matches facts) instead of pinning 133.
+- **Stale-server detection** — `/api/version` build stamp (git commit) verified by check-ready.js.
+- **Act 1 honesty hardening** — cloudlabs-sim terminal + evidence card now derive from the fixture
+  via /api/labstate (deploymentLog exposed) instead of hardcoded text; CloudLabs-accurate tab names
+  (Lab Guide / Environment Details, per help.cloudlabs.ai); escalate shows the redacted packet next
+  to the raw-secret terminal line; presenter reset in Help tab.
+- **labdoctor reordered REAL-first** — production scan is the hero; the fixture fleet is fenced
+  below a labelled FIXTURE fold. monitor's reliability ledger folded behind a toggle.
+- **checkup.js finally has tests** — 8 new cases covering the three demo arcs (broken/needs-human/
+  clean), wrapper stripping, asset honesty, de-dup, unreadable files, plus the staged samples
+  end-to-end. Suite: 112/112.
+- **Docs consolidated** — docs/DEMO_MASTER_SCRIPT.md rewritten as the ONLY script (six acts, ops,
+  rescue, numbers policy); README quickstart fixed (START_DEMO.cmd, not the retired .bat); four
+  older scripts archived with dated names + reasons; preflight.js LLM check is warn-not-fail;
+  REAL_LABS_DIR env-overridable everywhere; presenter/rail/speaking-script stale refs fixed.
+- Readiness: check-ready.js — 36/36 green.
+
 ### 2026-07-03 — 🎬 Demo-day readiness
 - **`preflight.js`** — one-command readiness check: 22 checks across every demo-critical endpoint
   (server/model up, catalog, fleet pattern, risk flag, false-PASS finding, preview-impact 36→100,

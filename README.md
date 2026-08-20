@@ -1,18 +1,21 @@
 # Rocky + Lab Doctor — README
 
-> **Last Updated:** 2026-07-03
+> **Last Updated:** 2026-08-19
 > **Project Status:** ACTIVE — working prototype, demo-ready
-> **Current Phase:** Hackathon demo → substrate (telemetry contract + real-data ingestion)
+> **Current Phase:** Presentation-ready showcase → substrate (telemetry contract + real-data ingestion)
 > **Version:** 0.1.0
 
 ---
 
 ## 🎬 DEMO QUICKSTART (fastest path)
 
-1. Double-click **`source/rocky-prototype/start-demo.bat`** — it starts the server, runs a 22-check
-   preflight (warming the LLM cache), and opens both demo tabs.
-2. Follow **`docs/demo_runbook.md`** — the only current runbook (the archived one is stale).
-3. Keep the server window open for the whole demo — the warm cache lives in that process.
+1. Double-click **`START_DEMO.cmd`** (repo root) — starts the server, runs the readiness check
+   (must say **ALL CHECKS GREEN**), and opens the act map (`http://localhost:5173/`).
+2. Follow **`docs/DEMO_MASTER_SCRIPT.md`** — the ONLY demo script. Six acts, one direction;
+   every page carries the act strip so you can't get lost.
+3. Optional: print **`/qa.html`** (the Q&A sheet) and keep it next to the keyboard.
+4. The AI model is off until a key is placed in `source/rocky-prototype/.env.local` —
+   every surface degrades honestly without it (deterministic evidence instead of narration).
 
 ---
 

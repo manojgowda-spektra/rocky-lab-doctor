@@ -1,6 +1,6 @@
 # Rocky — Live Demo Speaking Script (~10 minutes)
 
-**How this works:** open `http://localhost:5173/demo.html` on the projector and press Start —
+**How this works:** open `http://localhost:5173/rail.html` on the projector and press Start —
 the product drives itself. Open `http://localhost:5173/presenter.html` on your own screen: it shows
 these exact lines, the segment number, and a countdown, synced live. The **segment badge top-right
 of the demo screen matches the numbers below**, so you can never get lost.
@@ -260,7 +260,7 @@ ticket export — that's the ask.
 2. Double-click **`START_DEMO.cmd`** (project root) — starts the server, runs preflight, opens both windows.
 3. Preflight: expect **53/57 green** — exactly 4 fail, all AI-chat checks (`model=off`), known and
    fine. The demo doesn't use the chat. *(Anything else red = stop and investigate.)*
-4. Drag **demo.html** window to the projector, press **F11**. Keep **presenter.html** on your laptop.
+4. Drag **rail.html** window to the projector, press **F11**. Keep **presenter.html** on your laptop.
    The presenter console is also your reliable remote — its buttons work even if the projector
    window loses keyboard focus.
 5. Do one silent full run (~10 min) to warm caches. Spot-check: segment 7 shows "Rescanned in …ms",

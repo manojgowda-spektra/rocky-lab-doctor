@@ -1,381 +1,870 @@
 {
-  "_comment": "Wingman knowledge base. Deterministic Q&A for the live demo — every number traces to FACTS.md / PROJECT_REPORT.md. 'ph' = phrases (substring match, weight 3). 'kw' = single keywords (token match, weight 1). 'a' = the spoken answer Manoj reads out. 'n' = key numbers line. 'src' = where it's verifiable.",
-  "entries": [
-    {
-      "id": "what-is-rocky",
-      "ph": ["what is rocky", "what does rocky do", "what is this project", "explain the project", "one line", "elevator pitch", "what did you build"],
-      "kw": ["overview", "summary", "about"],
-      "a": "Rocky is the reliability layer for our hands-on labs. One system, three jobs: it FINDS what's broken by reading guides and watching results, it FIXES it as a draft that a human approves on GitHub, and it HELPS the learner in the moment with evidence, never guesses.",
-      "n": "133 real defects found · 8 repos · 5 PRs (2 merged)",
-      "src": "Report §1, §3"
-    },
-    {
-      "id": "how-labs-rot",
-      "ph": ["how can labs rot", "labs are tested", "already test", "how do they break", "why do labs break", "nobody changed", "photo and the movie", "labs go stale"],
-      "kw": ["rot", "stale", "drift", "break"],
-      "a": "Testing a lab before publishing is a photo — it proves it worked that day. But labs live for months and the cloud moves underneath them: vendors rename products, retire models, change defaults. Nobody edits the lab and it still breaks. Rocky is the movie — it watches continuously.",
-      "n": "Example: Azure AD → Microsoft Entra ID rename; ada-002 model retirement",
-      "src": "Report §2"
-    },
-    {
-      "id": "lying-check",
-      "ph": ["lying check", "false pass", "check says green", "passing but broken", "100 percent completion", "validation lies", "how do you catch"],
-      "kw": ["contradiction", "checkmark", "lie"],
-      "a": "Worse than a failing lab is a check that says PASS while the learner's environment is broken. Rocky holds the check's claim next to independent evidence of what actually happened, and flags the contradiction. In our twin scenario, a security lab showed 100% completion while 23 of 24 learners had left storage publicly exposed.",
-      "n": "23/24 false-passes on the twin · check F-V2 · publicAccess:true where false expected",
-      "src": "Report §2, §8 (SIMULATED scenario, real logic)"
-    },
-    {
-      "id": "scan-numbers",
-      "ph": ["how many problems", "how many findings", "what did it find", "scan results", "how many defects", "hundred thirty"],
-      "kw": ["133", "findings", "defects", "268"],
-      "a": "Rocky scanned 8 real production lab repositories — 268 guide files — and found 133 real defects, re-confirmed by a live rescan. Just as important: 3 of the 8 repos came back completely clean. It says 'nothing wrong here' when nothing is wrong.",
-      "n": "133 defects · 268 files · 8 repos · 3 clean",
-      "src": "Report §5 — verifiable on disk"
-    },
-    {
-      "id": "finding-types",
-      "ph": ["types of problems", "kinds of defects", "breakdown", "what categories", "what kind of issues"],
-      "kw": ["categories", "types", "breakdown"],
-      "a": "The 133 break down into: 71 broken screenshot references, 16 missing credential tokens in translated guides, 16 deprecated dependencies like retired AI models, 12 asset-path case mismatches that 404 on the web, 12 renamed products, 5 end-of-life runtimes, and 1 locale release drift.",
-      "n": "71+16+16+12+12+5+1 = 133",
-      "src": "Report §5 table"
-    },
-    {
-      "id": "japanese-inject",
-      "ph": ["japanese", "rti username", "credential token", "inject token", "lost in translation", "translated guide", "placeholder"],
-      "kw": ["translation", "locale", "login"],
-      "a": "The platform auto-fills each learner's real login through inject tokens in the guide. The Japanese translation dropped all of them — so a Japanese learner is literally instructed to type the placeholder word 'RTI_username' as their username. Sign-in fails and they can't know why. 16 of these across 5 languages: Japanese fully, French, German, Spanish and Portuguese partially.",
-      "n": "16 missing tokens · 5 languages · RTIAD-Workshop Lab-1",
-      "src": "Report §5A — real, file-and-line quoted"
-    },
-    {
-      "id": "retired-model",
-      "ph": ["ada-002", "ada 002", "retired model", "deprecated model", "embedding model", "old model"],
-      "kw": ["retirement", "embedding"],
-      "a": "A real guide tells learners to deploy text-embedding-ada-002, a model on Azure's official retirement path — learners would build on something scheduled to disappear. Rocky drafted the switch to text-embedding-3-small; it's open as pull request ai-developer#5.",
-      "n": "Challenge-05.md line 112 · PR ai-developer#5 (open, green)",
-      "src": "Report §5B"
-    },
-    {
-      "id": "case-mismatch",
-      "ph": ["case mismatch", "works on windows", "404 on github", "media folder", "path case"],
-      "kw": ["lowercase", "case", "404"],
-      "a": "A German guide references images at lowercase 'media' but the real folder is capital-M 'Media'. Windows ignores case, so it works locally — but case-sensitive web hosting 404s every one of the 69 image references at once. That's why testing on Windows never catches it.",
-      "n": "69 image refs in German Lab-2 · 12 case-mismatch findings total",
-      "src": "Report §5D"
-    },
-    {
-      "id": "locale-drift",
-      "ph": ["locale drift", "old release", "february release", "two month old", "non-english learners"],
-      "kw": ["release", "version"],
-      "a": "The English course points at the April-2026 release, but 30 non-English entries still point at February-2026 — every non-English learner silently gets a two-month-old course. One finding, thirty stale locale entries.",
-      "n": "30 stale entries · Apr-2026 vs Feb-2026",
-      "src": "Report §5C"
-    },
-    {
-      "id": "false-positives",
-      "ph": ["false positive", "false alarm", "how accurate", "can you trust the findings", "wrongly flagged", "cry wolf", "precision"],
-      "kw": ["accuracy", "audit", "confirmed"],
-      "a": "We hand-audited a sample of the scanner's output: zero false alarms in 42. The localization family was independently re-audited with different tooling: 29 of 29 confirmed. And 3 of 8 repos came back clean — a tool that flags everything is useless; the clean verdicts are what make the findings credible.",
-      "n": "0/42 hand-audit · 29/29 re-audit · 3/8 repos clean",
-      "src": "Report §7"
-    },
-    {
-      "id": "pull-requests",
-      "ph": ["pull request", "how many prs", "merged", "github fixes", "who approves"],
-      "kw": ["pr", "prs", "merge"],
-      "a": "Five real pull requests on GitHub so far, two merged by humans: the Azure AD to Microsoft Entra ID rename, and the CI gate itself. Three more are open and green: end-of-life runtimes, the ada-002 model swap, and Node version floors. Rocky never merges anything itself — a person always approves.",
-      "n": "5 opened · 2 merged (MCW#1, ai-developer#2) · 3 open (ai-dev#4, #5, OpenAIWorkshop#2)",
-      "src": "Report §6 — verifiable on GitHub"
-    },
-    {
-      "id": "ci-gate",
-      "ph": ["ci gate", "four seconds", "prevention", "blocked the bug", "regression", "stop it coming back"],
-      "kw": ["gate", "block", "prevent"],
-      "a": "Prevention is the merged CI gate: once a class of mistake is fixed, the gate stops it re-entering the catalog. We proved it by deliberately planting a regression in a real repo — the gate blocked the merge in 4 seconds. Every repo under the gate is one that can't silently rot the same way again.",
-      "n": "4-second block · gate merged as ai-developer#2",
-      "src": "Report §6 step 4"
-    },
-    {
-      "id": "campaigns",
-      "ph": ["thirteen campaigns", "13 campaigns", "group the findings", "root cause", "fix backlog", "62 percent"],
-      "kw": ["campaign", "grouped", "backlog"],
-      "a": "133 individual findings would be an unusable ticket pile. The Fixer groups them by shared root cause into 13 campaigns — and the top 3 campaigns cover 62% of everything. One decision closes dozens of findings at once.",
-      "n": "133 → 13 campaigns · top 3 = 62%",
-      "src": "Report §8 — real findings, real grouping"
-    },
-    {
-      "id": "ai-role",
-      "ph": ["role of ai", "where is the ai", "how do you use ai", "engine asserts", "is this ai", "llm do"],
-      "kw": ["ai", "llm", "gpt", "model"],
-      "a": "The most important design decision: a deterministic engine decides every finding — exact string matches at known file and line, same input same output. The AI is only allowed to write the plain-English sentence around a fact the engine already proved. The engine asserts; the AI narrates.",
-      "n": "No finding depends on an AI opinion",
-      "src": "Report §4"
-    },
-    {
-      "id": "hallucination",
-      "ph": ["hallucinate", "hallucination", "ai makes things up", "invent a problem", "ai wrong"],
-      "kw": ["invent", "makeup"],
-      "a": "It can't hallucinate a finding, because the AI is never allowed to decide anything. Every finding is computed by auditable deterministic code. The AI only phrases what's already proven — and if the AI is off, like today, the findings still stand as evidence cards.",
-      "n": "AI narrates only · findings survive with AI off",
-      "src": "Report §4, §7"
-    },
-    {
-      "id": "ai-off-why",
-      "ph": ["why is the chat off", "ai chat off", "why no chat", "voice is off", "chatbot not working", "chat not working", "chat is not working", "chat doesn't work", "why is the chat", "ai not working", "ai is off"],
-      "kw": ["chat", "subscription", "disabled", "chatbot"],
-      "a": "The Azure subscription that holds the language-model resource is disabled — a billing and IT matter, not engineering. The fix is to re-enable it or point Rocky at a new model resource. The honest part: everything that decides is deterministic and unaffected, and the Companion degrades to evidence cards instead of bluffing. You saw that in the demo.",
-      "n": "Deterministic engine unaffected · evidence-card fallback by design",
-      "src": "Report §10"
-    },
-    {
-      "id": "auto-fix-safety",
-      "ph": ["auto fix", "automatically fix", "break something", "what if the fix is wrong", "apply changes", "silently change"],
-      "kw": ["safety", "approve", "human"],
-      "a": "Rocky never applies anything by itself. Every fix is a draft pull request with the evidence attached; a human reviews and merges. And you watched the refusal path live — when the restore action had no named human authorizer, it refused with an explicit error. That's enforced in code.",
-      "n": "0 auto-applied changes · human approval on every PR",
-      "src": "Report §7 · amnesty gate live-provable"
-    },
-    {
-      "id": "real-vs-simulated",
-      "ph": ["is this real", "real or fake", "real data", "simulated data", "which parts are real", "is the dashboard real"],
-      "kw": ["real", "simulated", "fake", "twin"],
-      "a": "Both — and it's labeled on every screen. Real and verifiable: the 133 findings, 8 repos, 5 pull requests, the 4-second CI block, the live rescan you watched. Simulated and labeled: the fleet dashboard, the learner stories, support and appeals numbers — a digital twin, because we deliberately don't touch production or real learners without approval. Nothing simulated is ever presented as real.",
-      "n": "Real: scan/PRs/gate · Simulated: fleet/learner stories (labeled)",
-      "src": "Report §8 honest table"
-    },
-    {
-      "id": "digital-twin",
-      "ph": ["digital twin", "why simulate", "practice data", "why not production", "test environment"],
-      "kw": ["fixture", "seeded"],
-      "a": "The twin is a 12-lab simulated fleet seeded to the platform's real API shapes. It exists because we refused to point Rocky at production learners without approval. It's already earned its keep — adversarial simulation against the twin uncovered 2 real bugs in Rocky's own engine before any learner could be affected.",
-      "n": "12 labs · health 84/100 · 3 broken +1 watch · 142 learners · found 2 real engine bugs",
-      "src": "Report §7, §8"
-    },
-    {
-      "id": "watcher",
-      "ph": ["watcher", "continuous monitoring", "alert fatigue", "how often does it scan", "recovery detected", "monitors the labs"],
-      "kw": ["monitor", "sweep", "alerts"],
-      "a": "The Watcher sweeps continuously and only speaks when something CHANGES — no alert spam. In the demo timeline it caught a silent break the moment it appeared, folded four failing labs into one incident, and detected recovery on its own without being told. The timeline is the labeled twin; the detection logic is the real code.",
-      "n": "Change-only alerts · auto-recovery detection · 4 labs → 1 incident",
-      "src": "Report §3, §6 step 3"
-    },
-    {
-      "id": "guardian-amnesty",
-      "ph": ["amnesty", "restore grades", "wrongly failed", "appeals", "overturn", "change a grade", "five gates"],
-      "kw": ["guardian", "verdict", "restore"],
-      "a": "When a broken check wrongly fails good learners, Rocky can restore those verdicts — but only behind 5 strict gates plus a named human authorizer, and you saw it refuse live when no human was named. In the review pool, 8 learners qualified and 2 were correctly turned down. The case data is simulated; the gate is the real engine.",
-      "n": "5 gates + named human · HTTP 400 refusal (live-provable) · 8 eligible / 2 excluded (twin)",
-      "src": "Report §3, §8"
-    },
-    {
-      "id": "support-listener",
-      "ph": ["support tickets", "seventy four", "ticket triage", "complaints", "help desk", "reduce tickets"],
-      "kw": ["listener", "tickets", "triage"],
-      "a": "The Listener collapses a flood of support tickets into a handful of root-cause incidents — on twin data, 74 tickets became 24 real incidents, roughly a 3-to-1 noise cut, so the team fixes causes instead of answering symptoms. It's waiting on a real ticket export to prove itself on production data.",
-      "n": "74 → 24 (SIMULATED; awaiting real ticket export)",
-      "src": "Report §3, §8"
-    },
-    {
-      "id": "scholar-intent",
-      "ph": ["scholar", "intent extraction", "machine readable", "understand the guide", "extract steps"],
-      "kw": ["intent", "extraction", "facts"],
-      "a": "The Scholar reads a lab guide and extracts the machine-readable intent of each step — what must be true for the step to have worked. The pilot ran on 2 real guides and extracted about 129 facts, every one quote-anchored to its exact source line. That's the ground truth layer future checks build on.",
-      "n": "~129 facts · 2 guides · 100% quote-anchored (REAL)",
-      "src": "Report §8"
-    },
-    {
-      "id": "change-intel",
-      "ph": ["change intelligence", "before it breaks", "end of life", "warning", "python 3.10", "predict"],
-      "kw": ["endoflife", "feeds", "forecast"],
-      "a": "Rocky watches public feeds — endoflife.date and Azure Updates — so it warns BEFORE a lab breaks. A real example it produced: 'Python 3.10 reaches end-of-life in about 118 days', together with the exact count of our guide files that still reference it.",
-      "n": "Real public feeds · e.g. Python 3.10 EOL ~118 days",
-      "src": "Report §6"
-    },
-    {
-      "id": "tests-quality",
-      "ph": ["how is it tested", "test suite", "unit tests", "quality of the code", "preflight"],
-      "kw": ["tests", "104", "56"],
-      "a": "104 automated tests across 17 test files, all passing, plus a 57-check preflight that runs before any live demo — what you saw on screen was verified this morning. The engine is deterministic, so the tests are exact, not flaky.",
-      "n": "104 tests / 17 files · 57-check preflight",
-      "src": "Report §7"
-    },
-    {
-      "id": "tech-stack",
-      "ph": ["tech stack", "what is it built", "which technology", "dependencies", "architecture"],
-      "kw": ["node", "stack", "framework"],
-      "a": "Deliberately boring and auditable: a zero-dependency Node.js server and a deterministic scanning engine — no framework magic, no black boxes. The optional AI layer sits strictly outside the decision path. That's what makes every finding reproducible: same input, same output.",
-      "n": "Zero-dependency Node · deterministic engine · AI optional",
-      "src": "Repo layout · Report §4"
-    },
-    {
-      "id": "scan-speed",
-      "ph": ["how fast", "how long does a scan", "scan speed", "rescan time"],
-      "kw": ["fast", "seconds", "speed"],
-      "a": "The live rescan you watched reads all 8 repositories — 268 guide files — in about 3 to 4 seconds on a laptop. It's deterministic string and structure analysis, not AI calls, so it's fast, free, and repeatable on every commit.",
-      "n": "~3–4s for 8 repos / 268 files",
-      "src": "Live rescan (rescanMs on screen)"
-    },
-    {
-      "id": "screenshots-content",
-      "ph": ["screenshots match", "compare screenshot", "image content", "vision", "does it look at images"],
-      "kw": ["screenshot", "images"],
-      "a": "Today Rocky catches broken and missing screenshots and case-mismatched image paths — 83 of the 133 findings are image-related. Verifying what a screenshot SHOWS against what the step intends is the next layer: the Scholar already extracts each step's intent as machine-readable facts, which is exactly the ground truth that comparison needs.",
-      "n": "71 broken + 12 case = 83 image findings today · content-check = roadmap on Scholar facts",
-      "src": "Report §5, §8"
-    },
-    {
-      "id": "cost",
-      "ph": ["what does it cost", "running cost", "expensive", "how much"],
-      "kw": ["cost", "price", "budget"],
-      "a": "Running it is nearly free: the engine is deterministic — no per-scan AI cost — and a full scan takes seconds on any machine. The AI narration is optional and costs pennies. The expensive part was building it; running it is a scheduled job.",
-      "n": "$0 per scan (deterministic) · narration optional",
-      "src": "Architecture"
-    },
-    {
-      "id": "next-steps",
-      "ph": ["next step", "what happens next", "rollout plan", "pilot", "shadow pilot", "what do you need"],
-      "kw": ["roadmap", "ask", "approval"],
-      "a": "The recommended first step is small and safe: a two-week support shadow-pilot. Rocky triages incoming tickets in parallel with one support engineer — who keeps making all decisions — and we measure one number: how much faster the root cause is found. It needs a support-team owner and a two-week ticket export. Zero learner risk.",
-      "n": "2-week shadow pilot · 1 engineer · 1 measured number (triage-time delta)",
-      "src": "Report §9, §11"
-    },
-    {
-      "id": "integration-risk",
-      "ph": ["how do we integrate", "connect to production", "real learner data", "risk ladder", "go live"],
-      "kw": ["integration", "production", "rollout"],
-      "a": "There's a documented risk ladder. LOW — running today: cloned repos, the labeled twin, public feeds, our own forks. MEDIUM — next: a self-owned 'Rocky QA' test event with team-owned seats only, the first real API data with nobody's learning at stake. HIGH — explicitly gated behind named approvals: any write path or real learner data. Each rung produces the evidence that justifies the next.",
-      "n": "LOW live today · MEDIUM = Rocky QA event · HIGH = named approvals only",
-      "src": "Report §9 · docs/safe_validation_and_integration.md"
-    },
-    {
-      "id": "data-privacy",
-      "ph": ["privacy", "learner data", "personal data", "gdpr", "data protection"],
-      "kw": ["consent", "sensitive"],
-      "a": "Rocky has deliberately taken zero production or learner data — that's the entire reason the labeled digital twin exists. Before any real-learner data is touched, even read-only and historical, the plan requires explicit data-privacy sign-off. Honesty about data is the product's core rule.",
-      "n": "0 production data taken · privacy sign-off required first",
-      "src": "Report §7, §9"
-    },
-    {
-      "id": "hosting-azure",
-      "ph": ["azure hosting", "app service", "deployed where", "is it hosted", "cloud deployment"],
-      "kw": ["hosted", "deploy", "webapp"],
-      "a": "It's deployed to Azure App Service, but that deployment is currently stopped because the same subscription that holds the AI resource is disabled — so today's demo runs locally, which is the primary mode anyway. Re-enabling is a billing/IT step, not an engineering one.",
-      "n": "App Service deployment exists · stopped (disabled subscription) · local = primary",
-      "src": "Report §10"
-    },
-    {
-      "id": "live-example-plant",
-      "ph": ["what did you just do", "you edited the file", "planted", "how did it catch", "did you fake that", "prepared trick"],
-      "kw": ["plant", "notepad", "edit"],
-      "a": "I added one real line to a real lab guide — telling learners to deploy text-embedding-ada-002, the same retired model we found in production. Rocky's rescan reads the actual files on disk, so it caught the exact file and line, and even flagged that the repo had uncommitted changes. Then I removed it and the verdict went back to clean. Nothing staged — you can pick the file and the line yourself.",
-      "n": "133 → 134 → 133 · exact file:line shown · repo dirty-marker",
-      "src": "Live on screen"
-    },
-    {
-      "id": "why-not-existing-tools",
-      "ph": ["existing tools", "link checker", "why not use", "off the shelf", "markdown lint", "competitors"],
-      "kw": ["linkchecker", "linter", "alternative"],
-      "a": "Generic link checkers don't know what a CloudLabs lab IS. They can't know that a missing inject token strands a learner at sign-in, that a locale file drifted a release behind English, or that a validation check contradicts the learner's actual environment. Rocky's checks encode our platform's failure modes — and it closes the loop with fixes, prevention, and learner help, which no linter does.",
-      "n": "Platform-aware checks + closed loop (find→fix→verify→prevent)",
-      "src": "Report §2–6"
-    },
-    {
-      "id": "who-built",
-      "ph": ["who built", "team size", "how long did it take", "built this alone"],
-      "kw": ["built", "author"],
-      "a": "It's an internal initiative I've been driving — built as a working prototype on our own platform knowledge, with every claim kept verifiable on GitHub or on disk precisely so it doesn't rest on anyone's word, including mine.",
-      "n": "Internal build · claims verifiable independently",
-      "src": "—"
-    },
-    {
-      "id": "scope-what-it-scans",
-      "ph": ["what does it scan", "only markdown", "code too", "scope of scanning", "other file types"],
-      "kw": ["scope", "markdown", "guides"],
-      "a": "Today the scanner reads the lab guide content — markdown across all languages — plus asset folders and repo state, because that's where learners actually get stranded. The engine is rule-based and extensible: each new failure mode we learn becomes a new deterministic check.",
-      "n": "268 md files + assets + git state today · checks are pluggable",
-      "src": "Report §5 · scanner design"
-    },
-    {
-      "id": "region-drift",
-      "ph": ["region drift", "wrong region", "sku not available", "east us", "priya"],
-      "kw": ["region", "sku"],
-      "a": "In the twin scenario, 22 of 43 learners deployed to eastus instead of westus2, which correlated with a SkuNotAvailable error on the VM size the lab needs. Rocky's drafted fix pins the region so the next learner can't fall in the same hole. Simulated data — the diagnosis logic is the real engine.",
-      "n": "22/43 wrong region · Standard_D4s_v5 · fix = pin region (twin)",
-      "src": "Report §8"
-    },
-    {
-      "id": "impact-modeled",
-      "ph": ["health score", "impact projection", "36 to 100", "how much improvement", "roi of fixing"],
-      "kw": ["projection", "modeled", "impact"],
-      "a": "Where Rocky projects the effect of a fix — like health 36 to 100 or completion 9% to 81% — those numbers are explicitly labeled MODELED, not executed, pending the author's merge. We don't claim credit before a merge. The real, unmodeled numbers are the findings and the merged PRs.",
-      "n": "Projections labeled MODELED · real = findings + PRs",
-      "src": "Report §8"
-    },
-    {
-      "id": "false-fail",
-      "ph": ["false fail", "failed unfairly", "check wrongly fails", "learner failed but was right"],
-      "kw": ["unfair", "wrongly"],
-      "a": "That's the mirror image of the lying check: a broken validation failing learners whose work was actually correct. Rocky detects the pattern, and the Guardian can restore those verdicts — but only through the five-gate, named-human process you saw refuse an unauthorized request live.",
-      "n": "Detection + gated restore · refusal live-provable",
-      "src": "Report §3"
-    },
-    {
-      "id": "node16-eol",
-      "ph": ["node 16", "old runtime", "end of life runtime", "node js version"],
-      "kw": ["runtime", "eol"],
-      "a": "Yes — a real workshop still tells learners to install Node.js 16, which reached end-of-life in September 2023. That's one of 5 end-of-life runtime findings, and the version-floor fix is one of the three open pull requests.",
-      "n": "5 EOL-runtime findings · fix open as OpenAIWorkshop#2",
-      "src": "Report §5"
-    },
-    {
-      "id": "entra-rename",
-      "ph": ["azure ad", "entra", "renamed product", "old product name"],
-      "kw": ["rename", "entra"],
-      "a": "A real repo still said 'Azure AD', which Microsoft renamed to Microsoft Entra ID back in 2023. Rocky found it, drafted the fix, and that became our first merged pull request. 12 renamed-product findings in total.",
-      "n": "MCW#1 merged · 12 renamed-product findings",
-      "src": "Report §5, §6"
-    },
-    {
-      "id": "companion-evidence",
-      "ph": ["evidence card", "how does the companion answer", "i dont know", "refuses to answer", "answer wrong advice"],
-      "kw": ["companion", "evidence"],
-      "a": "The Companion answers only from evidence the engine verified — lab state, checks, logs. When it can't verify something it says 'I don't know' instead of guessing, and it refuses plausible-but-wrong shortcuts, like picking a smaller VM when the real cause is the region. With the AI voice off it still works — it shows the evidence card directly.",
-      "n": "Evidence-only answers · honest 'I don't know' · works with AI off",
-      "src": "Report §3, §4"
-    },
-    {
-      "id": "can-learners-see",
-      "ph": ["learner facing", "do learners see rocky", "in the lab today", "shipped to learners"],
-      "kw": ["learners", "embedded"],
-      "a": "Not yet — what you saw is the working companion inside a simulated learner environment. Putting it in front of real learners is a HIGH rung on the risk ladder, gated behind the pilot results and named approvals. The path is: prove it in the QA event first, then the support pilot, then learner-facing.",
-      "n": "Sim today · learner-facing = gated rollout step",
-      "src": "Report §9"
-    },
-    {
-      "id": "multi-cloud",
-      "ph": ["other clouds", "aws", "gcp", "only azure", "multi cloud"],
-      "kw": ["cloud", "vendor"],
-      "a": "The engine is vendor-neutral by design — checks are data: token lists, structure rules, contradiction patterns. Azure is where our labs and the first deprecation feeds are, so it's proven there first; adding AWS or GCP catalogs is new check-data, not a rebuild.",
-      "n": "Checks are pluggable data · Azure first because our labs are there",
-      "src": "Architecture"
-    },
-    {
-      "id": "upload-checkup",
-      "ph": ["upload a guide", "try my own guide", "my own lab", "bring my own", "upload page", "drag and drop", "test our lab", "check my guide", "scan my lab"],
-      "kw": ["upload", "drop", "checkup"],
-      "a": "Yes — that's the Checkup page you saw. Drop any lab guide on it and the same deterministic engine that scanned our 8 repos scans yours live, in memory, nothing stored. Upload the whole lab folder and it also verifies images, path casing, and translation token loss. Checks it can't run on what you gave it are listed as skipped — never guessed.",
-      "n": "Same engine, two entry points · files scanned in memory · skipped ≠ guessed",
-      "src": "Live on screen (segment 08) · labdoctor/checkup.js"
-    },
-    {
-      "id": "demo-machine",
-      "ph": ["can i run it", "where does it run", "install it", "try it myself"],
-      "kw": ["run", "install", "laptop"],
-      "a": "Everything you saw runs locally from one zero-dependency Node server — clone the repo, node web/server.js, and the same preflight I ran this morning verifies your setup with 57 checks. I can share the repo and the quickstart after this call.",
-      "n": "1 command to run · 57-check preflight validates setup",
-      "src": "Repo quickstart"
-    }
-  ]
+ "_comment": "Wingman knowledge base. Deterministic Q&A for the live demo — every number traces to FACTS.md / PROJECT_REPORT.md. 'ph' = phrases (substring match, weight 3). 'kw' = single keywords (token match, weight 1). 'a' = the spoken answer Manoj reads out. 'n' = key numbers line. 'src' = where it's verifiable.",
+ "entries": [
+  {
+   "id": "what-is-rocky",
+   "ph": [
+    "what is rocky",
+    "what does rocky do",
+    "what is this project",
+    "explain the project",
+    "one line",
+    "elevator pitch",
+    "what did you build"
+   ],
+   "kw": [
+    "overview",
+    "summary",
+    "about"
+   ],
+   "a": "Rocky is the reliability layer for our hands-on labs. One system, three jobs: it FINDS what's broken by reading guides and watching results, it FIXES it as a draft that a human approves on GitHub, and it HELPS the learner in the moment with evidence, never guesses.",
+   "n": "133 real defects found · 8 repos · 5 PRs (2 merged)",
+   "src": "Report §1, §3"
+  },
+  {
+   "id": "how-labs-rot",
+   "ph": [
+    "how can labs rot",
+    "labs are tested",
+    "already test",
+    "how do they break",
+    "why do labs break",
+    "nobody changed",
+    "photo and the movie",
+    "labs go stale"
+   ],
+   "kw": [
+    "rot",
+    "stale",
+    "drift",
+    "break"
+   ],
+   "a": "Testing a lab before publishing is a photo — it proves it worked that day. But labs live for months and the cloud moves underneath them: vendors rename products, retire models, change defaults. Nobody edits the lab and it still breaks. Rocky is the movie — it watches continuously.",
+   "n": "Example: Azure AD → Microsoft Entra ID rename; ada-002 model retirement",
+   "src": "Report §2"
+  },
+  {
+   "id": "lying-check",
+   "ph": [
+    "lying check",
+    "false pass",
+    "check says green",
+    "passing but broken",
+    "100 percent completion",
+    "validation lies",
+    "how do you catch"
+   ],
+   "kw": [
+    "contradiction",
+    "checkmark",
+    "lie"
+   ],
+   "a": "Worse than a failing lab is a check that says PASS while the learner's environment is broken. Rocky holds the check's claim next to independent evidence of what actually happened, and flags the contradiction. In our twin scenario, a security lab showed 100% completion while 23 of 24 learners had left storage publicly exposed.",
+   "n": "23/24 false-passes on the twin · check F-V2 · publicAccess:true where false expected",
+   "src": "Report §2, §8 (SIMULATED scenario, real logic)"
+  },
+  {
+   "id": "scan-numbers",
+   "ph": [
+    "how many problems",
+    "how many findings",
+    "what did it find",
+    "scan results",
+    "how many defects",
+    "hundred thirty"
+   ],
+   "kw": [
+    "133",
+    "findings",
+    "defects",
+    "268"
+   ],
+   "a": "Rocky scanned 8 real production lab repositories — 268 guide files — and found 133 real defects, re-confirmed by a live rescan. Just as important: 3 of the 8 repos came back completely clean. It says 'nothing wrong here' when nothing is wrong.",
+   "n": "133 defects · 268 files · 8 repos · 3 clean",
+   "src": "Report §5 — verifiable on disk"
+  },
+  {
+   "id": "finding-types",
+   "ph": [
+    "types of problems",
+    "kinds of defects",
+    "breakdown",
+    "what categories",
+    "what kind of issues"
+   ],
+   "kw": [
+    "categories",
+    "types",
+    "breakdown"
+   ],
+   "a": "The 133 break down into: 71 broken screenshot references, 16 missing credential tokens in translated guides, 16 deprecated dependencies like retired AI models, 12 asset-path case mismatches that 404 on the web, 12 renamed products, 5 end-of-life runtimes, and 1 locale release drift.",
+   "n": "71+16+16+12+12+5+1 = 133",
+   "src": "Report §5 table"
+  },
+  {
+   "id": "japanese-inject",
+   "ph": [
+    "japanese",
+    "rti username",
+    "credential token",
+    "inject token",
+    "lost in translation",
+    "translated guide",
+    "placeholder"
+   ],
+   "kw": [
+    "translation",
+    "locale",
+    "login"
+   ],
+   "a": "The platform auto-fills each learner's real login through inject tokens in the guide. The Japanese translation dropped all of them — so a Japanese learner is literally instructed to type the placeholder word 'RTI_username' as their username. Sign-in fails and they can't know why. 16 of these across 5 languages: Japanese fully, French, German, Spanish and Portuguese partially.",
+   "n": "16 missing tokens · 5 languages · RTIAD-Workshop Lab-1",
+   "src": "Report §5A — real, file-and-line quoted"
+  },
+  {
+   "id": "retired-model",
+   "ph": [
+    "ada-002",
+    "ada 002",
+    "retired model",
+    "deprecated model",
+    "embedding model",
+    "old model"
+   ],
+   "kw": [
+    "retirement",
+    "embedding"
+   ],
+   "a": "A real guide tells learners to deploy text-embedding-ada-002, a model on Azure's official retirement path — learners would build on something scheduled to disappear. Rocky drafted the switch to text-embedding-3-small; it's open as pull request ai-developer#5.",
+   "n": "Challenge-05.md line 112 · PR ai-developer#5 (open, green)",
+   "src": "Report §5B"
+  },
+  {
+   "id": "case-mismatch",
+   "ph": [
+    "case mismatch",
+    "works on windows",
+    "404 on github",
+    "media folder",
+    "path case"
+   ],
+   "kw": [
+    "lowercase",
+    "case",
+    "404"
+   ],
+   "a": "A German guide references images at lowercase 'media' but the real folder is capital-M 'Media'. Windows ignores case, so it works locally — but case-sensitive web hosting 404s every one of the 69 image references at once. That's why testing on Windows never catches it.",
+   "n": "69 image refs in German Lab-2 · 12 case-mismatch findings total",
+   "src": "Report §5D"
+  },
+  {
+   "id": "locale-drift",
+   "ph": [
+    "locale drift",
+    "old release",
+    "february release",
+    "two month old",
+    "non-english learners"
+   ],
+   "kw": [
+    "release",
+    "version"
+   ],
+   "a": "The English course points at the April-2026 release, but 30 non-English entries still point at February-2026 — every non-English learner silently gets a two-month-old course. One finding, thirty stale locale entries.",
+   "n": "30 stale entries · Apr-2026 vs Feb-2026",
+   "src": "Report §5C"
+  },
+  {
+   "id": "false-positives",
+   "ph": [
+    "false positive",
+    "false alarm",
+    "how accurate",
+    "can you trust the findings",
+    "wrongly flagged",
+    "cry wolf",
+    "precision"
+   ],
+   "kw": [
+    "accuracy",
+    "audit",
+    "confirmed"
+   ],
+   "a": "We hand-audited a sample of the scanner's output: zero false alarms in 42. The localization family was independently re-audited with different tooling: 29 of 29 confirmed. And 3 of 8 repos came back clean — a tool that flags everything is useless; the clean verdicts are what make the findings credible.",
+   "n": "0/42 hand-audit · 29/29 re-audit · 3/8 repos clean",
+   "src": "Report §7"
+  },
+  {
+   "id": "pull-requests",
+   "ph": [
+    "pull request",
+    "how many prs",
+    "merged",
+    "github fixes",
+    "who approves"
+   ],
+   "kw": [
+    "pr",
+    "prs",
+    "merge"
+   ],
+   "a": "Five real pull requests on GitHub so far, two merged by humans: the Azure AD to Microsoft Entra ID rename, and the CI gate itself. Three more are open and green: end-of-life runtimes, the ada-002 model swap, and Node version floors. Rocky never merges anything itself — a person always approves.",
+   "n": "5 opened · 2 merged (MCW#1, ai-developer#2) · 3 open (ai-dev#4, #5, OpenAIWorkshop#2)",
+   "src": "Report §6 — verifiable on GitHub"
+  },
+  {
+   "id": "ci-gate",
+   "ph": [
+    "ci gate",
+    "four seconds",
+    "prevention",
+    "blocked the bug",
+    "regression",
+    "stop it coming back"
+   ],
+   "kw": [
+    "gate",
+    "block",
+    "prevent"
+   ],
+   "a": "Prevention is the merged CI gate: once a class of mistake is fixed, the gate stops it re-entering the catalog. We proved it by deliberately planting a regression in a real repo — the gate blocked the merge in 4 seconds. Every repo under the gate is one that can't silently rot the same way again.",
+   "n": "4-second block · gate merged as ai-developer#2",
+   "src": "Report §6 step 4"
+  },
+  {
+   "id": "campaigns",
+   "ph": [
+    "thirteen campaigns",
+    "13 campaigns",
+    "group the findings",
+    "root cause",
+    "fix backlog",
+    "62 percent"
+   ],
+   "kw": [
+    "campaign",
+    "grouped",
+    "backlog"
+   ],
+   "a": "133 individual findings would be an unusable ticket pile. The Fixer groups them by shared root cause into 13 campaigns — and the top 3 campaigns cover 62% of everything. One decision closes dozens of findings at once.",
+   "n": "133 → 13 campaigns · top 3 = 62%",
+   "src": "Report §8 — real findings, real grouping"
+  },
+  {
+   "id": "ai-role",
+   "ph": [
+    "role of ai",
+    "where is the ai",
+    "how do you use ai",
+    "engine asserts",
+    "is this ai",
+    "llm do"
+   ],
+   "kw": [
+    "ai",
+    "llm",
+    "gpt",
+    "model"
+   ],
+   "a": "The most important design decision: a deterministic engine decides every finding — exact string matches at known file and line, same input same output. The AI is only allowed to write the plain-English sentence around a fact the engine already proved. The engine asserts; the AI narrates.",
+   "n": "No finding depends on an AI opinion",
+   "src": "Report §4"
+  },
+  {
+   "id": "hallucination",
+   "ph": [
+    "hallucinate",
+    "hallucination",
+    "ai makes things up",
+    "invent a problem",
+    "ai wrong"
+   ],
+   "kw": [
+    "invent",
+    "makeup"
+   ],
+   "a": "It can't hallucinate a finding, because the AI is never allowed to decide anything. Every finding is computed by auditable deterministic code. The AI only phrases what's already proven — and if the AI is off, like today, the findings still stand as evidence cards.",
+   "n": "AI narrates only · findings survive with AI off",
+   "src": "Report §4, §7"
+  },
+  {
+   "id": "ai-off-why",
+   "ph": [
+    "why is the chat off",
+    "ai chat off",
+    "why no chat",
+    "voice is off",
+    "chatbot not working",
+    "chat not working",
+    "chat is not working",
+    "chat doesn't work",
+    "why is the chat",
+    "ai not working",
+    "ai is off"
+   ],
+   "kw": [
+    "chat",
+    "subscription",
+    "disabled",
+    "chatbot"
+   ],
+   "a": "The Azure subscription that holds the language-model resource is disabled — a billing and IT matter, not engineering. The fix is to re-enable it or point Rocky at a new model resource. The honest part: everything that decides is deterministic and unaffected, and the Companion degrades to evidence cards instead of bluffing. You saw that in the demo.",
+   "n": "Deterministic engine unaffected · evidence-card fallback by design",
+   "src": "Report §10"
+  },
+  {
+   "id": "auto-fix-safety",
+   "ph": [
+    "auto fix",
+    "automatically fix",
+    "break something",
+    "what if the fix is wrong",
+    "apply changes",
+    "silently change"
+   ],
+   "kw": [
+    "safety",
+    "approve",
+    "human"
+   ],
+   "a": "Rocky never applies anything by itself. Every fix is a draft pull request with the evidence attached; a human reviews and merges. And you watched the refusal path live — when the restore action had no named human authorizer, it refused with an explicit error. That's enforced in code.",
+   "n": "0 auto-applied changes · human approval on every PR",
+   "src": "Report §7 · amnesty gate live-provable"
+  },
+  {
+   "id": "real-vs-simulated",
+   "ph": [
+    "is this real",
+    "real or fake",
+    "real data",
+    "simulated data",
+    "which parts are real",
+    "is the dashboard real"
+   ],
+   "kw": [
+    "real",
+    "simulated",
+    "fake",
+    "twin"
+   ],
+   "a": "Both — and it's labeled on every screen. Real and verifiable: the 133 findings, 8 repos, 5 pull requests, the 4-second CI block, the live rescan you watched. Simulated and labeled: the fleet dashboard, the learner stories, support and appeals numbers — a digital twin, because we deliberately don't touch production or real learners without approval. Nothing simulated is ever presented as real.",
+   "n": "Real: scan/PRs/gate · Simulated: fleet/learner stories (labeled)",
+   "src": "Report §8 honest table"
+  },
+  {
+   "id": "digital-twin",
+   "ph": [
+    "digital twin",
+    "why simulate",
+    "practice data",
+    "why not production",
+    "test environment"
+   ],
+   "kw": [
+    "fixture",
+    "seeded"
+   ],
+   "a": "The twin is a 12-lab simulated fleet seeded to the platform's real API shapes. It exists because we refused to point Rocky at production learners without approval. It's already earned its keep — adversarial simulation against the twin uncovered 2 real bugs in Rocky's own engine before any learner could be affected.",
+   "n": "12 labs · health 84/100 · 3 broken +1 watch · 142 learners · found 2 real engine bugs",
+   "src": "Report §7, §8"
+  },
+  {
+   "id": "watcher",
+   "ph": [
+    "watcher",
+    "continuous monitoring",
+    "alert fatigue",
+    "how often does it scan",
+    "recovery detected",
+    "monitors the labs"
+   ],
+   "kw": [
+    "monitor",
+    "sweep",
+    "alerts"
+   ],
+   "a": "The Watcher sweeps continuously and only speaks when something CHANGES — no alert spam. In the demo timeline it caught a silent break the moment it appeared, folded four failing labs into one incident, and detected recovery on its own without being told. The timeline is the labeled twin; the detection logic is the real code.",
+   "n": "Change-only alerts · auto-recovery detection · 4 labs → 1 incident",
+   "src": "Report §3, §6 step 3"
+  },
+  {
+   "id": "guardian-amnesty",
+   "ph": [
+    "amnesty",
+    "restore grades",
+    "wrongly failed",
+    "appeals",
+    "overturn",
+    "change a grade",
+    "five gates"
+   ],
+   "kw": [
+    "guardian",
+    "verdict",
+    "restore"
+   ],
+   "a": "When a broken check wrongly fails good learners, Rocky can restore those verdicts — but only behind 5 strict gates plus a named human authorizer, and you saw it refuse live when no human was named. In the review pool, 8 learners qualified and 2 were correctly turned down. The case data is simulated; the gate is the real engine.",
+   "n": "5 gates + named human · HTTP 400 refusal (live-provable) · 8 eligible / 2 excluded (twin)",
+   "src": "Report §3, §8"
+  },
+  {
+   "id": "support-listener",
+   "ph": [
+    "support tickets",
+    "seventy four",
+    "ticket triage",
+    "complaints",
+    "help desk",
+    "reduce tickets"
+   ],
+   "kw": [
+    "listener",
+    "tickets",
+    "triage"
+   ],
+   "a": "The Listener collapses a flood of support tickets into a handful of root-cause incidents — on twin data, 74 tickets became 24 real incidents, roughly a 3-to-1 noise cut, so the team fixes causes instead of answering symptoms. It's waiting on a real ticket export to prove itself on production data.",
+   "n": "74 → 24 (SIMULATED; awaiting real ticket export)",
+   "src": "Report §3, §8"
+  },
+  {
+   "id": "scholar-intent",
+   "ph": [
+    "scholar",
+    "intent extraction",
+    "machine readable",
+    "understand the guide",
+    "extract steps"
+   ],
+   "kw": [
+    "intent",
+    "extraction",
+    "facts"
+   ],
+   "a": "The Scholar reads a lab guide and extracts the machine-readable intent of each step — what must be true for the step to have worked. The pilot ran on 2 real guides and extracted about 129 facts, every one quote-anchored to its exact source line. That's the ground truth layer future checks build on.",
+   "n": "~129 facts · 2 guides · 100% quote-anchored (REAL)",
+   "src": "Report §8"
+  },
+  {
+   "id": "change-intel",
+   "ph": [
+    "change intelligence",
+    "before it breaks",
+    "end of life",
+    "warning",
+    "python 3.10",
+    "predict"
+   ],
+   "kw": [
+    "endoflife",
+    "feeds",
+    "forecast"
+   ],
+   "a": "Rocky watches public feeds — endoflife.date and Azure Updates — so it warns BEFORE a lab breaks. A real example it produced: 'Python 3.10 reaches end-of-life in about 118 days', together with the exact count of our guide files that still reference it.",
+   "n": "Real public feeds · e.g. Python 3.10 EOL ~118 days",
+   "src": "Report §6"
+  },
+  {
+   "id": "tests-quality",
+   "ph": [
+    "how is it tested",
+    "test suite",
+    "unit tests",
+    "quality of the code",
+    "preflight"
+   ],
+   "kw": [
+    "tests",
+    "104",
+    "56"
+   ],
+   "a": "112 automated tests across 18 test files, all passing, plus a preflight and a readiness gate (check-ready) that run before any live demo — what you saw on screen was verified this morning. The engine is deterministic, so the tests are exact, not flaky.",
+   "n": "112 tests / 18 files · preflight + readiness gate before every demo",
+   "src": "Report §7"
+  },
+  {
+   "id": "tech-stack",
+   "ph": [
+    "tech stack",
+    "what is it built",
+    "which technology",
+    "dependencies",
+    "architecture"
+   ],
+   "kw": [
+    "node",
+    "stack",
+    "framework"
+   ],
+   "a": "Deliberately boring and auditable: a zero-dependency Node.js server and a deterministic scanning engine — no framework magic, no black boxes. The optional AI layer sits strictly outside the decision path. That's what makes every finding reproducible: same input, same output.",
+   "n": "Zero-dependency Node · deterministic engine · AI optional",
+   "src": "Repo layout · Report §4"
+  },
+  {
+   "id": "scan-speed",
+   "ph": [
+    "how fast",
+    "how long does a scan",
+    "scan speed",
+    "rescan time"
+   ],
+   "kw": [
+    "fast",
+    "seconds",
+    "speed"
+   ],
+   "a": "The live rescan you watched reads all 8 repositories — 268 guide files — in about 3 to 4 seconds on a laptop. It's deterministic string and structure analysis, not AI calls, so it's fast, free, and repeatable on every commit.",
+   "n": "~3–4s for 8 repos / 268 files",
+   "src": "Live rescan (rescanMs on screen)"
+  },
+  {
+   "id": "screenshots-content",
+   "ph": [
+    "screenshots match",
+    "compare screenshot",
+    "image content",
+    "vision",
+    "does it look at images"
+   ],
+   "kw": [
+    "screenshot",
+    "images"
+   ],
+   "a": "Today Rocky catches broken and missing screenshots and case-mismatched image paths — 83 of the 133 findings are image-related. Verifying what a screenshot SHOWS against what the step intends is the next layer: the Scholar already extracts each step's intent as machine-readable facts, which is exactly the ground truth that comparison needs.",
+   "n": "71 broken + 12 case = 83 image findings today · content-check = roadmap on Scholar facts",
+   "src": "Report §5, §8"
+  },
+  {
+   "id": "cost",
+   "ph": [
+    "what does it cost",
+    "running cost",
+    "expensive",
+    "how much"
+   ],
+   "kw": [
+    "cost",
+    "price",
+    "budget"
+   ],
+   "a": "Running it is nearly free: the engine is deterministic — no per-scan AI cost — and a full scan takes seconds on any machine. The AI narration is optional and costs pennies. The expensive part was building it; running it is a scheduled job.",
+   "n": "$0 per scan (deterministic) · narration optional",
+   "src": "Architecture"
+  },
+  {
+   "id": "next-steps",
+   "ph": [
+    "next step",
+    "what happens next",
+    "rollout plan",
+    "pilot",
+    "shadow pilot",
+    "what do you need"
+   ],
+   "kw": [
+    "roadmap",
+    "ask",
+    "approval"
+   ],
+   "a": "The recommended first step is small and safe: a two-week support shadow-pilot. Rocky triages incoming tickets in parallel with one support engineer — who keeps making all decisions — and we measure one number: how much faster the root cause is found. It needs a support-team owner and a two-week ticket export. Zero learner risk.",
+   "n": "2-week shadow pilot · 1 engineer · 1 measured number (triage-time delta)",
+   "src": "Report §9, §11"
+  },
+  {
+   "id": "integration-risk",
+   "ph": [
+    "how do we integrate",
+    "connect to production",
+    "real learner data",
+    "risk ladder",
+    "go live"
+   ],
+   "kw": [
+    "integration",
+    "production",
+    "rollout"
+   ],
+   "a": "There's a documented risk ladder. LOW — running today: cloned repos, the labeled twin, public feeds, our own forks. MEDIUM — next: a self-owned 'Rocky QA' test event with team-owned seats only, the first real API data with nobody's learning at stake. HIGH — explicitly gated behind named approvals: any write path or real learner data. Each rung produces the evidence that justifies the next.",
+   "n": "LOW live today · MEDIUM = Rocky QA event · HIGH = named approvals only",
+   "src": "Report §9 · docs/safe_validation_and_integration.md"
+  },
+  {
+   "id": "data-privacy",
+   "ph": [
+    "privacy",
+    "learner data",
+    "personal data",
+    "gdpr",
+    "data protection"
+   ],
+   "kw": [
+    "consent",
+    "sensitive"
+   ],
+   "a": "Rocky has deliberately taken zero production or learner data — that's the entire reason the labeled digital twin exists. Before any real-learner data is touched, even read-only and historical, the plan requires explicit data-privacy sign-off. Honesty about data is the product's core rule.",
+   "n": "0 production data taken · privacy sign-off required first",
+   "src": "Report §7, §9"
+  },
+  {
+   "id": "hosting-azure",
+   "ph": [
+    "azure hosting",
+    "app service",
+    "deployed where",
+    "is it hosted",
+    "cloud deployment"
+   ],
+   "kw": [
+    "hosted",
+    "deploy",
+    "webapp"
+   ],
+   "a": "It's deployed to Azure App Service, but that deployment is currently stopped because the same subscription that holds the AI resource is disabled — so today's demo runs locally, which is the primary mode anyway. Re-enabling is a billing/IT step, not an engineering one.",
+   "n": "App Service deployment exists · stopped (disabled subscription) · local = primary",
+   "src": "Report §10"
+  },
+  {
+   "id": "live-example-plant",
+   "ph": [
+    "what did you just do",
+    "you edited the file",
+    "planted",
+    "how did it catch",
+    "did you fake that",
+    "prepared trick"
+   ],
+   "kw": [
+    "plant",
+    "notepad",
+    "edit"
+   ],
+   "a": "I added one real line to a real lab guide — telling learners to deploy text-embedding-ada-002, the same retired model we found in production. Rocky's rescan reads the actual files on disk, so it caught the exact file and line, and even flagged that the repo had uncommitted changes. Then I removed it and the verdict went back to clean. Nothing staged — you can pick the file and the line yourself.",
+   "n": "133 → 134 → 133 · exact file:line shown · repo dirty-marker",
+   "src": "Live on screen"
+  },
+  {
+   "id": "why-not-existing-tools",
+   "ph": [
+    "existing tools",
+    "link checker",
+    "why not use",
+    "off the shelf",
+    "markdown lint",
+    "competitors"
+   ],
+   "kw": [
+    "linkchecker",
+    "linter",
+    "alternative"
+   ],
+   "a": "Generic link checkers don't know what a CloudLabs lab IS. They can't know that a missing inject token strands a learner at sign-in, that a locale file drifted a release behind English, or that a validation check contradicts the learner's actual environment. Rocky's checks encode our platform's failure modes — and it closes the loop with fixes, prevention, and learner help, which no linter does.",
+   "n": "Platform-aware checks + closed loop (find→fix→verify→prevent)",
+   "src": "Report §2–6"
+  },
+  {
+   "id": "who-built",
+   "ph": [
+    "who built",
+    "team size",
+    "how long did it take",
+    "built this alone"
+   ],
+   "kw": [
+    "built",
+    "author"
+   ],
+   "a": "It's an internal initiative I've been driving — built as a working prototype on our own platform knowledge, with every claim kept verifiable on GitHub or on disk precisely so it doesn't rest on anyone's word, including mine.",
+   "n": "Internal build · claims verifiable independently",
+   "src": "—"
+  },
+  {
+   "id": "scope-what-it-scans",
+   "ph": [
+    "what does it scan",
+    "only markdown",
+    "code too",
+    "scope of scanning",
+    "other file types"
+   ],
+   "kw": [
+    "scope",
+    "markdown",
+    "guides"
+   ],
+   "a": "Today the scanner reads the lab guide content — markdown across all languages — plus asset folders and repo state, because that's where learners actually get stranded. The engine is rule-based and extensible: each new failure mode we learn becomes a new deterministic check.",
+   "n": "268 md files + assets + git state today · checks are pluggable",
+   "src": "Report §5 · scanner design"
+  },
+  {
+   "id": "region-drift",
+   "ph": [
+    "region drift",
+    "wrong region",
+    "sku not available",
+    "east us",
+    "priya"
+   ],
+   "kw": [
+    "region",
+    "sku"
+   ],
+   "a": "In the twin scenario, 22 of 43 learners deployed to eastus instead of westus2, which correlated with a SkuNotAvailable error on the VM size the lab needs. Rocky's drafted fix pins the region so the next learner can't fall in the same hole. Simulated data — the diagnosis logic is the real engine.",
+   "n": "22/43 wrong region · Standard_D4s_v5 · fix = pin region (twin)",
+   "src": "Report §8"
+  },
+  {
+   "id": "impact-modeled",
+   "ph": [
+    "health score",
+    "impact projection",
+    "36 to 100",
+    "how much improvement",
+    "roi of fixing"
+   ],
+   "kw": [
+    "projection",
+    "modeled",
+    "impact"
+   ],
+   "a": "Where Rocky projects the effect of a fix — like health 36 to 100 or completion 9% to 81% — those numbers are explicitly labeled MODELED, not executed, pending the author's merge. We don't claim credit before a merge. The real, unmodeled numbers are the findings and the merged PRs.",
+   "n": "Projections labeled MODELED · real = findings + PRs",
+   "src": "Report §8"
+  },
+  {
+   "id": "false-fail",
+   "ph": [
+    "false fail",
+    "failed unfairly",
+    "check wrongly fails",
+    "learner failed but was right"
+   ],
+   "kw": [
+    "unfair",
+    "wrongly"
+   ],
+   "a": "That's the mirror image of the lying check: a broken validation failing learners whose work was actually correct. Rocky detects the pattern, and the Guardian can restore those verdicts — but only through the five-gate, named-human process you saw refuse an unauthorized request live.",
+   "n": "Detection + gated restore · refusal live-provable",
+   "src": "Report §3"
+  },
+  {
+   "id": "node16-eol",
+   "ph": [
+    "node 16",
+    "old runtime",
+    "end of life runtime",
+    "node js version"
+   ],
+   "kw": [
+    "runtime",
+    "eol"
+   ],
+   "a": "Yes — a real workshop still tells learners to install Node.js 16, which reached end-of-life in September 2023. That's one of 5 end-of-life runtime findings, and the version-floor fix is one of the three open pull requests.",
+   "n": "5 EOL-runtime findings · fix open as OpenAIWorkshop#2",
+   "src": "Report §5"
+  },
+  {
+   "id": "entra-rename",
+   "ph": [
+    "azure ad",
+    "entra",
+    "renamed product",
+    "old product name"
+   ],
+   "kw": [
+    "rename",
+    "entra"
+   ],
+   "a": "A real repo still said 'Azure AD', which Microsoft renamed to Microsoft Entra ID back in 2023. Rocky found it, drafted the fix, and that became our first merged pull request. 12 renamed-product findings in total.",
+   "n": "MCW#1 merged · 12 renamed-product findings",
+   "src": "Report §5, §6"
+  },
+  {
+   "id": "companion-evidence",
+   "ph": [
+    "evidence card",
+    "how does the companion answer",
+    "i dont know",
+    "refuses to answer",
+    "answer wrong advice"
+   ],
+   "kw": [
+    "companion",
+    "evidence"
+   ],
+   "a": "The Companion answers only from evidence the engine verified — lab state, checks, logs. When it can't verify something it says 'I don't know' instead of guessing, and it refuses plausible-but-wrong shortcuts, like picking a smaller VM when the real cause is the region. With the AI voice off it still works — it shows the evidence card directly.",
+   "n": "Evidence-only answers · honest 'I don't know' · works with AI off",
+   "src": "Report §3, §4"
+  },
+  {
+   "id": "can-learners-see",
+   "ph": [
+    "learner facing",
+    "do learners see rocky",
+    "in the lab today",
+    "shipped to learners"
+   ],
+   "kw": [
+    "learners",
+    "embedded"
+   ],
+   "a": "Not yet — what you saw is the working companion inside a simulated learner environment. Putting it in front of real learners is a HIGH rung on the risk ladder, gated behind the pilot results and named approvals. The path is: prove it in the QA event first, then the support pilot, then learner-facing.",
+   "n": "Sim today · learner-facing = gated rollout step",
+   "src": "Report §9"
+  },
+  {
+   "id": "multi-cloud",
+   "ph": [
+    "other clouds",
+    "aws",
+    "gcp",
+    "only azure",
+    "multi cloud"
+   ],
+   "kw": [
+    "cloud",
+    "vendor"
+   ],
+   "a": "The engine is vendor-neutral by design — checks are data: token lists, structure rules, contradiction patterns. Azure is where our labs and the first deprecation feeds are, so it's proven there first; adding AWS or GCP catalogs is new check-data, not a rebuild.",
+   "n": "Checks are pluggable data · Azure first because our labs are there",
+   "src": "Architecture"
+  },
+  {
+   "id": "upload-checkup",
+   "ph": [
+    "upload a guide",
+    "try my own guide",
+    "my own lab",
+    "bring my own",
+    "upload page",
+    "drag and drop",
+    "test our lab",
+    "check my guide",
+    "scan my lab"
+   ],
+   "kw": [
+    "upload",
+    "drop",
+    "checkup"
+   ],
+   "a": "Yes — that's the drop zone on the engine page you saw (Act 2). Drop any lab guide on it and the same deterministic engine that scanned our production repos scans yours live, in memory, nothing stored. Upload the whole lab folder and it also verifies images, path casing, and translation token loss. Checks it can't run on what you gave it are listed as skipped — never guessed.",
+   "n": "Same engine, two entry points · files scanned in memory · skipped ≠ guessed",
+   "src": "Live on screen — Act 2 demo.html (rail segment 08) · labdoctor/checkup.js"
+  },
+  {
+   "id": "demo-machine",
+   "ph": [
+    "can i run it",
+    "where does it run",
+    "install it",
+    "try it myself"
+   ],
+   "kw": [
+    "run",
+    "install",
+    "laptop"
+   ],
+   "a": "Everything you saw runs locally from one zero-dependency Node server — clone the repo, node web/server.js, and the same readiness check I ran this morning (check-ready.js) verifies your setup end to end. I can share the repo and the quickstart after this call.",
+   "n": "1 command to run · readiness check validates setup",
+   "src": "Repo quickstart"
+  }
+ ]
 }

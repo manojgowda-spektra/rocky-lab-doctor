@@ -32,36 +32,44 @@
 </style>
 </head>
 <body>
+<script src="/nav.js" data-act="6"></script>
 <div class="wrap">
-  <h1>Every claim, receipted.</h1>
-  <div class="sub">One Rocky, several hats — Doctor, Fixer, Watcher, Guardian, Scholar, Listener, Companion. The engine asserts; the AI narrates.</div>
+  <h1>Act 6 — Every claim, receipted.</h1>
+  <div class="sub">Everything you saw in the last few minutes, checkable right now. The engine asserts; the AI narrates.</div>
 
   <div class="grid">
     <div class="stat"><div class="v orange" id="findings">—</div><div class="k">real defects found in the production catalog</div></div>
     <div class="stat"><div class="v" id="repos">—</div><div class="k">production lab repos scanned (<span id="clean">—</span> clean)</div></div>
-    <div class="stat"><div class="v" id="scanms">—</div><div class="k">live rescan, <span id="files">—</span> guide files</div></div>
-    <div class="stat"><div class="v">0<span style="font-size:16px">/42</span></div><div class="k">false positives in hand-audited sample</div></div>
+    <div class="stat"><div class="v" id="scanms">—</div><div class="k">full-catalog scan (<span id="scandate">—</span>), <span id="files">—</span> guide files</div></div>
+    <div class="stat"><div class="v" id="fpstat">—</div><div class="k">false positives in hand-audited sample</div></div>
   </div>
 
   <div class="lines">
     <span class="real">REAL</span> — deprecated AI models learners are told to deploy · renamed products · broken images learners see<br>
     <b>Detects what tickets can't:</b> validations that silently PASS learners whose work is wrong<br>
-    <b id="testline">104 deterministic tests · 57-check demo preflight</b> · runs with the AI switched off<br>
+    <b id="testline">— deterministic tests</b> · runs with the AI switched off<br>
     Every fix is a draft with evidence — a human approves. <b>We don't fake green.</b><br>
-    <span style="font-size:12px">5 real pull requests · 2 merged · 1 CI-blocked regression closed in 4s · CI gate armed on production content</span>
+    <span style="font-size:12px" id="prline">—</span>
   </div>
 
-  <a class="url" id="selfurl" href="/">open Rocky</a>
-  <div class="tag">Pick any finding. Open the file. Check us. <span id="prline"></span></div>
-  <div class="tag" style="margin-top:10px">
-    <a class="real" style="text-decoration:none" href="/">🏠 Home</a> ·
-    <a class="real" style="text-decoration:none" href="/labdoctor.html">🩺 Doctor</a> ·
-    <a class="real" style="text-decoration:none" href="/campaigns.html">🛠️ Fixer</a> ·
-    <a class="real" style="text-decoration:none" href="/monitor.html">📡 Watcher</a> ·
-    <a class="real" style="text-decoration:none" href="/amnesty.html">⚖️ Guardian</a> ·
-    <a class="real" style="text-decoration:none" href="/intent.html">📋 Scholar</a> ·
-    <a class="real" style="text-decoration:none" href="/support.html">🎧 Listener</a> ·
-    <a class="real" style="text-decoration:none" href="/rocky.html?demo=1">💬 Companion</a>
+  <div style="border:1px solid rgba(46,230,200,.35);border-radius:14px;background:rgba(46,230,200,.05);padding:16px 22px;margin-bottom:24px;text-align:left">
+    <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:800;margin-bottom:8px">The ask — three things</div>
+    <div style="font-size:13.5px;line-height:1.9;color:var(--ink)">
+      1 · <b>Merge the open pull requests</b> — they're green and reviewed.<br>
+      2 · <b>Approve a two-week support shadow-pilot</b> — that gets us the measured triage number, the first real business figure.<br>
+      3 · <b>Re-enable the AI subscription</b> — the learner companion gets its voice back (everything you just saw ran without it).
+    </div>
+  </div>
+
+  <div class="tag">Pick any finding. Open the file. Check us.</div>
+
+  <div class="tag" style="margin-top:14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Optional deep-dives</div>
+  <div class="tag" style="margin-top:6px">
+    <a class="real" style="text-decoration:none" href="/amnesty.html">⚖️ Guardian (SIM)</a> ·
+    <a class="real" style="text-decoration:none" href="/intent.html">📋 Scholar (REAL)</a> ·
+    <a class="real" style="text-decoration:none" href="/backstage.html">🎛 Backstage</a> ·
+    <a class="real" style="text-decoration:none" href="/qa.html">🗒 Q&amp;A sheet</a> ·
+    <a class="real" style="text-decoration:none" href="/">🏠 Back to the act map</a>
   </div>
 </div>
 <script>
@@ -73,8 +81,15 @@ fetch('/api/labhealth/real-scan').then(x=>x.json()).then(r=>{
   document.getElementById('files').textContent=r.totals.files;
   const ms=r.repos.reduce((s,x)=>s+(x.ms||0),0);
   document.getElementById('scanms').textContent=(ms/1000).toFixed(1)+'s';
+  if(r.scannedAt)document.getElementById('scandate').textContent=new Date(r.scannedAt).toLocaleDateString();
 }).catch(()=>{});
-document.getElementById('selfurl').textContent=location.origin.replace(/^https?:\/\//,'');
+fetch('/api/facts').then(x=>x.json()).then(f=>{
+  if(!f||!f.static) return;
+  const s=f.static, fp=s.falsePositiveAudit||{};
+  document.getElementById('fpstat').innerHTML=(fp.falsePositives??'—')+'<span style="font-size:16px">/'+(fp.sampled??'—')+'</span>';
+  document.getElementById('testline').textContent=s.tests+' deterministic tests · readiness-checked before every demo';
+  document.getElementById('prline').textContent=s.pullRequests+' real pull requests · '+s.pullRequestsMerged+' merged · '+(s.ciBlockedRegressions??1)+' CI-blocked regression closed in '+s.ciBlockSeconds+'s · CI gate armed on production content';
+}).catch(()=>{});
 </script>
 </body>
 </html>

@@ -3,15 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rocky — the reliability layer for hands-on cloud labs</title>
+<title>Rocky — demo home</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 15V7' stroke='%23aebdd3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='6' r='3.5' fill='%232ee6c8'/%3E%3Crect x='6' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Crect x='51' y='26' width='7' height='15' rx='3.5' fill='%23aebdd3'/%3E%3Cellipse cx='32' cy='34' rx='23' ry='21' fill='%23e9eff8'/%3E%3Crect x='13.5' y='23.5' width='37' height='21.5' rx='10.7' fill='%230a1120'/%3E%3Crect x='22.4' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(6 25.3 34.2)'/%3E%3Crect x='35.8' y='27.5' width='5.8' height='13.5' rx='2.9' fill='%232ee6c8' transform='rotate(-6 38.7 34.2)'/%3E%3C/svg%3E">
+<!--
+  THE DEMO HOME — the presenter's map, not a marketing page.
+  One entry point ("Start the demo"), the six acts in the exact order they're presented,
+  live REAL numbers (never hardcoded), the honesty legend, and a clearly-OPTIONAL extras strip.
+  Canonical script: docs/DEMO_MASTER_SCRIPT.md — the acts here mirror it 1:1.
+-->
 <style>
   :root{
-    --bg:#080b11; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.06);
-    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.14);
+    --bg:#080b11; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
     --ink:#eaf2f6; --dim:#8b98a6; --dim2:#5f6b78;
-    --teal:#2ee6c8; --teal-dim:rgba(46,230,200,.14);
-    --crit:#ff5c72; --high:#ff9f45; --med:#ffd93d; --low:#6ba6ff; --good:#2ee6c8; --violet:#a78bfa;
+    --teal:#2ee6c8; --teal-dim:rgba(46,230,200,.14); --high:#ff9f45; --sim:#a9cbff;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
@@ -20,99 +25,72 @@
   body{background:radial-gradient(1200px 720px at 80% -10%,rgba(46,230,200,.07),transparent 58%),radial-gradient(900px 600px at 8% 6%,rgba(107,166,255,.05),transparent 55%),var(--bg);
     color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
   a{color:inherit;text-decoration:none}
-  ::selection{background:var(--teal-dim)}
-  .wrap{max-width:1120px;margin:0 auto;padding:20px 22px 70px}
+  .wrap{max-width:980px;margin:0 auto;padding:26px 22px 60px}
 
-  /* top bar */
-  .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 2px 20px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;
+  .top{display:flex;align-items:center;gap:14px;padding:0 0 22px}
+  .logo{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
         background:linear-gradient(150deg,rgba(46,230,200,.22),rgba(46,230,200,.05));border:1px solid var(--line2)}
-  .brand h1{font-size:18px;margin:0;font-weight:750;letter-spacing:-.01em}
-  .brand p{margin:1px 0 0;font-size:11.5px;color:var(--dim)}
+  .top h1{font-size:19px;margin:0;font-weight:800;letter-spacing:-.01em}
+  .top p{margin:1px 0 0;font-size:11.5px;color:var(--dim)}
   .spacer{flex:1}
   .hbadge{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel)}
   .hbadge b{color:var(--teal)}
-  .btn{cursor:pointer;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px}
-  .btn:hover{border-color:var(--teal)}
-  .btn.primary{background:var(--teal);color:#04120f;border-color:transparent}
-  .btn.primary:hover{filter:brightness(1.06)}
 
-  /* hero */
-  .hero{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:26px 26px 22px;margin-bottom:14px}
-  .hero .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
-  .hero h2{font-size:30px;line-height:1.12;margin:0 0 12px;font-weight:800;letter-spacing:-.02em;max-width:20ch;text-wrap:balance}
+  .hero{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:26px;margin-bottom:14px;
+    display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+  .hero .txt{flex:1;min-width:280px}
+  .hero h2{font-size:26px;line-height:1.15;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
   .hero h2 em{font-style:normal;color:var(--teal)}
-  .hero .lede{color:var(--dim);font-size:15px;max-width:66ch;line-height:1.6}
-  .hero .lede b{color:var(--ink);font-weight:600}
-  .hero .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .hero .lede{color:var(--dim);font-size:14px;max-width:62ch;line-height:1.6;margin:0}
+  .hero .lede b{color:var(--ink)}
+  .startbtn{display:inline-flex;align-items:center;gap:10px;background:var(--teal);color:#04241f;font-weight:800;
+    font-size:16px;border-radius:12px;padding:16px 26px;box-shadow:0 10px 34px rgba(46,230,200,.25);white-space:nowrap}
+  .startbtn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .startbtn small{display:block;font-size:10.5px;font-weight:600;opacity:.75}
 
-  /* live strip */
-  .live{display:grid;grid-template-columns:auto repeat(4,1fr);gap:14px;align-items:center;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px 18px;margin-bottom:14px}
-  @media(max-width:820px){.live{grid-template-columns:auto 1fr 1fr}}
-  .ring{position:relative;width:78px;height:78px;flex:none}
-  .ring svg{transform:rotate(-90deg)}
-  .ring .num{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-  .ring .num b{font-size:22px;font-weight:750}
-  .ring .num span{font-size:8.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
-  .lstat .v{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums}
-  .lstat .v.real{color:var(--teal)} .lstat .v.warn{color:var(--high)}
-  .lstat .k{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;line-height:1.45}
-  .lstat .tag{font-size:9px;font-weight:800;letter-spacing:.5px;padding:1px 6px;border-radius:5px;margin-left:5px;vertical-align:middle}
-  .tag.real{background:var(--teal-dim);color:var(--teal)} .tag.sim{background:rgba(107,166,255,.14);color:#a9cbff}
+  /* live REAL numbers */
+  .live{display:flex;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;background:var(--panel);
+    padding:14px 18px;margin-bottom:22px;align-items:center;justify-content:space-around}
+  .lstat{text-align:center;min-width:110px}
+  .lstat .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--teal)}
+  .lstat .v.warn{color:var(--high)}
+  .lstat .k{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;line-height:1.4}
+  .tag{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:1px 6px;border-radius:5px;vertical-align:middle}
+  .tag.real{background:var(--teal-dim);color:var(--teal)}
 
-  h3.section{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:26px 2px 12px;font-weight:700}
+  h3.section{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:24px 2px 12px;font-weight:700}
   h3.section span{color:var(--dim2);text-transform:none;letter-spacing:0;font-weight:400;font-size:11.5px}
 
-  /* workflow spine */
-  .spine{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
-  @media(max-width:900px){.spine{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:560px){.spine{grid-template-columns:1fr}}
-  .stage{position:relative;padding:16px 15px 15px;border-right:1px solid var(--line);text-decoration:none;color:inherit;display:block;transition:background .15s}
-  .spine>.stage:nth-child(6n){border-right:none}
-  @media(max-width:900px){.spine>.stage:nth-child(3n){border-right:none}.stage{border-bottom:1px solid var(--line)}.spine>.stage:nth-last-child(-n+3){border-bottom:none}}
-  @media(max-width:560px){.stage{border-right:none!important;border-bottom:1px solid var(--line)!important}.spine>.stage:last-child{border-bottom:none!important}}
-  .stage:hover{background:var(--panel2)}
-  .stage .n{font-family:var(--mono);font-size:10px;color:var(--dim2);letter-spacing:.05em}
-  .stage h4{font-size:14.5px;font-weight:750;margin:5px 0 6px;letter-spacing:-.01em}
-  .stage p{font-size:11.5px;color:var(--dim);margin:0 0 10px;line-height:1.45;min-height:48px}
-  .stage .hat{font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.02em}
-  .stage .st{font-family:var(--mono);font-size:10.5px;color:var(--ink);margin-top:7px;display:block}
-  .stage .arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);z-index:2;color:var(--dim2);font-size:14px;background:var(--bg);padding:2px 0}
-  .spine>.stage:nth-child(6n) .arrow,.spine>.stage:last-child .arrow{display:none}
-  @media(max-width:900px){.stage .arrow{display:none}}
+  /* the act map */
+  .acts{display:flex;flex-direction:column;gap:8px}
+  .act{display:flex;align-items:center;gap:16px;border:1px solid var(--line);border-radius:13px;background:var(--panel);
+    padding:14px 18px;transition:border-color .15s,transform .15s}
+  .act:hover{border-color:var(--teal);transform:translateX(3px)}
+  .act .n{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);
+    font-size:14px;font-weight:800;background:var(--panel2);border:1px solid var(--line2);color:var(--teal)}
+  .act .body{flex:1;min-width:0}
+  .act .t{font-weight:750;font-size:14.5px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .act .d{color:var(--dim);font-size:12px;margin-top:2px;line-height:1.5}
+  .act .time{flex:none;font-family:var(--mono);font-size:11px;color:var(--dim2)}
+  .act .go{flex:none;color:var(--teal);font-weight:700;font-size:13px}
+  .pv{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:5px}
+  .pv.real{background:var(--teal-dim);color:var(--teal)}
+  .pv.sim{background:rgba(107,166,255,.15);color:var(--sim)}
+  .skip{font-size:9px;font-weight:700;color:var(--dim2);border:1px dashed var(--line2);border-radius:5px;padding:1px 6px}
 
-  /* hats grid */
-  .hats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  @media(max-width:900px){.hats{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:520px){.hats{grid-template-columns:1fr}}
-  .hat-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 15px;text-decoration:none;color:inherit;display:block;transition:border-color .15s,transform .15s}
-  .hat-card:hover{border-color:var(--teal);transform:translateY(-1px)}
-  .hat-card .row1{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-  .hat-card .hemoji{font-size:19px}
-  .hat-card .hname{font-weight:700;font-size:14px}
-  .hat-card .hname small{color:var(--dim);font-weight:500;font-size:11px}
-  .hat-card p{margin:0;font-size:11.5px;color:var(--dim);line-height:1.5}
-  .hat-card .prov{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:1px 6px;border-radius:5px;margin-left:auto}
+  /* extras */
+  .extras{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  .extra{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:12px 14px;transition:border-color .15s}
+  .extra:hover{border-color:var(--sim)}
+  .extra .t{font-weight:700;font-size:12.5px}
+  .extra .d{color:var(--dim);font-size:11px;margin-top:3px;line-height:1.45}
 
-  /* role views */
-  .views{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  @media(max-width:900px){.views{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:520px){.views{grid-template-columns:1fr}}
-  .view{border:1px solid var(--line);border-radius:12px;background:linear-gradient(160deg,var(--panel2),var(--panel));padding:15px;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:border-color .15s}
-  .view:hover{border-color:var(--violet)}
-  .view .vk{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin-bottom:8px}
-  .view h4{font-size:15px;font-weight:750;margin:0 0 6px}
-  .view p{font-size:11.5px;color:var(--dim);margin:0 0 12px;line-height:1.5;flex:1}
-  .view .go{font-size:11.5px;color:var(--teal);font-weight:650}
-
-  /* footer legend */
-  .legend{margin-top:26px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 18px;display:flex;gap:22px;flex-wrap:wrap;align-items:center;justify-content:center;font-size:11.5px;color:var(--dim)}
-  .legend .item{display:inline-flex;align-items:center;gap:7px}
-  .legend .sw{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:5px}
-  .sw.real{background:var(--teal-dim);color:var(--teal)} .sw.sim{background:rgba(107,166,255,.14);color:#a9cbff} .sw.mod{background:rgba(167,139,250,.16);color:#c9b8ff}
-  .sw.mix{background:rgba(46,230,200,.1);color:#8ff0e0;border:1px solid rgba(107,166,255,.45)}
-  .foot{margin-top:18px;text-align:center;font-size:11px;color:var(--dim2);line-height:1.8}
+  .legend{margin-top:24px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px 18px;
+    display:flex;gap:22px;flex-wrap:wrap;align-items:center;justify-content:center;font-size:11.5px;color:var(--dim)}
+  .legend .sw{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:5px;margin-right:6px}
+  .sw.real{background:var(--teal-dim);color:var(--teal)} .sw.sim{background:rgba(107,166,255,.14);color:var(--sim)}
+  .sw.mod{background:rgba(167,139,250,.16);color:#c9b8ff}
+  .foot{margin-top:16px;text-align:center;font-size:11px;color:var(--dim2);line-height:1.8}
   .foot b{color:var(--dim)}
 </style>
 </head>
@@ -120,193 +98,145 @@
 <div class="wrap">
 
   <div class="top">
-    <a class="brand" href="/">
-      <div class="logo" aria-label="Rocky">
-        <svg width="32" height="32" viewBox="0 0 64 64" role="img" aria-hidden="true">
-          <defs>
-            <linearGradient id="rkHead" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3cfe2"/></linearGradient>
-            <linearGradient id="rkVisor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#131d33"/><stop offset="1" stop-color="#05080f"/></linearGradient>
-            <linearGradient id="rkEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eafffb"/><stop offset=".45" stop-color="#2ee6c8"/><stop offset="1" stop-color="#17b09a"/></linearGradient>
-            <filter id="rkGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.6"/></filter>
-          </defs>
-          <path d="M32 15 V7" stroke="#aebdd3" stroke-width="2.6" stroke-linecap="round"/>
-          <circle cx="32" cy="5.5" r="3.4" fill="#2ee6c8" filter="url(#rkGlow)" opacity=".85"/>
-          <circle cx="32" cy="5.5" r="2.2" fill="#2ee6c8"/>
-          <circle cx="31.2" cy="4.7" r=".8" fill="#eafffb"/>
-          <rect x="6.5" y="26" width="6" height="14" rx="3" fill="#aebdd3"/>
-          <rect x="51.5" y="26" width="6" height="14" rx="3" fill="#aebdd3"/>
-          <ellipse cx="32" cy="34" rx="23" ry="20.5" fill="url(#rkHead)"/>
-          <path d="M12.5 28 A 21 18 0 0 1 51.5 28" stroke="#ffffff" stroke-opacity=".7" stroke-width="1.6" fill="none"/>
-          <rect x="13.5" y="24" width="37" height="21" rx="10.5" fill="url(#rkVisor)"/>
-          <rect x="13.5" y="24" width="37" height="21" rx="10.5" stroke="#ffffff" stroke-opacity=".12" fill="none"/>
-          <rect x="17" y="26.5" width="30" height="7" rx="3.5" fill="#9fd8ff" opacity=".12"/>
-          <g filter="url(#rkGlow)" opacity=".9">
-            <rect x="22.4" y="28" width="5.6" height="13" rx="2.8" fill="#2ee6c8" transform="rotate(6 25.2 34.5)"/>
-            <rect x="36" y="28" width="5.6" height="13" rx="2.8" fill="#2ee6c8" transform="rotate(-6 38.8 34.5)"/>
-          </g>
-          <rect x="22.4" y="28" width="5.6" height="13" rx="2.8" fill="url(#rkEye)" transform="rotate(6 25.2 34.5)"/>
-          <rect x="36" y="28" width="5.6" height="13" rx="2.8" fill="url(#rkEye)" transform="rotate(-6 38.8 34.5)"/>
-          <circle cx="24.4" cy="30.8" r="1.1" fill="#ffffff" opacity=".9"/>
-          <circle cx="38" cy="30.8" r="1.1" fill="#ffffff" opacity=".9"/>
-        </svg>
-      </div>
-      <div><h1>Rocky</h1><p>the reliability layer for hands-on cloud labs</p></div>
-    </a>
+    <div class="logo" aria-label="Rocky">
+      <svg width="34" height="34" viewBox="0 0 64 64" role="img" aria-hidden="true">
+        <defs>
+          <linearGradient id="rkHead" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3cfe2"/></linearGradient>
+          <linearGradient id="rkVisor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#131d33"/><stop offset="1" stop-color="#05080f"/></linearGradient>
+          <linearGradient id="rkEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eafffb"/><stop offset=".45" stop-color="#2ee6c8"/><stop offset="1" stop-color="#17b09a"/></linearGradient>
+          <filter id="rkGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.6"/></filter>
+        </defs>
+        <path d="M32 15 V7" stroke="#aebdd3" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="32" cy="5.5" r="3.4" fill="#2ee6c8" filter="url(#rkGlow)" opacity=".85"/>
+        <circle cx="32" cy="5.5" r="2.2" fill="#2ee6c8"/>
+        <rect x="6.5" y="26" width="6" height="14" rx="3" fill="#aebdd3"/>
+        <rect x="51.5" y="26" width="6" height="14" rx="3" fill="#aebdd3"/>
+        <ellipse cx="32" cy="34" rx="23" ry="20.5" fill="url(#rkHead)"/>
+        <rect x="13.5" y="24" width="37" height="21" rx="10.5" fill="url(#rkVisor)"/>
+        <g filter="url(#rkGlow)" opacity=".9">
+          <rect x="22.4" y="28" width="5.6" height="13" rx="2.8" fill="#2ee6c8" transform="rotate(6 25.2 34.5)"/>
+          <rect x="36" y="28" width="5.6" height="13" rx="2.8" fill="#2ee6c8" transform="rotate(-6 38.8 34.5)"/>
+        </g>
+        <rect x="22.4" y="28" width="5.6" height="13" rx="2.8" fill="url(#rkEye)" transform="rotate(6 25.2 34.5)"/>
+        <rect x="36" y="28" width="5.6" height="13" rx="2.8" fill="url(#rkEye)" transform="rotate(-6 38.8 34.5)"/>
+      </svg>
+    </div>
+    <div><h1>Rocky</h1><p>the reliability layer for hands-on cloud labs</p></div>
     <div class="spacer"></div>
-    <div class="hbadge" id="modelBadge">engine: <b>deterministic + LLM</b></div>
-    <a class="btn primary" href="/labdoctor.html">Open Rocky →</a>
+    <div class="hbadge" id="modelBadge">engine: <b>deterministic</b> (AI off)</div>
   </div>
 
   <div class="hero">
-    <div class="eyebrow">One companion · seven hats · one honest engine</div>
-    <h2>Labs that <em>test, diagnose, and fix themselves</em> — before a learner ever complains.</h2>
-    <p class="lede">Cloud labs rot silently: Azure changes underneath them and a lab's own checks start passing wrong
-      work or failing correct work. Today you find out from angry tickets, weeks late. <b>Rocky watches every
-      learner session as a live test</b>, finds the contradiction that proves a real defect, drafts the fix for a
-      human to approve, and remembers every case — and <b>every claim it makes is labelled real, predicted, or
-      simulated. It never fakes a green result.</b></p>
-    <div class="cta">
-      <a class="btn primary" href="/labdoctor.html">🩺 Start with the Doctor</a>
-      <a class="btn" href="/rocky.html?demo=1">💬 Meet Rocky (learner view)</a>
-      <a class="btn" href="/receipts.html">🧾 See the receipts</a>
+    <div class="txt">
+      <h2>Labs rot silently. Rocky <em>finds it, drafts the fix, and proves the fix worked.</em></h2>
+      <p class="lede">The cloud changes underneath a lab even when nobody edits the guide — a model retires, a product
+      is renamed, a translation drops a login token — and a learner at 2&nbsp;a.m. pays for it.
+      This demo shows the whole loop on <b>real production guides, live</b>, in six short acts.
+      Everything on screen is labelled <b>REAL or SIMULATED</b> — Rocky never fakes green.</p>
     </div>
+    <a class="startbtn" href="/cloudlabs-sim.html">▶ Start the demo<small>Act 1 · the stuck learner</small></a>
   </div>
 
   <div class="live" id="live">
-    <div class="ring" id="ring">
-      <svg width="78" height="78" viewBox="0 0 78 78"><circle cx="39" cy="39" r="33" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/><circle id="ringArc" cx="39" cy="39" r="33" fill="none" stroke="#2ee6c8" stroke-width="7" stroke-linecap="round" stroke-dasharray="207" stroke-dashoffset="207"/></svg>
-      <div class="num"><b id="healthNum">—</b><span>fleet health</span></div>
-    </div>
-    <div class="lstat"><div class="v warn" id="brokenNum">—</div><div class="k">labs failing learners now <span class="tag sim">SIM FLEET</span></div></div>
-    <div class="lstat"><div class="v" id="learnersNum">—</div><div class="k">learners in impacted labs <span class="tag sim">SIM FLEET</span></div></div>
-    <div class="lstat"><div class="v real" id="findingsNum">—</div><div class="k">real defects found <span class="tag real">REAL REPOS</span></div></div>
-    <div class="lstat"><div class="v real" id="reposNum">—</div><div class="k">production repos scanned</div></div>
+    <div class="lstat"><div class="v warn" id="findingsNum">—</div><div class="k">real defects found <span class="tag real">REAL</span></div></div>
+    <div class="lstat"><div class="v" id="reposNum">—</div><div class="k">production repos scanned</div></div>
+    <div class="lstat"><div class="v" id="filesNum">—</div><div class="k">guide files scanned</div></div>
+    <div class="lstat"><div class="v" id="campNum">—</div><div class="k">root-cause campaigns</div></div>
+    <div class="lstat"><div class="v" id="prNum">—</div><div class="k">real pull requests (<span id="prMerged">—</span> merged)</div></div>
+    <div class="lstat"><div class="v" id="testNum">—</div><div class="k">automated tests</div></div>
   </div>
 
-  <h3 class="section">The workflow <span>— one story, six stages. Each stage is a hat Rocky wears; click any stage to jump in.</span></h3>
-  <div class="spine">
-    <a class="stage" href="/receipts.html">
-      <div class="n">STAGE 1</div><h4>Problem</h4>
-      <p>Azure shifts a region default, retires a model, renames a blade. The lab's checks start lying — silently.</p>
-      <div class="hat">the reason Rocky exists</div>
-      <span class="st">weeks → minutes</span>
-      <span class="arrow">→</span>
+  <h3 class="section">The demo — six acts, in this order <span>· ~12 min full, ~8 min if you skip Act 5 · script: docs/DEMO_MASTER_SCRIPT.md</span></h3>
+  <div class="acts">
+    <a class="act" href="/cloudlabs-sim.html">
+      <span class="n">1</span>
+      <span class="body"><span class="t">The stuck learner <span class="pv sim">SIMULATED</span></span>
+      <span class="d">A CloudLabs lab, mid-failure: validations red, <code style="font-size:11px">SkuNotAvailable</code> in the log. Rocky diagnoses from evidence, refuses the tempting wrong fix, escalates with a redacted packet.</span></span>
+      <span class="time">~3 min</span><span class="go">Open →</span>
     </a>
-    <a class="stage" href="/labdoctor.html">
-      <div class="n">STAGE 2</div><h4>Detection</h4>
-      <p>Scan real lab repos + every learner session. Deterministic, file:line evidence, CI-gated.</p>
-      <div class="hat">🩺 Doctor</div>
-      <span class="st" id="s-detect">— findings</span>
-      <span class="arrow">→</span>
+    <a class="act" href="/demo.html">
+      <span class="n">2</span>
+      <span class="body"><span class="t">The engine, live <span class="pv real">REAL</span></span>
+      <span class="d">The heart of the demo. Pick a real production guide → it finds the defects → drafts the fix as a red/green diff → re-scans to <b>prove</b> the fix. Three arcs: broken, needs-a-human, clean.</span></span>
+      <span class="time">~4 min</span><span class="go">Open →</span>
     </a>
-    <a class="stage" href="/labdoctor.html">
-      <div class="n">STAGE 3</div><h4>Diagnosis</h4>
-      <p>Find the contradiction: 100% "passed" yet broken; correct work marked failed. Not a guess — two facts that can't both be true.</p>
-      <div class="hat">🩺 Doctor</div>
-      <span class="st">0 / 42 false positives</span>
-      <span class="arrow">→</span>
+    <a class="act" href="/labdoctor.html">
+      <span class="n">3</span>
+      <span class="body"><span class="t">The fleet <span class="pv real">REAL</span></span>
+      <span class="d">Scale: every production repo scanned at once — findings with file:line evidence, plus upstream retirement deadlines from live feeds.</span></span>
+      <span class="time">~2 min</span><span class="go">Open →</span>
     </a>
-    <a class="stage" href="/campaigns.html">
-      <div class="n">STAGE 4</div><h4>Action</h4>
-      <p>Draft the fix (human approves), group findings into campaigns, restore verdicts wronged by a bad check.</p>
-      <div class="hat">🛠️ Fixer · ⚖️ Guardian</div>
-      <span class="st" id="s-action">— → campaigns</span>
-      <span class="arrow">→</span>
+    <a class="act" href="/campaigns.html">
+      <span class="n">4</span>
+      <span class="body"><span class="t">Decisions, not lint <span class="pv real">REAL</span></span>
+      <span class="d">All findings collapse into a handful of root-cause campaigns — the top three cover most of the backlog. A plan you can actually merge.</span></span>
+      <span class="time">~1.5 min</span><span class="go">Open →</span>
     </a>
-    <a class="stage" href="/monitor.html">
-      <div class="n">STAGE 5</div><h4>Verification</h4>
-      <p>Watch the fleet over time. Recovery is detected automatically; alerts fire only on change, never on steady state.</p>
-      <div class="hat">📡 Watcher</div>
-      <span class="st">recovery auto-detected</span>
-      <span class="arrow">→</span>
+    <a class="act" href="/monitor.html">
+      <span class="n">5</span>
+      <span class="body"><span class="t">The Watcher <span class="pv sim">SIMULATED</span> <span class="skip">SKIPPABLE</span></span>
+      <span class="d">The time dimension: continuous sweeps that alert only on change, fold a platform incident into one alert, and detect recovery on their own.</span></span>
+      <span class="time">~1.5 min</span><span class="go">Open →</span>
     </a>
-    <a class="stage" href="/monitor.html">
-      <div class="n">STAGE 6</div><h4>Prevention</h4>
-      <p>A CI gate blocks rot from ever merging again. Change intelligence warns before a model or runtime is retired.</p>
-      <div class="hat">📡 Watcher · 📋 Scholar</div>
-      <span class="st">regression blocked in 4s</span>
-      <span class="arrow">→</span>
+    <a class="act" href="/receipts.html">
+      <span class="n">6</span>
+      <span class="body"><span class="t">Receipts + the ask <span class="pv real">REAL</span></span>
+      <span class="d">Every number from the last 15 minutes, checkable live — then the three asks. "Pick any finding, open the file, check us."</span></span>
+      <span class="time">~1 min</span><span class="go">Open →</span>
     </a>
   </div>
 
-  <h3 class="section">One Rocky, many hats <span>— the same engine and the same honesty, wearing a different hat for each job.</span></h3>
-  <div class="hats">
-    <a class="hat-card" href="/labdoctor.html"><div class="row1"><span class="hemoji">🩺</span><span class="hname">Doctor <small>· diagnose</small></span><span class="prov sw mix">REAL + SIM</span></div><p>Scans <b>real production lab repos</b>, and diagnoses drift, false-PASS, false-FAIL on a <b>labelled fixture</b> telemetry fleet.</p></a>
-    <a class="hat-card" href="/campaigns.html"><div class="row1"><span class="hemoji">🛠️</span><span class="hname">Fixer <small>· remediate</small></span><span class="prov sw real">REAL</span></div><p>Groups findings by root cause into a mergeable backlog — 104 findings become a handful of campaigns.</p></a>
-    <a class="hat-card" href="/monitor.html"><div class="row1"><span class="hemoji">📡</span><span class="hname">Watcher <small>· monitor</small></span><span class="prov sw sim">SIM</span></div><p>Continuous fleet monitor + reliability ledger. Alerts on change, silence on steady state.</p></a>
-    <a class="hat-card" href="/amnesty.html"><div class="row1"><span class="hemoji">⚖️</span><span class="hname">Guardian <small>· protect</small></span><span class="prov sw sim">SIM</span></div><p>False-FAIL Amnesty: restore verdicts a regressed check wrongly failed — under five gates, human-approved.</p></a>
-    <a class="hat-card" href="/intent.html"><div class="row1"><span class="hemoji">📋</span><span class="hname">Scholar <small>· understand</small></span><span class="prov sw real">REAL</span></div><p>Extracts what each lab step intends, then proves every fact against a verbatim quote from the source.</p></a>
-    <a class="hat-card" href="/support.html"><div class="row1"><span class="hemoji">🎧</span><span class="hname">Listener <small>· triage</small></span><span class="prov sw sim">SIM</span></div><p>Collapses support tickets to root-cause incidents — 74 tickets become 24 real issues.</p></a>
-    <a class="hat-card" href="/rocky.html?demo=1"><div class="row1"><span class="hemoji">💬</span><span class="hname">Companion <small>· assist</small></span><span class="prov sw sim">SIM</span></div><p>The learner-facing character. Answers from real evidence, refuses the tempting-but-wrong fix, never bluffs.</p></a>
-    <a class="hat-card" href="/receipts.html"><div class="row1"><span class="hemoji">🧾</span><span class="hname">Receipts <small>· prove</small></span><span class="prov sw real">REAL</span></div><p>Every number on every screen, sourced. Pick any finding, open the file, check us.</p></a>
-  </div>
-
-  <h3 class="section">Pick your view <span>— the same product, framed for who's in the room.</span></h3>
-  <div class="views">
-    <a class="view" href="/receipts.html">
-      <div class="vk">Executive</div><h4>The business case</h4>
-      <p>The problem, the proof, and the money line: detection in minutes not weeks, QA that scales with sessions not headcount.</p>
-      <span class="go">Open the receipts →</span>
-    </a>
-    <a class="view" href="/labdoctor.html">
-      <div class="vk">Technical</div><h4>How it actually works</h4>
-      <p>Deterministic contradiction detection with file:line evidence; the engine asserts, the model only narrates.</p>
-      <span class="go">Open the Doctor →</span>
-    </a>
-    <a class="view" href="/monitor.html">
-      <div class="vk">Operations</div><h4>Running the fleet</h4>
-      <p>Continuous monitoring, a reliability ledger with error budgets, and campaigns that turn a backlog into a plan.</p>
-      <span class="go">Open the Watcher →</span>
-    </a>
-    <a class="view" href="/support.html">
-      <div class="vk">Support</div><h4>Fewer tickets, faster answers</h4>
-      <p>Tickets collapsed to real incidents, and a companion that resolves the common ones before they're ever filed.</p>
-      <span class="go">Open the Listener →</span>
-    </a>
+  <h3 class="section">Extras <span>· optional deep-dives — not part of the main flow</span></h3>
+  <div class="extras">
+    <a class="extra" href="/amnesty.html"><div class="t">⚖️ The Guardian <span class="pv sim">SIM</span></div><div class="d">Restores learners wrongly failed by a broken check — five gates, refuses without a named human (live HTTP 400).</div></a>
+    <a class="extra" href="/intent.html"><div class="t">📋 The Scholar <span class="pv real">REAL</span></div><div class="d">Extracts each step's intent from real guides — every fact anchored to a verbatim quote.</div></a>
+    <a class="extra" href="/backstage.html"><div class="t">🎛 Backstage</div><div class="d">Second-screen live feed of what the engine is doing — proof the engine asserts and the AI only narrates.</div></a>
+    <a class="extra" href="/qa.html"><div class="t">🗒 Q&amp;A sheet</div><div class="d">Every anticipated audience question with the honest answer — printable, keep it next to the keyboard.</div></a>
+    <a class="extra" href="/rail.html"><div class="t">🎬 Video track</div><div class="d">Hands-free scripted tour (rail + presenter notes) for recording a demo video — not for live rooms.</div></a>
   </div>
 
   <div class="legend">
-    <span class="item"><span class="sw real">REAL</span> actual production lab repos, PRs, CI</span>
-    <span class="item"><span class="sw sim">SIM</span> digital twin — labelled, never presented as production</span>
-    <span class="item"><span class="sw mix">REAL + SIM</span> real repo scan shown alongside a labelled fixture fleet</span>
-    <span class="item"><span class="sw mod">MODELED</span> projected impact, explicitly not executed</span>
+    <span><span class="sw real">REAL</span> actual production lab repos, PRs, CI</span>
+    <span><span class="sw sim">SIMULATED</span> digital twin — labelled, never presented as production</span>
+    <span><span class="sw mod">MODELED</span> projected impact, explicitly not executed</span>
   </div>
   <div class="foot">
     <b>The engine asserts; the AI narrates. We never fake green.</b><br>
-    104 automated tests · 50-check demo preflight · 0/42 false positives, hand-audited · running on Azure
+    <span id="footFacts">— </span> · before presenting run <b>START_DEMO.cmd</b> (starts server + readiness check)
   </div>
 
 </div>
 <script>
-// Live numbers — pulled from the same APIs the dashboards use, so the front door is never stale or hardcoded.
-// Every fetch is guarded: if an endpoint is slow or down, the page still renders (dashes), never a dead screen.
+// Live numbers only — nothing on this page is hardcoded. Guarded: a slow endpoint leaves dashes, never a dead page.
 (async () => {
-  try {
-    const cat = await (await fetch('/api/labhealth/catalog')).json();
-    if (cat && typeof cat.catalogHealth === 'number') {
-      document.getElementById('healthNum').textContent = cat.catalogHealth;
-      const arc = document.getElementById('ringArc'); const C = 2 * Math.PI * 33;
-      arc.setAttribute('stroke-dasharray', C.toFixed(1));
-      arc.setAttribute('stroke-dashoffset', (C * (1 - cat.catalogHealth / 100)).toFixed(1));
-      arc.setAttribute('stroke', cat.catalogHealth >= 85 ? '#2ee6c8' : cat.catalogHealth >= 60 ? '#ff9f45' : '#ff5c72');
-      document.getElementById('brokenNum').textContent = cat.broken + ' / ' + cat.labCount;
-      document.getElementById('learnersNum').textContent = (cat.learnersAffected || 0).toLocaleString();
-    }
-  } catch (e) {}
   try {
     const rs = await (await fetch('/api/labhealth/real-scan')).json();
     if (rs && rs.available) {
       document.getElementById('findingsNum').textContent = rs.totals.findings;
       document.getElementById('reposNum').textContent = rs.repoCount;
-      const c = await (await fetch('/api/labhealth/campaigns')).json().catch(() => null);
-      document.getElementById('s-detect').textContent = rs.totals.findings + ' findings · ' + rs.repoCount + ' repos';
-      if (c && c.available) document.getElementById('s-action').textContent = rs.totals.findings + ' → ' + c.stats.campaigns + ' campaigns';
+      document.getElementById('filesNum').textContent = rs.totals.files;
     }
   } catch (e) {}
   try {
+    const c = await (await fetch('/api/labhealth/campaigns')).json();
+    if (c && c.available) document.getElementById('campNum').textContent = c.stats.campaigns;
+  } catch (e) {}
+  try {
+    const f = await (await fetch('/api/facts')).json();
+    if (f && f.static) {
+      document.getElementById('prNum').textContent = f.static.pullRequests;
+      document.getElementById('prMerged').textContent = f.static.pullRequestsMerged;
+      document.getElementById('testNum').textContent = f.static.tests;
+      const fp = f.static.falsePositiveAudit || {};
+      document.getElementById('footFacts').textContent =
+        f.static.tests + ' automated tests · ' + (fp.falsePositives ?? '—') + '/' + (fp.sampled ?? '—') +
+        ' false positives in the hand audit · CI blocked a planted regression in ' + f.static.ciBlockSeconds + 's';
+    }
+  } catch (e) {}
+  try {
+    // Conservative default is already in the markup ("deterministic, AI off") — only UPGRADE on confirmation.
     const st = await (await fetch('/api/labstate')).json();
-    if (st && st.model && st.model !== 'off') document.getElementById('modelBadge').innerHTML = 'engine: <b>deterministic + LLM</b>';
-    else document.getElementById('modelBadge').innerHTML = 'engine: <b>deterministic</b> (LLM off)';
+    if (st && st.model && st.model !== 'off') document.getElementById('modelBadge').innerHTML = 'engine: <b>deterministic + AI (' + ({ azure: 'Azure OpenAI' }[st.model] || st.model) + ')</b>';
   } catch (e) {}
 })();
 </script>

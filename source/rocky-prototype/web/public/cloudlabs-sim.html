@@ -169,8 +169,8 @@
     <!-- ============ GUIDE PANE ============ -->
     <div class="guide">
       <div class="gtabs">
-        <div class="gtab on" id="tab-guide" onclick="switchTab('guide')">Lab guide</div>
-        <div class="gtab" id="tab-env" onclick="switchTab('env')">Environment</div>
+        <div class="gtab on" id="tab-guide" onclick="switchTab('guide')">Lab Guide</div>
+        <div class="gtab" id="tab-env" onclick="switchTab('env')">Environment Details</div>
         <div class="gtab" id="tab-help" onclick="switchTab('help')">Help</div>
       </div>
       <div class="gbody" id="pane-guide">
@@ -193,6 +193,7 @@
         <p class="objective">Rocky — the lab companion — lives in the bottom-right of your lab screen. Click it (or the button below) and ask anything about <em>this</em> lab. It answers from your actual validation evidence, and if it can't verify something, it says so instead of guessing.</p>
         <button class="valbtn" onclick="openPanel()">💬 Ask Rocky</button>
         <p class="objective" style="margin-top:14px;font-size:11.5px">Every answer is grounded in: your validation results, the lab's deployment log, and the authored guide. Nothing else. If the AI model is unreachable, Rocky still shows you the engine's deterministic evidence. (Psst — try double-clicking Rocky.)</p>
+        <p class="objective" style="margin-top:18px;font-size:11px;color:#8a97a5">Presenter: <a href="#" onclick="resetSim();return false" style="color:#0b69d4">↻ reset the simulated lab state</a> — restores the broken deployment for the next run. · <a href="/" style="color:#0b69d4">⌂ act map</a></p>
       </div>
     </div>
 
@@ -219,12 +220,15 @@
           <span class="q" onclick="ask('Did I complete this step correctly?')">Check my work</span>
           <span class="q" onclick="ask('My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?')">Why failing?</span>
           <span class="q" onclick="ask('Give me a hint')">Hint</span>
+          <span class="q" style="border-color:#0f8a4d;color:#0f8a4d" onclick="applyFix()">✓ Apply the fix</span>
+          <span class="q" style="border-color:#c62f3e;color:#c62f3e" onclick="escalate()">🛟 Escalate</span>
         </div>
         <div class="compose"><input id="pinput" placeholder="Ask about this lab…"/><button onclick="sendInput()">Send</button></div>
       </div>
     </div>
   </div>
   <div class="toast" id="toastEl"></div>
+  <script src="/nav.js" data-act="1" data-slim></script>
 
 <script>
 const $=(s)=>document.querySelector(s);
@@ -294,14 +298,19 @@ async function validateStep(ev,guid){
 }
 function anyFailing(){return lab&&(lab.validations||[]).some(v=>v.status==='failed');}
 
-/* ---------- terminal: replay the lab's deployment log (same story the engine diagnoses) ---------- */
+/* ---------- terminal: replay the lab's deployment log FROM THE FIXTURE (via /api/labstate) ----------
+   Derived, not hardcoded, so this screen can never contradict the evidence the engine reasons over.
+   The learner's own terminal shows raw output (including the planted fake secret) — watch what the
+   ESCALATION packet does with that same line: redacted before anything leaves the box. */
 function paintTerm(){
   const t=$('#term');
-  t.innerHTML=`<div><span class="p">odl_user@lab-vm:~$</span> az deployment group create -g rg-app --template-file main.bicep</div>
-    <div class="info">[info ] Created resource group 'rg-app' in location 'eastus'.</div>
-    <div class="info">[info ] Created virtual network 'vnet-app' in 'eastus'.</div>
-    <div class="err">[error] SkuNotAvailable — The requested VM size 'Standard_D4s_v5' is currently not available in location 'eastus' for this subscription. Please try another size or deploy to a different location.</div>
-    <div><span class="p">odl_user@lab-vm:~$</span> <span class="cursor"></span></div>`;
+  const rows=(lab&&lab.deploymentLog||[]).map(e=>
+    e.level==='error'
+      ? `<div class="err">[error] ${esc(e.code||'error')} — ${esc(e.message||'')}</div>`
+      : `<div class="info">[info ] ${esc(e.message||'')}</div>`).join('');
+  t.innerHTML=`<div><span class="p">odl_user@lab-vm:~$</span> az deployment group create -g rg-app --template-file main.bicep</div>`+
+    (rows||'<div class="info">[info ] (no deployment activity yet)</div>')+
+    `<div><span class="p">odl_user@lab-vm:~$</span> <span class="cursor"></span></div>`;
 }
 
 /* ============================================================================
@@ -518,11 +527,13 @@ function addMsg(who,t){const d=document.createElement('div');d.className='msg '+
 function typeInto(el,text){el.textContent='';let i=0;(function step(){el.textContent=text.slice(0,i++);if(i<=text.length)setTimeout(step,Math.max(8,16-text.length/24));})();}
 function evidenceCard(){
   const fails=(lab.validations||[]).filter(v=>v.status==='failed');
+  const errs=(lab.deploymentLog||[]).filter(e=>e.level==='error');
+  const region=(lab.lab&&lab.lab.expectedRegion)||'the required region';
   const d=document.createElement('div');d.className='ecard';
   d.innerHTML=`<div class="et">Rocky's evidence — deterministic engine, no AI needed</div>`+
     fails.map(v=>`<div class="row">✗ ${esc(v.description)}${v.expected?` — expected ${esc(JSON.stringify(v.expected))}, observed <b>${esc(JSON.stringify(v.observed))}</b>`:''}</div>`).join('')+
-    `<div class="row">⚠ deployment error: <b>SkuNotAvailable</b> in 'eastus' — a symptom of the wrong region, not the VM size</div>`+
-    `<div class="row" style="color:#0f8a4d">→ fix: recreate the resources in westus2 (the lab's required region)</div>`;
+    errs.map(e=>`<div class="row">⚠ deployment error: <b>${esc(e.code||'error')}</b>${/SkuNotAvailable/i.test(e.code||'')?` — a symptom of the wrong region, not the VM size`:''}</div>`).join('')+
+    `<div class="row" style="color:#0f8a4d">→ fix: recreate the resources in ${esc(region)} (the lab's required region)</div>`;
   $('#plog').appendChild(d);$('#plog').scrollTop=1e9;
 }
 async function ask(message){if(!panelOpen)openPanel();addMsg('you',message);const el=addMsg('rk','…');
@@ -536,9 +547,55 @@ async function ask(message){if(!panelOpen)openPanel();addMsg('you',message);cons
 function sendInput(){const i=$('#pinput');const v=i.value.trim();if(v){i.value='';ask(v);}}
 $('#pinput').addEventListener('keydown',e=>{if(e.key==='Enter')sendInput();});
 
+/* ---------- actions: escalate (redacted packet) + apply-fix (verified, then celebrate) ---------- */
+async function escalate(){
+  if(!panelOpen)openPanel();
+  // the catch must cover the fetch itself, not just JSON parsing — a dead server mid-demo
+  // should produce the honest failure message, never a silent unhandled rejection
+  const r=await fetch('/api/report',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({reason:'learner-escalated'})}).then(x=>x.json()).catch(()=>null);
+  if(!r||!r.ticket){addMsg('rk','Could not reach the escalation endpoint — try again.');return;}
+  const s=r.summary||{};
+  addMsg('rk',`Escalated — you didn't have to explain a thing. Ticket ${r.ticket}.`);
+  const d=document.createElement('div');d.className='ecard';
+  d.innerHTML=`<div class="et">Diagnostic packet — auto-built, secrets REDACTED before it left the box</div>`+
+    `<div class="row">Lab: ${esc(s.lab||'—')}</div>`+
+    `<div class="row">Step: ${esc(s.step||'—')}</div>`+
+    `<div class="row">Likely root cause: <b>${esc(s.likelyRootCause||'—')}</b></div>`+
+    `<div class="row">Failing: ${esc((s.failingValidations||[]).join('; ')||'—')}</div>`+
+    `<div class="row">Errors: ${esc((s.errors||[]).join(' | ')||'—')}</div>`+
+    `<div class="row" style="color:#0f8a4d">Compare the connection-string error with your terminal — the password and API key are gone. Redaction is code, not policy.</div>`;
+  $('#plog').appendChild(d);$('#plog').scrollTop=1e9;
+  setEmotion('hero');showBubble("I've got you — the technical team has everything they need. 🛡️",5);
+}
+async function applyFix(){
+  if(!panelOpen)openPanel();
+  const before=(lab.validations||[]).filter(v=>v.status==='failed').length;
+  addMsg('you','(applies the fix — recreates the resources in the required region)');
+  await fetch('/api/applyfix',{method:'POST',headers:{'content-type':'application/json'},body:'{}'}).catch(()=>{});
+  try{await loadLab();}catch(e){addMsg('rk','Could not re-check the validations — the server is unreachable. Try again.');setEmotion('concerned');return;}
+  paintTerm();
+  const after=(lab.validations||[]).filter(v=>v.status==='failed').length;
+  if(after<before){
+    addMsg('rk',`Re-checked your validations: ${before-after} check${before-after>1?'s':''} now passing${after?` — ${after} still failing (a separate issue, honestly shown)`:' — all green.'}`);
+    setEmotion('celebrate');confetti();showBubble('Verified — the region checks pass now. 🎉',5);
+    setTimeout(()=>{if(tgtName==='celebrate')setEmotion(anyFailing()?'concerned':'happy');},2600);
+  } else {
+    addMsg('rk','Applied — but the validations still fail. That means the fix didn\'t address the real cause; Rocky won\'t pretend otherwise.');
+    setEmotion('concerned');
+  }
+}
+async function resetSim(){
+  await fetch('/api/reset',{method:'POST'}).catch(()=>{});
+  try{await loadLab();}catch(e){toast('Could not reach the server — is it running?');return;}
+  paintTerm();
+  $('#plog').innerHTML='';delete $('#plog').dataset.greeted;
+  closePanel();setEmotion('neutral');toast('Simulated lab state reset — broken deployment restored.');
+}
+
 /* ---------- boot ---------- */
 (async()=>{
   await loadLab();paintTerm();resize();pos=restPos();ptgt=restPos();
+  fetch('/api/backstage/note',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'learner',title:'Act 1 opened: the simulated stuck learner',detail:'CloudLabs-shaped lab, validations failing, SkuNotAvailable in the deployment log',prov:'FIXTURE'})}).catch(()=>{});
   setEmotion('neutral');requestAnimationFrame(frame);
   setTimeout(()=>{setEmotion('curious');showBubble("Hey! I'm Rocky 👋 — click me if this lab gives you trouble.",5);},1200);
   // proactive + evidence-gated: speaks only because checks are genuinely failing in this scenario

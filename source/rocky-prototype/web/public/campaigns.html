@@ -48,14 +48,13 @@
 </style>
 </head>
 <body>
+<script src="/nav.js" data-act="4"></script>
 <div class="wrap">
   <div class="top">
-    <a class="logo" href="/" title="Rocky home" style="text-decoration:none">🛠️</a>
-    <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.6em">· Fixer</span></h1><div class="sub">real findings, grouped by CAUSE — a backlog you can actually merge</div></div>
+    <a class="logo" href="/" title="Demo home" style="text-decoration:none">🛠️</a>
+    <div><h1>Act 4 — Decisions, not lint <span style="color:var(--dim);font-weight:600;font-size:.6em">· Rocky as Fixer</span></h1><div class="sub">real findings, grouped by CAUSE — a backlog you can actually merge</div></div>
     <div class="spacer"></div>
     <span class="realbadge">REAL REPOSITORY SCAN</span>
-    <a class="nav" href="/labdoctor.html">🩺 Doctor</a>
-    <a class="nav" href="/monitor.html">📡 Watcher →</a>
   </div>
 
   <div class="stats" id="stats"></div>
@@ -83,7 +82,8 @@ async function load(){
     '<div class="stat"><div class="v">'+s.campaigns+'</div><div class="k">campaigns (grouped by cause)</div></div>'+
     '<div class="stat"><div class="v">'+s.crossRepoCampaigns+'</div><div class="k">cross-repo campaigns</div></div>'+
     '<div class="stat"><div class="v">'+s.top3CoveragePct+'%</div><div class="k">covered by the top 3</div></div>';
-  $('#coverage').innerHTML='<b>'+s.findings+' findings</b> is a backlog nobody merges. Grouped by cause it is <b>'+s.campaigns+' campaigns</b>, and the top 3 alone cover <b>'+s.top3CoveragePct+'%</b> of everything — that is a Dependabot-shaped unit of work, not a wall of lint.';
+  $('#coverage').innerHTML='<b>'+s.findings+' findings</b> is a backlog nobody merges. Grouped by cause it is <b>'+s.campaigns+' campaigns</b>, and the top 3 alone cover <b>'+s.top3CoveragePct+'%</b> of everything — that is a Dependabot-shaped unit of work, not a wall of lint.'+
+    '<div style="margin-top:6px;color:var(--dim2)">And when support tickets arrive, they attach to these same root causes — fix one campaign, close a whole stack of tickets at once.</div>';
 
   const host=$('#campaigns'); host.innerHTML='';
   r.campaigns.forEach((c,i)=>{

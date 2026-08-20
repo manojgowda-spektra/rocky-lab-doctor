@@ -30,6 +30,20 @@ const REAL_LABS_DIR = process.env.REAL_LABS_DIR || 'C:/Users/ManojGowda/OneDrive
 const SCAN_FILE = path.join(__dirname, '..', 'labdoctor', 'real-scan-results.json');
 function loadRealScan() { try { return JSON.parse(fs.readFileSync(SCAN_FILE, 'utf8')); } catch { return null; } }
 
+// FACTS — the single source for the demo's static verified claims (PR counts, test counts, audits).
+// Scan-derived numbers stay live from /api/labhealth/*; pages read BOTH so a rescan can never
+// contradict the narration. See docs/DEMO_MASTER_SCRIPT.md.
+// Fallback is {} (no .static) ON PURPOSE: pages guard with `f && f.static`, so a missing/corrupt
+// facts.json renders dashes — never the string "undefined" in a stat tile.
+const FACTS = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'facts.json'), 'utf8')); } catch { return {}; } })();
+
+// Build stamp — lets check-ready.js prove the server on :5173 is THIS checkout, not a stale one.
+const BUILD = (() => {
+  let commit = null;
+  try { commit = require('child_process').execSync('git rev-parse --short HEAD', { cwd: __dirname, timeout: 3000 }).toString().trim(); } catch {}
+  return { version: require('../package.json').version, commit, startedAt: new Date().toISOString() };
+})();
+
 // Lazy singleton for the support-intel demo world (SIMULATED, deterministic seed).
 let _supportWorld = null;
 function supportWorld() {
@@ -219,7 +233,9 @@ function findingsSummary() {
   catch { return []; }
 }
 function labState() {
-  return { lab: ctx.lab, currentStep: ctx.currentStep, validations: ctx.validations, findings: findingsSummary(), model: isConfigured() ? provider() : 'off' };
+  // deploymentLog rides along so the sim page paints its terminal FROM the fixture — the screen
+  // can never contradict the evidence the engine (and Rocky's answers) actually reason over.
+  return { lab: ctx.lab, currentStep: ctx.currentStep, validations: ctx.validations, findings: findingsSummary(), deploymentLog: ctx.deploymentActivityLog || [], model: isConfigured() ? provider() : 'off' };
 }
 
 // Build a support-ready diagnostic summary so the user never has to explain the issue.
@@ -266,6 +282,10 @@ const server = http.createServer(async (req, res) => {
 
   // ---- API ----
   if (p === '/api/labstate') { return json(res, labState()); }
+  if (p === '/api/facts') { return json(res, FACTS); }
+  if (p === '/api/version') { return json(res, BUILD); }
+  // Q&A knowledge base, read-only — powers the printable Q&A sheet (/qa.html)
+  if (p === '/api/qa') { return json(res, { entries: KB.map(({ id, ph, a, n, src }) => ({ id, q: (ph && ph[0]) || id, a, n: n || '', src: src || '' })) }); }
 
   // ---- BACKSTAGE feed endpoints ----
   if (p === '/api/backstage') {
@@ -301,8 +321,14 @@ const server = http.createServer(async (req, res) => {
     const ev = wingPush({ kind: 'q', text, source, isQuestion, suggestions });
     // Optional AI draft — strictly additive, clearly tagged, never blocks the deterministic answer.
     if (isConfigured() && b.wantAi !== false && isQuestion) {
+      // Numbers are TEMPLATED from facts.json + the live scan cache, never hardcoded in the prompt —
+      // a rescan can't make the AI contradict the screen.
+      const sc = loadRealScan(); const st = FACTS.static || {};
+      const nums = sc && sc.totals
+        ? `${sc.totals.findings} defects/${sc.repoCount} repos/${sc.totals.files} files, ${st.pullRequests} PRs (${st.pullRequestsMerged} merged), ${st.falsePositiveAudit ? st.falsePositiveAudit.falsePositives + '/' + st.falsePositiveAudit.sampled : '0/42'} false alarms, ${st.ciBlockSeconds}s CI block`
+        : 'see /receipts.html for the live numbers';
       askLLM(
-        'You are Rocky\'s presenter assistant during a live demo. Answer the audience question in 2-3 short spoken sentences the presenter can read aloud. Be honest: real numbers are 133 defects/8 repos/268 files, 5 PRs (2 merged), 0/42 false alarms, 4s CI block; fleet dashboards and learner stories are a labeled digital twin. Never invent numbers. If unsure say what is verified and what is not.',
+        `You are Rocky's presenter assistant during a live demo. Answer the audience question in 2-3 short spoken sentences the presenter can read aloud. Be honest: real numbers are ${nums}; fleet dashboards and learner stories are a labeled digital twin. Never invent numbers. If unsure say what is verified and what is not.`,
         text
       ).then((ans) => { if (ans) wingPush({ kind: 'ai', qId: ev.id, text: String(ans).slice(0, 700) }); }).catch(() => {});
     }
@@ -333,7 +359,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const files = s.files.map((f) => ({ path: f, content: fs.readFileSync(path.join(base, f), 'utf8') }));
       return json(res, { id: s.id, title: s.title, files });
-    } catch (e) { return json(res, { error: 'sample files missing — re-run START_DEMO staging' }, 500); }
+    } catch (e) { return json(res, { error: 'sample files missing — restore the Demo-Uploads folder at the repo root (git checkout -- Demo-Uploads)' }, 500); }
   }
 
   // ---- GUIDE CHECKUP — upload any lab guide (or folder), same engine scans it live ----
@@ -657,8 +683,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ---- static ----
-  // "/" is the unified front door (home.html). The animated companion lives at /rocky.html (deep-linked
-  // as /rocky.html?demo=1). Every other page is a "hat" reached from home or the in-page nav.
+  // "/" is the demo home (home.html — the act map). The flow pages carry the shared act strip
+  // (nav.js). The animated companion lives INSIDE cloudlabs-sim.html (Act 1); retired pages are
+  // in web/attic/ and are deliberately NOT served.
   let file = p === '/' ? '/home.html' : p;
   const full = path.join(PUBLIC, path.normalize(file).replace(/^(\.\.[/\\])+/, ''));
   fs.readFile(full, (err, data) => {

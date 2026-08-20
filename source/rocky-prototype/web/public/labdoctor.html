@@ -77,7 +77,7 @@
   .chip.med{color:var(--med);border-color:rgba(255,217,61,.35)} .chip.low{color:var(--low);border-color:rgba(107,166,255,.35)}
   .chip.ok{color:var(--good);border-color:rgba(46,230,200,.35)}
 
-  .detail{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-top:16px;overflow:hidden}
+  .detail{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-top:16px;overflow:hidden;scroll-margin-top:46px} /* keep the detail header visible below the fixed act strip when scrollIntoView fires */
   .empty{display:grid;place-content:center;text-align:center;height:220px;color:var(--dim2)}
   .dhead{display:flex;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
   .dhead .title{font-size:16px;font-weight:650}
@@ -154,22 +154,28 @@
 </style>
 </head>
 <body>
+<script src="/nav.js" data-act="3"></script>
 <div class="wrap">
   <div class="top">
     <div class="brand">
-      <a class="logo" href="/" title="Rocky home" style="text-decoration:none">🩺</a>
-      <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.55em;letter-spacing:.02em">· Doctor</span></h1><p>One companion, several hats — Doctor scans and diagnoses; every learner session is a live test</p></div>
+      <a class="logo" href="/" title="Demo home" style="text-decoration:none">🩺</a>
+      <div><h1>Act 3 — The fleet <span style="color:var(--dim);font-weight:600;font-size:.55em;letter-spacing:.02em">· Rocky as Doctor</span></h1><p>Every production repo scanned at once — the same engine you just watched, at scale</p></div>
     </div>
     <div class="spacer"></div>
-    <div class="hbadge" id="modelBadge">engine: deterministic + <b>LLM</b></div>
-    <a class="btn ghost" href="/campaigns.html" title="Rocky as Fixer — real findings grouped by cause into a mergeable backlog">🛠️ Fixer</a>
-    <a class="btn ghost" href="/monitor.html" title="Rocky as Watcher — regression/recovery/platform-incident alerts over an evolving fleet (simulated)">📡 Watcher</a>
-    <a class="btn ghost" href="/amnesty.html" title="Rocky as Guardian — restores verdicts wronged by a regressed validator, under five gates (simulated mirror of the write endpoint)">⚖️ Guardian</a>
-    <a class="btn ghost" href="/intent.html" title="Rocky as Scholar — per-step objective/outcome extracted from real guides and quote-audited">📋 Scholar</a>
-    <a class="btn ghost" href="/support.html" title="Rocky as Listener — tickets collapsed to root-cause incidents (simulated fleet)">🎧 Listener</a>
-    <a class="btn ghost" href="/rocky.html?demo=1" title="Rocky's Companion hat — the same broken lab, from the learner's side">💬 Companion</a>
-    <a class="btn ghost" href="/receipts.html" title="Evidence pack — every number Rocky shows you, receipted">🧾 Receipts</a>
+    <div class="hbadge" id="modelBadge">engine: <b>deterministic</b> (AI off)</div>
   </div>
+
+  <!-- REAL first: the first number a viewer reads on this page is real, never fixture -->
+  <div id="realScan"></div>
+  <div id="ecosystem"></div>
+
+  <!-- ══════════ Below this fold: the digital-twin fleet — FIXTURE data, clearly fenced ══════════ -->
+  <div style="display:flex;align-items:center;gap:12px;margin:26px 0 12px">
+    <span style="font-size:9.5px;font-weight:800;letter-spacing:.6px;padding:3px 9px;border-radius:6px;background:rgba(107,166,255,.14);color:#a9cbff;border:1px solid rgba(107,166,255,.35)">FIXTURE</span>
+    <span style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:700">The telemetry view — what this becomes once wired to live CloudLabs validation results</span>
+    <span style="flex:1;border-top:1px solid var(--line)"></span>
+  </div>
+  <div style="font-size:12px;color:var(--dim2);margin:0 0 14px;max-width:90ch">Everything below runs on a <b>labelled fixture fleet</b> (seeded to verified CloudLabs API shapes) — it demonstrates the diagnosis logic on telemetry: drift, false-PASS, false-FAIL, per-learner impact. The scan above is real today; this is the roadmap, honestly labelled.</div>
 
   <div class="hero">
     <div class="ring" id="catRing"></div>
@@ -179,9 +185,6 @@
       <div class="hstat" style="margin-top:9px"><div class="k">Learners in impacted labs</div><div class="v" id="learnersV">—</div></div>
     </div>
   </div>
-
-  <div id="realScan"></div>
-  <div id="ecosystem"></div>
 
   <div id="patterns"></div>
   <div id="radar"></div>
@@ -205,7 +208,7 @@
   </div>
 
   <div class="provstrip">
-    <span><b class="pv-real">REAL</b> Catalog scan — 8 production lab repos, deterministic checks, FP-audited (42 sampled · 0 false positives)</span>
+    <span><b class="pv-real">REAL</b> Catalog scan — <span id="pvRepos">every</span> production lab repo(s), deterministic checks, FP-audited (<span id="pvFp">hand-sampled</span>)</span>
     <span><b class="pv-fix">FIXTURE</b> Fleet telemetry — seeded to verified CloudLabs API shapes; live wiring is integration, not research</span>
     <span><b class="pv-mod">MODELED</b> Fix-impact preview — never executed; a human approves every fix</span>
   </div>
@@ -483,13 +486,27 @@ function renderRealScan(r){
     if(nr&&nr.available){renderRealScan(nr);const btn=$('#rescanBtn');if(btn)btn.textContent='↻ Rescanned in '+(nr.rescanMs||'?')+'ms';}
     else rb.textContent='↻ Rescan live';};
 }
-fetch('/api/labhealth/real-scan').then(x=>x.json()).then(renderRealScan).catch(()=>{});
+fetch('/api/labhealth/real-scan').then(x=>x.json()).then(r=>{
+  renderRealScan(r);
+  // provenance strip numbers come from the SAME live source as the hero strip — a rescan can't split them
+  if(r&&r.available){const el=$('#pvRepos');if(el)el.textContent=r.repoCount;}
+}).catch(()=>{});
+fetch('/api/facts').then(x=>x.json()).then(f=>{
+  const fp=f&&f.static&&f.static.falsePositiveAudit;
+  if(fp){const el=$('#pvFp');if(el)el.textContent=fp.sampled+' sampled · '+fp.falsePositives+' false positives';}
+}).catch(()=>{});
 
 // ---- Ecosystem change intelligence: live-feed deadlines joined against the real catalog ----
 fetch('/api/labhealth/ecosystem').then(x=>x.json()).then(r=>{
   const box=$('#ecosystem'); if(!r||!r.available||!(r.impacts||[]).length){box.innerHTML='';return;}
-  const when=(i)=> i.status==='already-eol' ? '<b style="color:var(--crit)">EOL passed '+esc(i.date)+'</b>'
-    : i.date ? '<b style="color:'+(i.daysUntil<=120?'var(--high)':'var(--med)')+'">'+esc(i.type)+' in '+i.daysUntil+' days</b> ('+esc(i.date)+')' : esc(i.type);
+  // daysUntil is recomputed at render time from the impact's date — the cached report's stored
+  // value ages, and a stale countdown on a REAL-badged strip is exactly what we never show.
+  const daysTo=(d)=>Math.ceil((new Date(d+'T00:00:00Z')-Date.now())/86400000);
+  const when=(i)=>{ if(i.status==='already-eol') return '<b style="color:var(--crit)">EOL passed '+esc(i.date)+'</b>';
+    if(!i.date) return esc(i.type);
+    const days=daysTo(i.date);
+    if(days<=0) return '<b style="color:var(--crit)">'+esc(i.type)+' date passed</b> ('+esc(i.date)+')';
+    return '<b style="color:'+(days<=120?'var(--high)':'var(--med)')+'">'+esc(i.type)+' in '+days+' days</b> ('+esc(i.date)+')'; };
   let html='<div class="rscan" style="border-color:rgba(255,159,69,.35);background:rgba(255,159,69,.04)"><div class="rhead">'+
     '<span class="realbadge" style="background:var(--high);color:#2a1500">LIVE FEEDS</span>'+
     '<span class="rtitle">Ecosystem change intelligence</span>'+

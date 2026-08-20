@@ -26,3 +26,17 @@ If you're an implementation model reading this repo cold: start at `docs/rocky_s
 
 Nothing in this folder should be treated as an active source of truth or reconciled against the current
 docs — read `docs/rocky_strategic_review.md` and `docs/rocky_complexity_audit.md` instead.
+
+## 2026-08-19 — the presentation rework (Six-Act flow)
+
+- **`2026-07-10_lab-that-lied_master_demo_script.md`** (was `master_demo_script.md`): the older
+  16-scene "lab that lied" script — superseded by `docs/DEMO_MASTER_SCRIPT.md` (the Six Acts).
+  Renamed on archive to kill the name collision.
+- **`2026-07-12_demo_runbook.md`**: ops runbook for the pre-rework surface; its reset/rescue
+  procedures were absorbed into DEMO_MASTER_SCRIPT.md §Rescue/§Ops.
+- **`2026-07-15_demo_simple_guide.md`**: simplified walkthrough that drifted from the build.
+- **`2026-07-14_recording_storyboard.md`**: storyboard superseded twice (rail.html + speaking script).
+
+The demo surface itself was consolidated the same day: retired pages live in
+`source/rocky-prototype/web/attic/` (rocky, checkup, showreel, wingman ×2, support), retired
+launchers in `source/rocky-prototype/attic/`. One flow remains: home → Acts 1–6.

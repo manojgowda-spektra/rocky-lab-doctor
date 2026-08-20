@@ -128,9 +128,10 @@
 </style>
 </head>
 <body>
+<script src="/nav.js" data-act="2"></script>
 <header>
   <div class="logo">🤖</div>
-  <h1>Rocky <span>· the reliability layer for hands-on labs</span></h1>
+  <h1>Act 2 — The engine, live <span>· Select → Diagnose → Fix → Verify</span></h1>
   <div class="live"><span class="dot"></span>LIVE — REAL ENGINE, REAL GUIDES</div>
 </header>
 
@@ -173,7 +174,7 @@
       <div id="cleanMsg" class="hidden">
         <div id="verdictClean" style="border-radius:14px;padding:22px;text-align:center;background:rgba(61,220,132,.09);border:1px solid rgba(61,220,132,.4)">
           <div style="font-size:20px;font-weight:800;color:var(--green)">✔ Nothing wrong with this lab.</div>
-          <div style="color:var(--dim);font-size:13.5px;margin-top:6px">Same checks, honestly applied — Rocky says clean when it's clean. (3 of our 8 production repos are clean too.)</div>
+          <div style="color:var(--dim);font-size:13.5px;margin-top:6px">Same checks, honestly applied — Rocky says clean when it's clean. <span id="cleanFact"></span></div>
         </div>
         <div style="margin-top:16px"><button class="ghost" id="backFromClean">← Try another lab</button></div>
       </div>
@@ -195,15 +196,14 @@
       </div>
       <div class="honest">Honesty note: the fixes were applied to an in-memory copy — the original guide is untouched.
         In production this exact draft becomes a pull request that a <b>human reviews and merges</b>; Rocky has already
-        produced 5 real pull requests this way (2 merged). Issues needing human judgment (like restoring translated
+        produced <span id="prFact">real pull requests</span> this way. Issues needing human judgment (like restoring translated
         credential tokens) stay as suggestions — Rocky never guesses.</div>
-      <div class="h2" style="margin-top:26px;font-size:17px">The bigger picture — in order</div>
+      <div class="h2" style="margin-top:26px;font-size:17px">Next acts — in order (or use the strip at the top)</div>
       <div class="nextgrid">
-        <a class="next" href="/labdoctor.html" target="_blank"><div class="nt">🩺 Fleet dashboard</div><div class="nd">All 8 repos + the digital-twin fleet — 133 findings at a glance</div></a>
-        <a class="next" href="/campaigns.html" target="_blank"><div class="nt">🛠 Fix campaigns</div><div class="nd">133 findings grouped into 13 root causes — top 3 cover 62%</div></a>
-        <a class="next" href="/monitor.html" target="_blank"><div class="nt">📡 The Watcher</div><div class="nd">Continuous sweeps — alerts only on change, detects recovery</div></a>
-        <a class="next" href="/amnesty.html" target="_blank"><div class="nt">⚖️ The Guardian</div><div class="nd">Restores wrongly-failed learners — refuses without a named human</div></a>
-        <a class="next" href="/receipts.html" target="_blank"><div class="nt">🧾 Receipts</div><div class="nd">Every claim, checkable: PRs, CI gate, audits</div></a>
+        <a class="next" href="/labdoctor.html"><div class="nt">③ The fleet</div><div class="nd" id="nx3">Every production repo scanned at once — file:line evidence</div></a>
+        <a class="next" href="/campaigns.html"><div class="nt">④ Campaigns</div><div class="nd" id="nx4">Findings grouped by root cause — a mergeable plan</div></a>
+        <a class="next" href="/monitor.html"><div class="nt">⑤ The Watcher</div><div class="nd">Continuous sweeps — alerts only on change (simulated · skippable)</div></a>
+        <a class="next" href="/receipts.html"><div class="nt">⑥ Receipts</div><div class="nd">Every claim, checkable: PRs, CI gate, audits — and the ask</div></a>
       </div>
     </section>
 
@@ -230,6 +230,21 @@ const TYPE_META={
   INJECT_TOKEN_LOSS:{name:'LOST CREDENTIAL TOKEN',cls:'c-red',fixable:false,
     sugg:'Restore the <inject key="…"> tokens from the English source into the translation. A translator must place them — Rocky flags exactly which keys are missing, but won\'t rewrite translated sentences.'},
 };
+
+// ---------- live facts (never hardcode narrative numbers — a rescan must not contradict the screen) ----------
+const LIVEFACTS={findings:0,repos:0,clean:0,pr:0,prMerged:0};
+(async()=>{
+  try{const rs=await(await fetch('/api/labhealth/real-scan')).json();
+    if(rs&&rs.available){LIVEFACTS.findings=rs.totals.findings;LIVEFACTS.repos=rs.repoCount;
+      LIVEFACTS.clean=(rs.repos||[]).filter(r=>r.findingCount===0).length;
+      $('#cleanFact').textContent='('+LIVEFACTS.clean+' of our '+LIVEFACTS.repos+' production repos are clean too.)';
+      $('#nx3').textContent='All '+LIVEFACTS.repos+' repos — '+LIVEFACTS.findings+' findings with file:line evidence';}}catch(e){}
+  try{const c=await(await fetch('/api/labhealth/campaigns')).json();
+    if(c&&c.available)$('#nx4').textContent=c.stats.findings+' findings → '+c.stats.campaigns+' root causes — top 3 cover '+c.stats.top3CoveragePct+'%';}catch(e){}
+  try{const f=await(await fetch('/api/facts')).json();
+    if(f&&f.static){LIVEFACTS.pr=f.static.pullRequests;LIVEFACTS.prMerged=f.static.pullRequestsMerged;
+      $('#prFact').textContent=f.static.pullRequests+' real pull requests ('+f.static.pullRequestsMerged+' merged)';}}catch(e){}
+})();
 
 // ---------- state ----------
 let FILES=[];        // [{path, content}] original
@@ -266,7 +281,7 @@ fetch('/api/demo/samples').then(r=>r.json()).then(j=>{
   document.querySelectorAll('.lab').forEach(el=>el.onclick=()=>loadSample(el.dataset.id));
 });
 log('INFO','Ready. Select a lab, or drop any guide — same engine either way.');
-tellPhone('1 · Select a lab','Pick one of the real sample guides, or drag any lab guide in. Same deterministic engine that scanned the 8 production repos.');
+tellPhone('1 · Select a lab','Pick one of the real sample guides, or drag any lab guide in. Same deterministic engine that scanned the production repos.');
 
 async function loadSample(id){
   if(busy) return; // ignore double-clicks / second card while loading
@@ -334,9 +349,9 @@ async function diagnose(){
   const g=++gen; // supersede any in-flight scan from a previous lab
   setStep(2); show('s2');
   $('#diagTitle').textContent='Diagnosing: '+LABEL;
-  $('#diagSub').textContent='Running the same deterministic checks that found 133 issues in production — no AI in the decision loop.';
+  $('#diagSub').textContent='Running the same deterministic checks that found '+(LIVEFACTS.findings?LIVEFACTS.findings+' issues':'every issue')+' in production — no AI in the decision loop.';
   $('#findings').innerHTML=''; $('#diagSum').innerHTML=''; $('#fixbar').classList.add('hidden'); $('#cleanMsg').classList.add('hidden');
-  tellPhone('2 · Diagnose',"Rocky is scanning the guide with the exact same checks used on the 8 production repos. Say: 'no AI decides here — every finding is an exact match at a known file and line.'");
+  tellPhone('2 · Diagnose',"Rocky is scanning the guide with the exact same checks used on the production repos. Say: 'no AI decides here — every finding is an exact match at a known file and line.'");
   const mdCount=FILES.filter(f=>isMd(f.path)&&typeof f.content==='string').length;
   log('ENGINE',`Scanning <b>${mdCount}</b> guide file(s): retired models · renamed products · EOL runtimes · asset links · translation tokens…`);
   await wait(600); // let the audience see the activity line before results land

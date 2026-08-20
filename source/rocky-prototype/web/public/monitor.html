@@ -56,16 +56,15 @@
 </style>
 </head>
 <body>
+<script src="/nav.js" data-act="5"></script>
 <div class="wrap">
   <div class="top">
-    <a class="logo" href="/" title="Rocky home" style="text-decoration:none">📡</a>
-    <div><h1>Rocky <span style="color:var(--dim);font-weight:600;font-size:.6em">· Watcher</span></h1><div class="sub">alerts on change, silence on steady state — the time dimension</div></div>
+    <a class="logo" href="/" title="Demo home" style="text-decoration:none">📡</a>
+    <div><h1>Act 5 — The Watcher <span style="color:var(--dim);font-weight:600;font-size:.6em">· the time dimension</span></h1><div class="sub">alerts on change, silence on steady state — testing once is a photo; this is the movie</div></div>
     <div class="spacer"></div>
     <span class="simbadge">SIMULATED FLEET — scripted timeline</span>
     <button class="btn primary" id="adv">▶ Advance one sweep</button>
     <button class="btn" id="reset">↻ Reset timeline</button>
-    <a class="nav" href="/labdoctor.html">🩺 Doctor</a>
-    <a class="nav" href="/campaigns.html">🛠️ Fixer →</a>
   </div>
 
   <div class="strip" id="strip"><div class="empty">No sweeps yet — click <b>Advance one sweep</b>. Each bar is one sweep of the whole fleet (green = healthy labs, orange = watch, red = broken).</div></div>
@@ -73,8 +72,9 @@
   <h2>Alert feed (newest first) — no change means no alerts</h2>
   <div id="alerts"><div class="empty">Silence is a feature: the monitor only speaks when the fleet CHANGES.</div></div>
 
-  <h2>Reliability ledger — every case below is DERIVED from the sweeps above, never re-guessed</h2>
-  <div class="ledgrid">
+  <h2 style="display:flex;align-items:center;gap:10px">Reliability ledger — every case below is DERIVED from the sweeps above, never re-guessed
+    <button class="btn" id="ledToggle" style="font-size:10.5px;padding:4px 10px">show ▾</button></h2>
+  <div class="ledgrid" id="ledgrid" style="display:none">
     <div class="lpanel"><div class="lhead">Fix queue · ranked by learner cost (learners × sweeps open)</div><div id="queue"><div class="empty">No open cases.</div></div></div>
     <div class="lpanel"><div class="lhead">Error budget · 95% objective, diagnosis-confirmed sweeps only</div><div id="sli"><div class="empty">No incidents recorded.</div></div></div>
     <div class="lpanel"><div class="lhead">Validator trust · only a check's OWN faults count against it</div><div id="trust"><div class="empty">All validators tier A — clean record.</div></div></div>
@@ -149,6 +149,8 @@ function renderLedger(led){
 }
 $('#adv').onclick=async()=>{await fetch('/api/monitor/advance',{method:'POST'});refresh();};
 $('#reset').onclick=async()=>{await fetch('/api/monitor/reset',{method:'POST'});refresh();};
+// The ledger is depth for Q&A, not a demo beat — folded by default so the act stays one idea.
+$('#ledToggle').onclick=()=>{const g=$('#ledgrid');const open=g.style.display!=='none';g.style.display=open?'none':'grid';$('#ledToggle').textContent=open?'show ▾':'hide ▴';};
 refresh();
 </script>
 </body>

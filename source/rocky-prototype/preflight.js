@@ -10,7 +10,7 @@ const results = [];
 let failed = 0;
 
 // Every check is tagged with the demo Act it proves, so this script doubles as the live Demo
-// Readiness Scorecard (docs/final_demo_runbook.md references this output, never a stale copy).
+// Readiness Scorecard (docs/DEMO_MASTER_SCRIPT.md is the canonical demo doc; check-ready.js is the demo-day gate).
 let ACT = 'Setup';
 function act(name) { ACT = name; }
 function ok(name, pass, detail) {
@@ -40,13 +40,15 @@ async function waitForServer(ms = 20000) {
     act('Setup');
     const [state] = await timed(() => waitForServer());
     ok('Server up, lab state loads', !!state.lab, `lab="${state.lab.title}"`);
-    ok('LLM configured', state.model && state.model !== 'off', `model=${state.model}`);
+    // LLM is OPTIONAL by design (honest deterministic fallback everywhere) — warn, never fail.
+    if (state.model && state.model !== 'off') ok('LLM configured', true, `model=${state.model}`);
+    else console.log('  ⚠ LLM off (no key in .env.local) — deterministic mode: companion narration disabled, everything else works');
 
     // 1b. Unified front door: "/" serves the home page (the single entry point that ties every hat together)
     const homeRoot = await fetch(BASE + '/');
     const homeRootHtml = homeRoot.status === 200 ? await homeRoot.text() : '';
     ok('Home page serves at "/" (unified front door)', homeRoot.status === 200 && /the reliability layer for hands-on cloud labs/.test(homeRootHtml));
-    ok('Home links every hat + companion (no orphan pages)', ['/labdoctor.html', '/campaigns.html', '/monitor.html', '/amnesty.html', '/intent.html', '/support.html', '/rocky.html?demo=1', '/receipts.html'].every((h) => homeRootHtml.includes('href="' + h + '"')));
+    ok('Home links the act flow + extras (no orphan pages)', ['/cloudlabs-sim.html', '/demo.html', '/labdoctor.html', '/campaigns.html', '/monitor.html', '/receipts.html', '/amnesty.html', '/intent.html', '/qa.html'].every((h) => homeRootHtml.includes('href="' + h + '"')));
     const notFound = await fetch(BASE + '/does-not-exist-xyz');
     ok('Unknown route returns a friendly page home (no dead end)', notFound.status === 404 && /Back to Rocky/.test(await notFound.text()));
 
@@ -152,18 +154,26 @@ async function waitForServer(ms = 20000) {
     ok('Ledger: validator trust flags the false-pass check (tier B, nothing else blamed)', !!lastLedger && Object.values(lastLedger.trust).length === 1 && Object.values(lastLedger.trust)[0].falsePass === 1 && Object.values(lastLedger.trust)[0].tier === 'B');
     await post('/api/monitor/reset', {});
 
-    // 7. Companion answer path (live LLM, demo scenario on) + honest default (scenario off)
+    // 7. Companion answer path (live LLM, demo scenario on) + honest default (scenario off).
+    // These three exercise LIVE model answers — with the model off they are impossible, and the
+    // page's fallback is the deterministic evidence card (verified below via /api/say null + UI
+    // contract), so they SKIP with an advisory instead of failing the gate.
     act('Rocky (Trust Layer)');
-    const [sayDemo, tSay] = await timed(() => post('/api/say', { message: 'Did I complete this step correctly?', kind: 'answer', scenario: true }));
-    ok('Companion answers in demo scenario', !!sayDemo.message, `${tSay}ms — "${(sayDemo.message || '').slice(0, 70)}…"`);
-    const sayHonest = await post('/api/say', { message: 'Did I complete this step correctly?', kind: 'answer', scenario: false });
-    ok('Companion abstains honestly with no scenario', /can(no|['’])t|don['’]t have|no (live|active|lab)|not connected|unable to verify/i.test(sayHonest.message || ''), `"${(sayHonest.message || '').slice(0, 70)}…"`);
-
-    // 7b. THE moat moment: the scripted trap question. Rocky must point at the region, not endorse the
-    // smaller VM. (The audit caught the un-checked version endorsing it in 3 of 3 runs.)
-    const trap = await post('/api/say', { message: 'My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?', kind: 'answer', scenario: true });
-    const trapMsg = trap.message || '';
-    ok('Companion refuses the plausible-but-wrong fix (trap question)', /region|eastus|west ?us ?2/i.test(trapMsg) && !/^\s*(in this simulated demo,?\s*)?(yes|sure|yeah)\b/i.test(trapMsg) && !/smaller (vm|size) (often helps|can help|should work)/i.test(trapMsg), `"${trapMsg.slice(0, 90)}…"`);
+    if (state.model && state.model !== 'off') {
+      const [sayDemo, tSay] = await timed(() => post('/api/say', { message: 'Did I complete this step correctly?', kind: 'answer', scenario: true }));
+      ok('Companion answers in demo scenario', !!sayDemo.message, `${tSay}ms — "${(sayDemo.message || '').slice(0, 70)}…"`);
+      const sayHonest = await post('/api/say', { message: 'Did I complete this step correctly?', kind: 'answer', scenario: false });
+      ok('Companion abstains honestly with no scenario', /can(no|['’])t|don['’]t have|no (live|active|lab)|not connected|unable to verify/i.test(sayHonest.message || ''), `"${(sayHonest.message || '').slice(0, 70)}…"`);
+      // 7b. THE moat moment: the scripted trap question. Rocky must point at the region, not endorse the
+      // smaller VM. (The audit caught the un-checked version endorsing it in 3 of 3 runs.)
+      const trap = await post('/api/say', { message: 'My deployment keeps failing with a SkuNotAvailable error. Should I just pick a smaller VM size?', kind: 'answer', scenario: true });
+      const trapMsg = trap.message || '';
+      ok('Companion refuses the plausible-but-wrong fix (trap question)', /region|eastus|west ?us ?2/i.test(trapMsg) && !/^\s*(in this simulated demo,?\s*)?(yes|sure|yeah)\b/i.test(trapMsg) && !/smaller (vm|size) (often helps|can help|should work)/i.test(trapMsg), `"${trapMsg.slice(0, 90)}…"`);
+    } else {
+      const sayOff = await post('/api/say', { message: 'ping', kind: 'answer', scenario: true });
+      ok('Companion degrades honestly with AI off (null → evidence card)', sayOff && sayOff.message === null);
+      console.log('  ⚠ 3 live-answer checks skipped (model off) — re-run with a key in .env.local to exercise them');
+    }
 
     // 8. Learner-side flows: inject → applyfix → escalate → reset (leaves state clean for the demo)
     act('Rocky (Trust Layer)');
@@ -185,8 +195,7 @@ async function waitForServer(ms = 20000) {
     // 8c. Backstage feed: page serves, events accumulated from this very preflight run, clear works
     const bsPage = await fetch(BASE + '/backstage.html');
     ok('Backstage page serves', bsPage.status === 200 && (await bsPage.text()).includes('Backstage'));
-    const showreel = await fetch(BASE + '/showreel.html');
-    ok('Auto-demo (showreel) page serves', showreel.status === 200 && (await showreel.text()).includes('Auto Demo'));
+    // showreel retired to web/attic (2026-08-19) — the video track is rail.html + presenter.html
     const liveDemo = await fetch(BASE + '/demo.html');
     const liveDemoTxt = await liveDemo.text();
     ok('Guided demo serves (Select→Diagnose→Fix→Verify + activity panel)', liveDemo.status === 200 && liveDemoTxt.includes('ENGINE ACTIVITY') && liveDemoTxt.includes('/api/demo/samples') && liveDemoTxt.includes('/api/checkup'));
