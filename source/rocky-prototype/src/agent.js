@@ -6,6 +6,7 @@ const { respond, analyze } = require('./rocky');
 const { ROCKY_SYSTEM, buildGroundedContext } = require('./prompt');
 const { chatStream, isConfigured } = require('./llm');
 const { logInteraction } = require('./session');
+const { redact } = require('./redact');
 
 const PROGRESS_RE = /\b(it )?(worked|works now|passed|fixed|resolved|got it|sorted)\b|that (worked|did it)/i;
 
@@ -15,6 +16,11 @@ const PROGRESS_RE = /\b(it )?(worked|works now|passed|fixed|resolved|got it|sort
  */
 async function handleTurn({ input, ctx, conversation, convo, onToken }) {
   conversation = conversation || convo; // accept either key name
+  // SC-005 — redact ONCE at the data boundary, before anything reads the context: the deterministic
+  // responder, the grounded prompt, and the model all see the scrubbed copy. live.js already did this
+  // (its line 13) but this path did not, so a real deployment error carrying a connection string
+  // would have reached the model. redact() is pure, so the caller's ctx is untouched.
+  ctx = redact(ctx);
   const parsed = parseInput(input);
 
   // ----- slash commands handled by the agent (control commands handled by the REPL) -----
