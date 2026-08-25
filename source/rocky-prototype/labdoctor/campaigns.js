@@ -17,6 +17,16 @@ const path = require('path');
 
 const REGISTRY_TYPES = new Set(['DEPRECATED_DEPENDENCY', 'RENAMED_PRODUCT', 'RETIRED_SKU', 'EOL_RUNTIME']);
 
+// Plain-English titles for per-repo campaigns, keyed by finding type. Without this, every per-repo
+// campaign inherited "Fix broken asset links" — which mislabelled four of thirteen campaigns,
+// including the translated-guide credential losses that are the most serious findings in the set.
+const REPO_CAMPAIGN_TITLES = {
+  BROKEN_ASSET_LINK: 'Fix broken image links',
+  ASSET_CASE_MISMATCH: 'Fix path capitalisation (works on Windows, 404s on GitHub)',
+  INJECT_TOKEN_LOSS: 'Restore lost credential tokens in translated guides',
+  LOCALE_POINTER_DRIFT: 'Realign translated guides to one release branch',
+};
+
 function buildCampaignPlan(scan) {
   const groups = new Map();
   for (const repo of scan.repos || []) {
@@ -48,9 +58,12 @@ function buildCampaignPlan(scan) {
       const repos = [...g.repos.values()].map((r) => ({ ...r, files: r.files.size })).sort((a, b) => b.findings - a.findings);
       return {
         type: g.type, cause: g.cause,
+        // Per-repo campaigns are NOT all broken images: inject-token loss, path-case mismatch and
+        // stale locale pointers all group per-repo too, and calling them "broken asset links" made
+        // four campaigns lie about what they contain. Title from the finding TYPE, not the grouping.
         title: g.cause.kind === 'upstream-change'
           ? `Replace "${g.cause.token}"${g.cause.replacement ? ` with "${g.cause.replacement}"` : ''} fleet-wide`
-          : `Fix broken asset links in ${g.cause.repo}`,
+          : `${REPO_CAMPAIGN_TITLES[g.type] || 'Fix ' + g.type.toLowerCase().replace(/_/g, ' ')} — ${g.cause.repo}`,
         repos, repoCount: repos.length,
         fileCount: repos.reduce((n, r) => n + r.files, 0),
         findings: g.findings,

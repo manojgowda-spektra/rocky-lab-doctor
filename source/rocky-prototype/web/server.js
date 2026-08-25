@@ -718,7 +718,11 @@ server.on('error', (err) => {
   throw err;
 });
 
-init().then(() => server.listen(PORT, () => {
+// Bind to loopback by default. The demo serves internal presenter material (the Q&A sheet) with no
+// auth, so it must not be reachable from the LAN unless explicitly asked for. ROCKY_HOST=0.0.0.0
+// opts in when a hosted deployment genuinely needs it (App Service sets its own).
+const HOST = process.env.ROCKY_HOST || '127.0.0.1';
+init().then(() => server.listen(PORT, HOST, () => {
   console.log(`\n🤖  Rocky Web running at  http://localhost:${PORT}`);
   console.log(`    Model: ${isConfigured() ? provider() : 'OFF (deterministic mode)'}  |  Ctrl+C to stop\n`);
 })).catch((e) => { console.error('Failed to start — check the fixtures JSON:', e.message); process.exit(1); });

@@ -1,6 +1,6 @@
 {
  "source": {
-  "scannedAt": "2026-07-04T15:37:58.964Z",
+  "scannedAt": "2026-07-15T04:03:27.262Z",
   "root": "C:/Users/ManojGowda/OneDrive - Spektra Systems LLC/Desktop/Labs",
   "provenance": "REAL repository scan (labdoctor/scan-real.js)"
  },
@@ -75,7 +75,7 @@
     "repo": "AI-Agents-using-Microsoft-Frameworks",
     "note": "broken asset paths local to this repo"
    },
-   "title": "Fix broken asset links in AI-Agents-using-Microsoft-Frameworks",
+   "title": "Fix broken image links — AI-Agents-using-Microsoft-Frameworks",
    "repos": [
     {
      "repo": "AI-Agents-using-Microsoft-Frameworks",
@@ -107,13 +107,51 @@
   },
   {
    "campaignId": "CAMP-03",
+   "type": "INJECT_TOKEN_LOSS",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "RTIAD-Workshop-April-2026",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Restore lost credential tokens in translated guides — RTIAD-Workshop-April-2026",
+   "repos": [
+    {
+     "repo": "RTIAD-Workshop-April-2026",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 16,
+     "files": 16,
+     "samples": [
+      {
+       "file": "French/Labguide/Lab-1---April-2026.md",
+       "line": 1,
+       "evidence": "English \"Labguide/Lab-1---April-2026.md\" carries 4 <inject> token(s); this French translation carries 3. Missing/short k"
+      },
+      {
+       "file": "Japanese/Labguide/Lab-1---April-2026.md",
+       "line": 1,
+       "evidence": "English \"Labguide/Lab-1---April-2026.md\" carries 4 <inject> token(s); this Japanese translation carries 0. Missing/short"
+      },
+      {
+       "file": "French/Labguide/Lab-2---April-2026.md",
+       "line": 1,
+       "evidence": "English \"Labguide/Lab-2---April-2026.md\" carries 5 <inject> token(s); this French translation carries 0. Missing/short k"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 16,
+   "findings": 16
+  },
+  {
+   "campaignId": "CAMP-04",
    "type": "BROKEN_ASSET_LINK",
    "cause": {
     "kind": "repo-hygiene",
     "repo": "RTIAD-Workshop-April-2026",
     "note": "broken asset paths local to this repo"
    },
-   "title": "Fix broken asset links in RTIAD-Workshop-April-2026",
+   "title": "Fix broken image links — RTIAD-Workshop-April-2026",
    "repos": [
     {
      "repo": "RTIAD-Workshop-April-2026",
@@ -144,7 +182,7 @@
    "findings": 13
   },
   {
-   "campaignId": "CAMP-04",
+   "campaignId": "CAMP-05",
    "type": "RENAMED_PRODUCT",
    "cause": {
     "kind": "upstream-change",
@@ -183,14 +221,52 @@
    "findings": 12
   },
   {
-   "campaignId": "CAMP-05",
+   "campaignId": "CAMP-06",
+   "type": "ASSET_CASE_MISMATCH",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "RTIAD-Workshop-April-2026",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Fix path capitalisation (works on Windows, 404s on GitHub) — RTIAD-Workshop-April-2026",
+   "repos": [
+    {
+     "repo": "RTIAD-Workshop-April-2026",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 12,
+     "files": 12,
+     "samples": [
+      {
+       "file": "German/Labguide/Lab-1---April-2026.md",
+       "line": 1,
+       "evidence": "35 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-1---April-2026/image3.png) —"
+      },
+      {
+       "file": "German/Labguide/Lab-2---April-2026.md",
+       "line": 1,
+       "evidence": "69 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-2---April-2026/image3.png) —"
+      },
+      {
+       "file": "German/Labguide/Lab-3---April-2026.md",
+       "line": 1,
+       "evidence": "61 image ref(s) in this file use \"media\" but the on-disk name is \"Media\" (e.g. ../media/Lab-3---April-2026/image3.png) —"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 12,
+   "findings": 12
+  },
+  {
+   "campaignId": "CAMP-07",
    "type": "BROKEN_ASSET_LINK",
    "cause": {
     "kind": "repo-hygiene",
     "repo": "MCW-App-modernization",
     "note": "broken asset paths local to this repo"
    },
-   "title": "Fix broken asset links in MCW-App-modernization",
+   "title": "Fix broken image links — MCW-App-modernization",
    "repos": [
     {
      "repo": "MCW-App-modernization",
@@ -221,7 +297,7 @@
    "findings": 4
   },
   {
-   "campaignId": "CAMP-06",
+   "campaignId": "CAMP-08",
    "type": "EOL_RUNTIME",
    "cause": {
     "kind": "upstream-change",
@@ -260,7 +336,7 @@
    "findings": 3
   },
   {
-   "campaignId": "CAMP-07",
+   "campaignId": "CAMP-09",
    "type": "DEPRECATED_DEPENDENCY",
    "cause": {
     "kind": "upstream-change",
@@ -294,7 +370,7 @@
    "findings": 2
   },
   {
-   "campaignId": "CAMP-08",
+   "campaignId": "CAMP-10",
    "type": "EOL_RUNTIME",
    "cause": {
     "kind": "upstream-change",
@@ -328,14 +404,14 @@
    "findings": 2
   },
   {
-   "campaignId": "CAMP-09",
+   "campaignId": "CAMP-11",
    "type": "BROKEN_ASSET_LINK",
    "cause": {
     "kind": "repo-hygiene",
     "repo": "OpenAIWorkshop",
     "note": "broken asset paths local to this repo"
    },
-   "title": "Fix broken asset links in OpenAIWorkshop",
+   "title": "Fix broken image links — OpenAIWorkshop",
    "repos": [
     {
      "repo": "OpenAIWorkshop",
@@ -356,7 +432,7 @@
    "findings": 1
   },
   {
-   "campaignId": "CAMP-10",
+   "campaignId": "CAMP-12",
    "type": "DEPRECATED_DEPENDENCY",
    "cause": {
     "kind": "upstream-change",
@@ -383,12 +459,40 @@
    "repoCount": 1,
    "fileCount": 1,
    "findings": 1
+  },
+  {
+   "campaignId": "CAMP-13",
+   "type": "LOCALE_POINTER_DRIFT",
+   "cause": {
+    "kind": "repo-hygiene",
+    "repo": "RTIAD-Workshop-April-2026",
+    "note": "broken asset paths local to this repo"
+   },
+   "title": "Realign translated guides to one release branch — RTIAD-Workshop-April-2026",
+   "repos": [
+    {
+     "repo": "RTIAD-Workshop-April-2026",
+     "owner": "repo maintainer (LABOWNERS pending)",
+     "findings": 1,
+     "files": 1,
+     "samples": [
+      {
+       "file": "English/Labguide/Combined-masterdoc.json",
+       "line": 1,
+       "evidence": "masterdoc pins entries to 2 different release branches: February-2026×30, April-2026×6 — some languages are being served"
+      }
+     ]
+    }
+   ],
+   "repoCount": 1,
+   "fileCount": 1,
+   "findings": 1
   }
  ],
  "stats": {
-  "campaigns": 10,
-  "findings": 104,
+  "campaigns": 13,
+  "findings": 133,
   "crossRepoCampaigns": 1,
-  "top3CoveragePct": 76
+  "top3CoveragePct": 62
  }
 }

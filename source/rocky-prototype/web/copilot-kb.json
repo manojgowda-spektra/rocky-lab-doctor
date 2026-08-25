@@ -477,8 +477,8 @@
     "104",
     "56"
    ],
-   "a": "112 automated tests across 18 test files, all passing, plus a preflight and a readiness gate (check-ready) that run before any live demo — what you saw on screen was verified this morning. The engine is deterministic, so the tests are exact, not flaky.",
-   "n": "112 tests / 18 files · preflight + readiness gate before every demo",
+   "a": "113 automated tests across 18 test files, all passing, plus a preflight and a readiness gate (check-ready) that run before any live demo — what you saw on screen was verified this morning. The engine is deterministic, so the tests are exact, not flaky.",
+   "n": "113 tests / 18 files · preflight + readiness gate before every demo",
    "src": "Report §7"
   },
   {

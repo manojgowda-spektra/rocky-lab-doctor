@@ -4,6 +4,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { buildCampaignPlan } = require('../labdoctor/campaigns');
+const fs = require('fs');
+const path = require('path');
 
 const F = (type, token, file, extra = {}) => ({ type, token, file, line: 1, evidence: `uses ${token}`, replacement: null, note: null, ...extra });
 
@@ -59,4 +61,30 @@ test('coverage and provenance are honest', () => {
     assert.ok(r.samples.length <= 3 && r.samples.every((s) => s.file), 'evidence samples are bounded and cited');
   }
   assert.deepEqual(buildCampaignPlan({ repos: [] }).stats, { campaigns: 0, findings: 0, crossRepoCampaigns: 0, top3CoveragePct: 0 }, 'empty scan yields an empty, non-crashing plan');
+});
+
+// Regression: every per-repo campaign used to inherit "Fix broken asset links", which mislabelled
+// four of thirteen campaigns — including the translated-guide credential losses, the most serious
+// findings in the set. Titles must describe the finding TYPE, not the grouping.
+test('per-repo campaign titles name the actual defect, not "broken asset links"', () => {
+  const scan = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'labdoctor', 'real-scan-results.json'), 'utf8'));
+  const plan = buildCampaignPlan(scan);
+  const byType = {};
+  for (const c of plan.campaigns) if (c.cause.kind !== 'upstream-change') byType[c.type] = c.title;
+
+  if (byType.INJECT_TOKEN_LOSS) {
+    assert.match(byType.INJECT_TOKEN_LOSS, /credential token/i, 'token-loss campaign must say so');
+    assert.doesNotMatch(byType.INJECT_TOKEN_LOSS, /asset link/i);
+  }
+  if (byType.ASSET_CASE_MISMATCH) {
+    assert.match(byType.ASSET_CASE_MISMATCH, /capitalisation|case/i);
+    assert.doesNotMatch(byType.ASSET_CASE_MISMATCH, /asset link/i);
+  }
+  if (byType.LOCALE_POINTER_DRIFT) {
+    assert.match(byType.LOCALE_POINTER_DRIFT, /release branch|locale/i);
+    assert.doesNotMatch(byType.LOCALE_POINTER_DRIFT, /asset link/i);
+  }
+  // and no two DIFFERENT defect types may share a title
+  const titles = Object.values(byType);
+  assert.equal(new Set(titles).size, titles.length, 'distinct defect types must have distinct titles');
 });
