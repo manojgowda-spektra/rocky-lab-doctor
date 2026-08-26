@@ -1,10 +1,10 @@
 {
-  "updated": "2026-08-25",
+  "updated": "2026-08-26",
   "note": "Single source for the demo's STATIC verified claims. Scan-derived numbers (findings, repos, files, campaign counts) must be read LIVE from /api/labhealth/real-scan and /api/labhealth/campaigns \u2014 never hardcoded here or in any page. check-ready.js audits consistency.",
   "static": {
     "pullRequests": 5,
     "pullRequestsMerged": 2,
-    "tests": 113,
+    "tests": 130,
     "falsePositiveAudit": {
       "sampled": 42,
       "falsePositives": 0

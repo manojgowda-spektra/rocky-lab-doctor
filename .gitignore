@@ -6,6 +6,8 @@
 source/rocky-prototype/logs/
 node_modules/
 *.zip
+# except the Copilot extension bundle — the submission tells judges to download it
+!Rocky-Extension.zip
 # local editor/agent settings
 .claude/
 TeamAlpha-Submission/

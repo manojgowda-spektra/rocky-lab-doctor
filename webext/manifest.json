@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Rocky — AI Lab Copilot",
+  "version": "1.0.0",
+  "description": "Rocky stands beside you in the portal and points at the exact next control. Never guesses: if it can't resolve a control with confidence, it says so.",
+  "permissions": ["storage", "clipboardWrite"],
+  "host_permissions": [
+    "https://ai.azure.com/*",
+    "https://*.azure.com/*",
+    "https://portal.azure.com/*"
+  ],
+  "action": { "default_popup": "popup.html", "default_title": "Rocky Copilot" },
+  "content_scripts": [
+    {
+      "matches": ["https://ai.azure.com/*", "https://*.azure.com/*", "https://portal.azure.com/*"],
+      "js": ["anchor.js", "rocky-render.js", "content.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["steps/*.json"], "matches": ["https://*.azure.com/*"] }
+  ]
+}

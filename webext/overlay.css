@@ -1,0 +1,78 @@
+/* Rocky Copilot overlay. Everything is namespaced under #rocky-copilot-root and pinned to a
+   very high z-index so a portal's own layers can't bury it. Pointer-events are off by default
+   so Rocky never intercepts a click the learner meant for the page — only the control bar and
+   the honest card are interactive. */
+
+#rocky-copilot-root {
+  position: fixed; inset: 0; z-index: 2147483000; pointer-events: none;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  color-scheme: light dark;
+}
+#rocky-copilot-root * { box-sizing: border-box; }
+
+#rk-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* the glow — a ring around the exact control, never a fill that hides it */
+#rk-glow {
+  position: fixed; border-radius: 10px; pointer-events: none;
+  border: 2.5px solid #2ee6c8;
+  box-shadow: 0 0 0 3px rgba(46,230,200,.28), 0 0 26px 6px rgba(46,230,200,.45), inset 0 0 14px rgba(46,230,200,.18);
+  animation: rk-pulse 1.7s ease-in-out infinite;
+  transition: left .18s ease, top .18s ease, width .18s ease, height .18s ease;
+}
+@keyframes rk-pulse {
+  50% { box-shadow: 0 0 0 5px rgba(46,230,200,.16), 0 0 34px 10px rgba(46,230,200,.30), inset 0 0 14px rgba(46,230,200,.12); }
+}
+
+/* speech bubble */
+#rk-bubble {
+  position: fixed; width: 260px; pointer-events: none;
+  background: #0d1426f2; color: #eaf2f6; border: 1px solid #ffffff26; border-radius: 14px;
+  padding: 12px 14px; font-size: 13.5px; line-height: 1.5;
+  box-shadow: 0 16px 44px rgba(0,0,0,.45); backdrop-filter: blur(10px);
+}
+#rk-progress { margin-top: 8px; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #2ee6c8; font-weight: 700; }
+
+/* the honest card — shown instead of a glow when the engine will not commit */
+#rk-card {
+  position: fixed; right: 24px; bottom: 92px; width: 320px; pointer-events: auto;
+  background: #0d1426f7; color: #eaf2f6; border: 1px solid #ffffff26;
+  border-left: 3px solid #fbbf24; border-radius: 12px; padding: 15px 17px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.5); backdrop-filter: blur(10px);
+}
+#rk-card .rk-card-h { display: flex; align-items: center; gap: 9px; font-size: 14px; margin-bottom: 7px; }
+#rk-card .rk-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; flex: none; }
+#rk-card p { margin: 0; font-size: 13px; line-height: 1.55; color: #c3cbd4; }
+#rk-card .rk-card-why {
+  margin-top: 10px; padding-top: 9px; border-top: 1px solid #ffffff1a;
+  font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: #8b95a1; word-break: break-word;
+}
+
+/* always-visible control bar — the guarantee that a tester can finish the flow
+   even if a control never resolves */
+#rk-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px;
+  display: flex; align-items: center; gap: 8px; pointer-events: auto;
+  background: #0b1220f2; border: 1px solid #ffffff26; border-radius: 999px;
+  padding: 8px 10px 8px 16px; box-shadow: 0 14px 40px rgba(0,0,0,.5); backdrop-filter: blur(10px);
+}
+#rk-bar-step {
+  font-size: 12px; font-weight: 700; color: #eaf2f6; letter-spacing: .01em;
+  margin-right: 6px; white-space: nowrap;
+}
+#rk-bar button {
+  cursor: pointer; font: 600 12.5px/1 "Segoe UI", system-ui, sans-serif;
+  color: #eaf2f6; background: #ffffff14; border: 1px solid #ffffff22;
+  border-radius: 999px; padding: 8px 13px; transition: background .12s, border-color .12s;
+}
+#rk-bar button:hover:not(:disabled) { background: #2ee6c826; border-color: #2ee6c8; color: #fff; }
+#rk-bar button:disabled { opacity: .35; cursor: default; }
+#rk-bar button:focus-visible { outline: 2px solid #2ee6c8; outline-offset: 2px; }
+#rk-restart { padding: 8px 11px; }
+
+.rk-conf { position: fixed; width: 8px; height: 13px; border-radius: 2px; pointer-events: none; will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  #rk-glow { animation: none; }
+  .rk-conf { animation-duration: .01ms; }
+}

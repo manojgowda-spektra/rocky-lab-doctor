@@ -7,6 +7,18 @@
 
 ---
 
+## 🧭 TWO THINGS TO TRY
+
+**1. The Copilot — guided, in the real portal (60 seconds)**
+`chrome://extensions` → Developer mode → **Load unpacked** → select **`webext/`** → open
+<https://ai.azure.com>. Rocky appears and walks you through deploying a model and chatting with it,
+glowing the exact next control at each step. If it can't resolve a control with confidence it says
+so instead of guessing — that refusal is the product's whole thesis. See `webext/README.md`.
+
+**2. The Doctor — fleet reliability (below)**
+
+---
+
 ## 🎬 DEMO QUICKSTART (fastest path)
 
 1. Double-click **`START_DEMO.cmd`** (repo root) — starts the server, runs the readiness check

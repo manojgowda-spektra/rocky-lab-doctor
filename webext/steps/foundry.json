@@ -1,0 +1,125 @@
+{
+  "bundle": "microsoft-foundry-deploy-and-chat",
+  "title": "Deploy a model and chat with it",
+  "portal": "ai.azure.com",
+  "authoredFrom": "Lab guide: Deploy your first model in Microsoft Foundry",
+  "note": "Step text is AI-authored from the lab guide. The match specs below are captured from the live portal and resolved DETERMINISTICALLY by anchor.js \u2014 the model never decides what to glow.",
+  "steps": [
+    {
+      "id": "open-deployments",
+      "say": "Let's deploy a model. Start in Deployments \u2014 it's in the left navigation.",
+      "match": {
+        "text": "Deployments",
+        "role": "link",
+        "near": "navigation"
+      },
+      "advanceOn": "click"
+    },
+    {
+      "id": "deploy-model-button",
+      "say": "Now open the model catalogue with Deploy model.",
+      "match": {
+        "text": "Deploy model",
+        "role": "button"
+      },
+      "advanceOn": "click"
+    },
+    {
+      "id": "deploy-base-model",
+      "say": "Choose Deploy base model \u2014 that's the catalogue of ready-made models.",
+      "match": {
+        "text": "Deploy base model"
+      },
+      "advanceOn": "click"
+    },
+    {
+      "id": "search-model",
+      "say": "Search for the model you want. Type gpt-5 here.",
+      "match": {
+        "role": "searchbox",
+        "name": "Search"
+      },
+      "advanceOn": "input",
+      "type": "gpt-5"
+    },
+    {
+      "id": "select-model-card",
+      "say": "There it is. Select the gpt-5 card.",
+      "match": {
+        "text": "gpt-5",
+        "near": "gpt-5"
+      },
+      "advanceOn": "click"
+    },
+    {
+      "id": "confirm-model",
+      "say": "Confirm your choice with Confirm.",
+      "match": {
+        "text": "Confirm",
+        "role": "button"
+      },
+      "advanceOn": "click"
+    },
+    {
+      "id": "deployment-name",
+      "say": "Give the deployment a name. I've put one on your clipboard \u2014 paste it in.",
+      "match": {
+        "role": "textbox",
+        "name": "Deployment name"
+      },
+      "advanceOn": "input",
+      "copyToClipboard": "rocky-gpt5-demo",
+      "type": "rocky-gpt5-demo"
+    },
+    {
+      "id": "deploy-confirm",
+      "say": "That's everything. Press Deploy.",
+      "match": {
+        "textExact": "Deploy",
+        "role": "button",
+        "near": "gpt-5"
+      },
+      "advanceOn": "click",
+      "note": "near:'gpt-5' scopes this to the chosen model's dialog. Without it, a page showing two model cards has two equally-valid Deploy buttons and Rocky correctly refuses to choose."
+    },
+    {
+      "id": "await-provisioning",
+      "say": "Provisioning now. This takes a moment \u2014 I'll wait with you.",
+      "match": {
+        "text": "Provisioning",
+        "role": "status"
+      },
+      "advanceOn": "appear",
+      "optional": true
+    },
+    {
+      "id": "open-playground",
+      "say": "Deployed. Let's actually talk to it \u2014 open the Playground.",
+      "match": {
+        "text": "Open in playground"
+      },
+      "advanceOn": "click"
+    },
+    {
+      "id": "prompt-box",
+      "say": "This is the chat box. Type a prompt \u2014 anything you like.",
+      "match": {
+        "role": "textbox",
+        "name": "Chat input"
+      },
+      "advanceOn": "input",
+      "type": "Explain what an insider risk policy does, in two sentences."
+    },
+    {
+      "id": "send-prompt",
+      "say": "And send it.",
+      "match": {
+        "name": "Send",
+        "role": "button"
+      },
+      "advanceOn": "click",
+      "final": true,
+      "celebrate": true
+    }
+  ]
+}
