@@ -1,20 +1,43 @@
 /*
  * interaction-live.js — the gate that should have existed from the start.
  *
- * WHY. Four defects reached a live lab in two days, and every one was invisible to the
- * existing suite:
+ * WHY. Six defects reached a live lab in two days, and every one was invisible to seventeen
+ * green gates:
  *
  *   - LabPilotRocky.explain() threw a ReferenceError, so every Explore explanation produced
- *     nothing. Sixteen gates, none of them called explain().
+ *     nothing. Seventeen gates, none of them ever CALLED explain().
  *   - Enter in the ask box silently did nothing, while the Ask button worked. No test had
  *     ever opened the ask box.
+ *   - context() crashed on st.steps[...] into an empty catch; the question vanished with no
+ *     error, no spinner, nothing.
  *   - Rocky was not injected on purview.microsoft.com, then not on ml.azure.com. Nothing
  *     checked that the manifest covered the hosts a real lab actually visits.
  *
  * The pattern is the same each time: the logic was tested in Node, and the failure only
  * existed when a person clicked something in a browser. This file closes that gap. It drives
- * the SHIPPED extension in real Edge and performs the actions a learner performs — open the
- * ask box, type, press Enter, click the button — and asserts that something happens.
+ * the SHIPPED extension in real Edge and CALLS THE FUNCTIONS A LEARNER TRIGGERS — open the
+ * ask box, type, press Enter, click the button, run explain() — and asserts something happens.
+ *
+ * ── THE CRUX: REACHING THE ISOLATED WORLD ────────────────────────────────────────────────
+ *
+ * Content scripts run in an isolated world. They do NOT share a global object with the page,
+ * so Runtime.evaluate in the page world can never see window.LabPilotRocky — it reports
+ * "absent" whatever Rocky is actually doing. Page.createIsolatedWorld does NOT help either:
+ * it creates a THIRD world, empty, that is neither the page's nor the extension's.
+ *
+ * That is why verify-loaded.js gave up and settled for DOM evidence, and why the previous
+ * draft of this file probed [ctxId, world.executionContextId] — two names for the SAME
+ * freshly-created empty world — and then silently fell back to the page world when the probe
+ * failed. Every assertion in it was structurally incapable of failing.
+ *
+ * The real answer is to enumerate Runtime.executionContextCreated EVENTS. Every world the
+ * page owns announces itself, and the extension's own world is the one whose
+ * auxData.type === 'isolatedWorld'. We buffer those events from BEFORE navigation, then pick
+ * the context that can actually see window.LabPilotRocky.
+ *
+ * THERE IS NO FALLBACK. If the extension's world cannot be found, this gate FAILS. A harness
+ * that degrades to a world where the answer is always "absent" is worse than no harness: it
+ * is a green light that cannot turn red.
  *
  * It deliberately does NOT assert on the model's answer: the point is that the QUESTION
  * reaches the code that would send it. A wrong API key must fail loudly, not silently.
@@ -26,7 +49,7 @@ const fs = require('fs');
 const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 const { killEdgeTree, rmQuiet, sweepStaleProfiles } = require('./edge-util');
 
 const ROOT = path.join(__dirname, '..');
@@ -48,8 +71,15 @@ function wsConnect(url) {
     sock.on('data', onData); sock.on('error', reject);
   });
 }
+
+// The CDP client buffers EVENTS as well as replies. Execution contexts are announced once,
+// asynchronously, and if we are not listening when the announcement arrives we can never ask
+// for it again — there is no "list contexts" command. Buffering them is what makes finding
+// the extension's world possible at all.
 function makeClient(sock, rest) {
   const pending = new Map(); let id = 0; let buf = rest;
+  const events = [];
+  const listeners = [];
   function frame(p) {
     const d = Buffer.from(p); const mk = crypto.randomBytes(4); const len = d.length; let head;
     if (len < 126) head = Buffer.from([0x81, 0x80 | len]);
@@ -70,6 +100,9 @@ function makeClient(sock, rest) {
         if (m.id && pending.has(m.id)) {
           const p = pending.get(m.id); pending.delete(m.id);
           m.error ? p.reject(new Error(m.error.message)) : p.resolve(m.result);
+        } else if (m.method) {
+          events.push(m);
+          for (const fn of listeners.slice()) { try { fn(m); } catch (e) {} }
         }
       } catch (e) {}
     }
@@ -83,6 +116,9 @@ function makeClient(sock, rest) {
         setTimeout(() => { if (pending.has(mid)) { pending.delete(mid); reject(new Error(method + ' timeout')); } }, 30000);
       });
     },
+    events,
+    eventsOf(method) { return events.filter((e) => e.method === method); },
+    on(fn) { listeners.push(fn); },
     close() { try { sock.destroy(); } catch (e) {} },
   };
 }
@@ -127,7 +163,6 @@ function stage(src) {
   // so an HTTP mock is never injected and the harness silently attaches to about:blank -
   // which is exactly what the first run of this file did.
   const HOST = 'purview.microsoft.com';
-  const { execFileSync } = require('child_process');
   const certDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rockyint-cert-'));
   const keyF = path.join(certDir, 'k.pem'), crtF = path.join(certDir, 'c.pem');
   const openssl = ['openssl',
@@ -146,6 +181,9 @@ function stage(src) {
   await new Promise((r) => srv.listen(0, '127.0.0.1', r));
   const mockPort = srv.address().port;
 
+  // Start on about:blank. We attach, enable Runtime, and only THEN navigate — so every
+  // execution context the lab page creates, including the extension's, is announced while we
+  // are listening. Navigating first is how the previous draft lost the announcements.
   const child = spawn(edge, [
     `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`,
     `--load-extension=${EXT}`, `--disable-extensions-except=${EXT}`,
@@ -154,37 +192,36 @@ function stage(src) {
     `--host-resolver-rules=MAP ${HOST}:443 127.0.0.1:${mockPort}`,
     '--ignore-certificate-errors',
     '--headless=new', '--window-size=1400,900',
-    `https://${HOST}/`,
+    'about:blank',
   ], { detached: true, stdio: 'ignore' });
 
   let client;
   try {
-    let targets;
+    // ---- attach to the blank tab BEFORE navigating -----------------------------------------
+    let targets = null, page = null;
     for (let i = 0; i < 70; i++) {
       await sleep(400);
       try {
         targets = await getJSON(`http://127.0.0.1:${port}/json/list`);
-        if (targets.some((t) => t.type === 'page' && /purview/i.test(t.url || ''))) break;
+        page = targets.find((t) => t.type === 'page' && t.webSocketDebuggerUrl);
+        if (page) break;
       } catch (e) {}
     }
-    const page = targets.find((t) => t.type === 'page' && /purview/i.test(t.url || ''));
-    assert(page, 'the lab page never appeared as a target');
+    assert(page, 'no debuggable page target appeared — Edge did not start');
     client = await wsConnect(page.webSocketDebuggerUrl);
-    await sleep(3500);          // let the content scripts settle
 
-    // Evaluate INSIDE THE CONTENT SCRIPT'S ISOLATED WORLD. This is the crux: content scripts
-    // do not share a global object with the page, so Runtime.evaluate in the page world can
-    // never see window.LabPilotRocky - it reports "absent" whatever Rocky is actually doing.
-    // Every probe written against the page world was structurally incapable of catching a
-    // broken ask box, which is why four interaction bugs reached a live lab.
     await client.send('Page.enable', {});
-    await client.send('Runtime.enable', {});
-    const frameTree = await client.send('Page.getFrameTree', {});
-    const frameId = frameTree.frameTree.frame.id;
-    const world = await client.send('Page.createIsolatedWorld',
-      { frameId, worldName: 'lp-probe', grantUniveralAccess: true });
-    // Find the extension's own world by asking each context whether Rocky lives there.
-    let ctxId = world.executionContextId;
+    await client.send('Runtime.enable', {});      // from here, contexts announce themselves
+
+    // ---- now navigate to the lab host --------------------------------------------------------
+    await client.send('Page.navigate', { url: `https://${HOST}/` });
+
+    // Wait for the extension's own isolated world to announce itself, rather than sleeping a
+    // fixed interval and hoping. On a loaded machine Edge can take several seconds to install
+    // an unpacked extension and reach document_idle.
+    const deadline = Date.now() + 45000;
+    let ctxId = null, chosen = null;
+    const seen = () => client.eventsOf('Runtime.executionContextCreated').map((e) => e.params.context);
 
     const evIn = async (id, expr) => {
       const r = await client.send('Runtime.evaluate',
@@ -196,25 +233,38 @@ function stage(src) {
       return r.result.value;
     };
 
-    // Collect every execution context the page has, then pick the one that can see Rocky.
-    const contexts = [];
-    client.send('Runtime.discardConsoleEntries', {}).catch(() => {});
-    await client.send('Runtime.evaluate', { expression: '1' });   // flush
-    // CDP reports contexts via events we are not buffering, so probe the known ids directly.
-    for (const id of [ctxId, world.executionContextId]) {
-      try { contexts.push({ id, has: await evIn(id, '!!window.LabPilotRocky') }); } catch (e) {}
+    while (Date.now() < deadline && ctxId === null) {
+      // The extension's world is an isolatedWorld that can see Rocky's globals. Check the
+      // isolated ones first, but probe every context rather than trusting auxData alone:
+      // the authoritative test is "can this context see window.LabPilotRocky".
+      const ctxs = seen();
+      const ordered = ctxs.slice().sort((a, b) => {
+        const ai = a.auxData && a.auxData.type === 'isolatedWorld' ? 0 : 1;
+        const bi = b.auxData && b.auxData.type === 'isolatedWorld' ? 0 : 1;
+        return ai - bi;
+      });
+      for (const c of ordered) {
+        try {
+          if (await evIn(c.id, '!!window.LabPilotRocky')) { ctxId = c.id; chosen = c; break; }
+        } catch (e) { /* a context can be destroyed mid-probe during navigation */ }
+      }
+      if (ctxId === null) await sleep(500);
     }
-    const hit = contexts.find((c) => c.has);
-    if (hit) ctxId = hit.id;
 
-    const ev = async (expr) => {
-      // Prefer the isolated world; fall back to the page world so the harness still runs.
-      try { return await evIn(ctxId, expr); }
-      catch (e) { return await evIn(undefined, expr); }
-    };
+    // NO FALLBACK. If we cannot reach the extension's world, the gate fails. Falling back to
+    // the page world is what made every assertion in the previous draft unfailable.
+    const worlds = seen().map((c) => `${c.id}:${(c.auxData && c.auxData.type) || '?'}:${c.name || '-'}`);
+    assert(ctxId !== null,
+      'could not find the extension isolated world that owns window.LabPilotRocky. ' +
+      `Contexts seen: [${worlds.join(', ')}]. Either the content scripts did not inject on ` +
+      `${HOST}, or Rocky threw during load. This gate does NOT fall back to the page world.`);
+
+    const ev = (expr) => evIn(ctxId, expr);
 
     console.log('\n=== ROCKY, AS A LEARNER USES HIM ===\n');
-    console.log('  page: ' + await ev('location.host + location.pathname'));
+    console.log(`  page:  ${await ev('location.host + location.pathname')}`);
+    console.log(`  world: ${ctxId} (${(chosen.auxData && chosen.auxData.type) || '?'}` +
+                `${chosen.name ? ', name="' + chosen.name + '"' : ''}) — the extension's own`);
 
     // ---- 1. is he actually there? ---------------------------------------------------------
     const loaded = await ev('({rocky:!!window.LabPilotRocky, explore:!!window.__lpExplore, ' +
@@ -227,15 +277,88 @@ function stage(src) {
       assert(loaded.overlay, 'the overlay did not load');
     });
 
-    // ---- 2. Rocky's UI is really in the page ------------------------------------------------
+    // ---- 2. every declared content script actually defined its global ----------------------
+    // A script that throws at load leaves its global undefined and everything downstream of
+    // it silently dead — which is exactly how explain() shipped broken.
+    const globals = await ev(`({
+      anchor:  !!window.LabPilotAnchor,   capture: !!window.LabPilotCapture,
+      kb:      !!window.LabPilotKB,       cloud:   !!window.LabPilotCloudLabs,
+      perceive:!!window.LabPilotPerceive, world:   !!window.LabPilotWorld,
+      label:   !!window.LabPilotLabel,    guide:   !!window.LabPilotGuide,
+      lab:     !!window.LabPilotLab,      watcher: !!window.LabPilotWatcher,
+      rocky:   !!window.LabPilotRocky,    overlay: !!window.LabPilotOverlay,
+      pilot:   !!window.LabPilotPilot,    recovery:!!window.LabPilotRecovery,
+      explore: !!window.__lpExplore,      controls:!!window.__lpControls,
+      cache:   !!window.LabPilotExplainCache
+    })`);
+    const missing = Object.keys(globals).filter((k) => !globals[k]);
+    check('every content script defined its global (none threw at load)', () => {
+      assert(missing.length === 0, `these scripts did not define their global: ${missing.join(', ')}`);
+    });
+
+    // ---- 3. Rocky's UI is really in the page ------------------------------------------------
     const ui = await ev('document.querySelectorAll("[data-labpilot]").length');
     check('Rocky draws himself into the page', () => {
       assert(ui > 0, 'no Rocky elements in the DOM — he is loaded but invisible');
     });
 
-    // ---- 3. THE ASK BOX: the path that silently failed in a live lab -------------------------
-    const opened = await ev('(function(){ try { window.__lpExplore.openAsk(); } catch(e){ return "threw: "+e.message; } ' +
-      'var i = document.querySelector("input[data-labpilot]"); return i ? "open" : "no-input"; })()');
+    // ---- 4. THE FUNCTIONS ARE CALLABLE: explain() shipped as a ReferenceError ----------------
+    // Not "is it a function" — CALL it. A ReferenceError inside the body is invisible to a
+    // typeof check, and that is precisely the bug that reached a learner.
+    const api = await ev(`(function(){
+      var out = {};
+      var E = window.__lpExplore || {};
+      ['toggle','start','stop','explain','detectCircle','ask','openAsk','openMenu','closeMenu','radialLayout']
+        .forEach(function(k){ out[k] = typeof E[k]; });
+      return out;
+    })()`);
+    check('Explore exposes every function it advertises', () => {
+      const notFn = Object.keys(api).filter((k) => api[k] !== 'function');
+      assert(notFn.length === 0, `not functions: ${notFn.map((k) => k + '=' + api[k]).join(', ')}`);
+    });
+
+    // explain() takes a DESCRIPTOR, the shape KB().describe() returns — not a raw element.
+    // Build it the way a real hover or circle does, so this exercises the true call path.
+    // (Passing a bare element throws a TypeError that looks like a product bug but is a
+    // harness bug; it cost a verification pass to establish that, hence this note.)
+    const explainCall = await ev(`(function(){
+      try {
+        var el = document.querySelector('#btn-create-resource') || document.querySelector('button');
+        if (!el) return { skipped: 'no control on the page to explain' };
+        var KB = window.LabPilotKB;
+        if (!KB || typeof KB.describe !== 'function') return { skipped: 'LabPilotKB.describe unavailable' };
+        var desc = KB.describe(el);
+        if (!desc) return { skipped: 'KB did not describe a plain button' };
+        window.__lpExplore.explain(desc, 'dwell');
+        return { threw: false, name: desc.name || null, role: desc.role || null };
+      } catch (e) { return { threw: true, name: e.name, message: e.message }; }
+    })()`);
+    console.log('  explain(): ' + JSON.stringify(explainCall));
+    check('explain() runs without throwing', () => {
+      // A skip is a FAILURE here. If we cannot even build a descriptor, the thing this gate
+      // exists to exercise never ran, and a silent skip would be another green-but-blind gate.
+      assert(!explainCall.skipped, `could not exercise explain(): ${explainCall.skipped}`);
+      assert(explainCall.threw === false,
+        `explain() threw ${explainCall.name}: ${explainCall.message} — this is the exact ` +
+        'shape of the ReferenceError that killed every Explore explanation in a live lab');
+    });
+
+    const menuCall = await ev(`(function(){
+      try { window.__lpExplore.openMenu(); return { threw:false, els: document.querySelectorAll('[data-labpilot]').length }; }
+      catch (e) { return { threw:true, name:e.name, message:e.message }; }
+    })()`);
+    check('openMenu() runs without throwing', () => {
+      assert(menuCall.threw === false, `openMenu() threw ${menuCall.name}: ${menuCall.message}`);
+    });
+    await ev('(function(){ try { window.__lpExplore.closeMenu(); } catch(e){} return 1; })()');
+
+    // ---- 5. THE ASK BOX: the path that silently failed in a live lab -------------------------
+    const opened = await ev(`(function(){
+      try { window.__lpExplore.openAsk(); }
+      catch (e) { return 'threw: ' + e.name + ': ' + e.message; }
+      var i = document.querySelector('input[data-labpilot]');
+      return i ? 'open' : 'no-input';
+    })()`);
     console.log('  openAsk(): ' + opened);
 
     check('the ask box opens and contains a real input', () => {
@@ -243,57 +366,89 @@ function stage(src) {
     });
 
     // Type a question the way a learner does, then press Enter. This is the exact sequence
-    // that did nothing in the lab.
+    // that did nothing in the lab. We stub ask() so no model call is made — the assertion is
+    // that the keystroke REACHES the handler, not what the model would say.
     const entered = await ev(`(function(){
-      var i = document.querySelector("input[data-labpilot]");
-      if (!i) return "no-input";
+      var i = document.querySelector('input[data-labpilot]');
+      if (!i) return { error: 'no-input' };
       window.__lpAsked = null;
-      var orig = window.__lpExplore.ask;
-      window.__lpExplore.ask = function(q){ window.__lpAsked = q; };       // capture, do not send
-      var form = i.closest("form");
-      if (form) {
-        var h = form.__lpTestHook;
-        // rebind the captured handler the same way the real box does
-      }
-      i.value = "what is a sensitivity label";
-      i.dispatchEvent(new Event("input", {bubbles:true}));
-      var ev2 = new KeyboardEvent("keydown", {key:"Enter", keyCode:13, which:13, bubbles:true, cancelable:true});
-      i.dispatchEvent(ev2);
-      return { asked: window.__lpAsked, defaultPrevented: ev2.defaultPrevented, value: i.value };
+      var E = window.__lpExplore;
+      var realAsk = E.ask;
+      E.ask = function (q) { window.__lpAsked = q; };       // capture, do not send
+      try {
+        i.value = 'what is a sensitivity label';
+        i.dispatchEvent(new Event('input', { bubbles: true }));
+        var k = new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true });
+        i.dispatchEvent(k);
+        return { asked: window.__lpAsked, defaultPrevented: k.defaultPrevented, value: i.value };
+      } finally { E.ask = realAsk; }
     })()`);
     console.log('  Enter: ' + JSON.stringify(entered));
 
-    check('pressing Enter in the ask box does SOMETHING', () => {
-      // The specific live failure: Enter was swallowed and nothing at all happened. Either the
-      // question was submitted, or the field was cleared, or the event was consumed - any of
+    check('pressing Enter in the ask box submits the question', () => {
+      assert(!entered.error, entered.error || '');
+      // The live failure was that Enter was swallowed and nothing at all happened. Either the
+      // question was submitted, or the field was cleared, or the event was consumed — any of
       // those proves the key reached the handler. Doing literally nothing is the bug.
       const acted = entered.defaultPrevented === true || entered.value === '' || !!entered.asked;
       assert(acted, 'Enter was swallowed entirely — exactly the live-lab failure');
     });
 
-    // ---- 4. the Ask BUTTON, which is the other route --------------------------------------
+    // ---- 6. the Ask BUTTON, which is the other route --------------------------------------
+    await ev('(function(){ try { window.__lpExplore.openAsk(); } catch(e){} return 1; })()');
     const clicked = await ev(`(function(){
-      var b = Array.prototype.slice.call(document.querySelectorAll("button[data-labpilot], #labpilot-rocky button, button"))
-        .filter(function(x){ return /^(Ask|…)$/.test((x.textContent||"").trim()); })[0];
-      if (!b) return "no-button";
-      var before = document.querySelectorAll("[data-labpilot]").length;
-      b.click();
-      return { clicked: true, before: before, after: document.querySelectorAll("[data-labpilot]").length };
+      var all = Array.prototype.slice.call(document.querySelectorAll('[data-labpilot] button, button[data-labpilot]'));
+      var b = all.filter(function (x) { return /^(Ask|Send|\\u2026|\\u27a4)$/.test((x.textContent || '').trim()); })[0] || all[0];
+      if (!b) return { error: 'no-button' };
+      window.__lpAsked = null;
+      var E = window.__lpExplore, realAsk = E.ask;
+      E.ask = function (q) { window.__lpAsked = q; };
+      try {
+        var i = document.querySelector('input[data-labpilot]');
+        if (i) { i.value = 'what is a sensitivity label'; i.dispatchEvent(new Event('input', { bubbles: true })); }
+        b.click();
+        return { clicked: true, label: (b.textContent || '').trim(), asked: window.__lpAsked };
+      } catch (e) { return { threw: true, name: e.name, message: e.message }; }
+      finally { E.ask = realAsk; }
     })()`);
     console.log('  Ask button: ' + JSON.stringify(clicked));
 
     check('the Ask button exists and is clickable', () => {
-      assert(clicked !== 'no-button', 'no Ask button in the ask box — the only working route in the live lab');
+      assert(!clicked.error, 'no button in the ask box — the only working route in the live lab');
+      assert(!clicked.threw, `the Ask button threw ${clicked.name}: ${clicked.message}`);
     });
 
-    // ---- 5. the background worker answers at all -------------------------------------------
-    const bg = await ev(`new Promise(function(res){
+    // ---- 7. a question SURVIVES the whole ask path without vanishing -------------------------
+    // The worst shipped bug: askRocky() crashed into an empty catch and the learner's question
+    // disappeared — no answer, no error, no spinner. Drive the REAL ask path (no stub) and
+    // assert that something observable happens.
+    const survived = await ev(`new Promise(function (res) {
+      var before = document.body.innerText.length;
+      try { window.__lpExplore.ask('which lab am I in'); }
+      catch (e) { res({ threw: true, name: e.name, message: e.message }); return; }
+      // Give the deterministic rungs (lab.json, then the CloudLabs corpus) a moment to land.
+      setTimeout(function () {
+        res({ threw: false, before: before, after: document.body.innerText.length,
+              panels: document.querySelectorAll('[data-labpilot]').length });
+      }, 6000);
+    })`);
+    console.log('  ask() end-to-end: ' + JSON.stringify(survived));
+
+    check('a question does not vanish into an empty catch', () => {
+      assert(survived.threw !== true,
+        `ask() threw ${survived.name}: ${survived.message} — the question vanished, which is ` +
+        'the exact live-lab failure');
+      assert(survived.panels > 0, 'the ask path left nothing on screen at all');
+    });
+
+    // ---- 8. the background worker answers at all -------------------------------------------
+    const bg = await ev(`new Promise(function (res) {
       try {
-        chrome.runtime.sendMessage({type:"lp-ask-ai", payload:{question:"ping"}}, function(r){
+        chrome.runtime.sendMessage({ type: 'lp-ask-ai', payload: { question: 'ping' } }, function (r) {
           res({ replied: true, hasText: !!(r && r.text), error: (r && r.error) || null,
                 lastError: chrome.runtime.lastError ? chrome.runtime.lastError.message : null });
         });
-        setTimeout(function(){ res({ replied: false }); }, 12000);
+        setTimeout(function () { res({ replied: false }); }, 12000);
       } catch (e) { res({ replied: false, threw: e.message }); }
     })`);
     console.log('  background: ' + JSON.stringify(bg));
