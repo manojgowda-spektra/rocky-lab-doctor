@@ -441,7 +441,30 @@ function stage(src) {
       assert(survived.panels > 0, 'the ask path left nothing on screen at all');
     });
 
-    // ---- 8. the background worker answers at all -------------------------------------------
+    // ---- 8. nothing threw while we were driving him -----------------------------------------
+    // content/error-collector.js loads first and records uncaught errors from our own files.
+    // Before it existed, verify-loaded.js read window.__lpErrors from the PAGE world and
+    // nothing anywhere ever wrote it — the one check claiming to catch a runtime exception
+    // from a content script could never fail. We read it from the extension's own world,
+    // after having actually exercised Rocky, so a throw during any of the above surfaces here.
+    const thrown = await ev('JSON.stringify(window.__lpErrors || null)');
+    const errs = JSON.parse(thrown || 'null');
+    console.log('  uncaught: ' + (errs === null ? 'COLLECTOR ABSENT' : errs.length ? JSON.stringify(errs) : 'none'));
+
+    check('the error collector is installed', () => {
+      // If this is absent the next check is vacuous, so assert it separately rather than
+      // letting a missing collector read as "no errors".
+      assert(errs !== null,
+        'window.__lpErrors is undefined — content/error-collector.js did not load, so the ' +
+        'uncaught-error check below would pass no matter what Rocky did');
+    });
+
+    check('nothing in Rocky threw while a learner used him', () => {
+      assert(errs !== null && errs.length === 0,
+        `uncaught errors from Rocky's own files: ${JSON.stringify(errs)}`);
+    });
+
+    // ---- 9. the background worker answers at all -------------------------------------------
     const bg = await ev(`new Promise(function (res) {
       try {
         chrome.runtime.sendMessage({ type: 'lp-ask-ai', payload: { question: 'ping' } }, function (r) {

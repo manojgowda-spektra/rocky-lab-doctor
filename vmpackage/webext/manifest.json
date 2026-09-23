@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LabPilot \u00b7 Rocky",
+  "name": "LabPilot · Rocky",
   "version": "0.9.7",
-  "description": "Rocky, your lab copilot, floats beside the exact next control and guides you click-by-click \u2014 and teaches: WHY each step matters, WHAT the technology is. Click Rocky to EXPLORE: rest on or circle any control and he explains it; destructive clicks are intercepted. Glows only on a uniquely resolved control; his mood comes only from deterministic facts.",
+  "description": "Rocky, your lab copilot, floats beside the exact next control and guides you click-by-click — and teaches: WHY each step matters, WHAT the technology is. Click Rocky to EXPLORE: rest on or circle any control and he explains it; destructive clicks are intercepted. Glows only on a uniquely resolved control; his mood comes only from deterministic facts.",
   "permissions": [
     "storage",
     "scripting",
@@ -63,6 +63,7 @@
         "https://*.azure.com/*"
       ],
       "js": [
+        "content/error-collector.js",
         "content/anchor-engine.js",
         "content/vision-matcher.js",
         "content/vision-templates.js",

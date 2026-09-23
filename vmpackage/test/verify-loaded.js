@@ -364,10 +364,20 @@ async function main() {
     if (sf.unique === 'resolved') oks.push(`and the unambiguous control resolves: "${sf.uniqueText}"`);
     else fails.push(`a control that should resolve did not: ${sf.unique}`);
 
-    // 6. no uncaught errors from our own files
-    const errs = await ask(`JSON.stringify(window.__lpErrors || [])`);
-    const list = JSON.parse(errs || '[]');
-    if (list.length) fails.push(`page errors: ${list.slice(0, 3).join(' | ')}`);
+    // 6. uncaught errors from our own files — DELIBERATELY NOT CHECKED HERE.
+    //
+    // This used to read `window.__lpErrors` through ask(), and it was the only check in the
+    // whole suite that claimed to catch a runtime exception from a content script. It could
+    // never fail, for two independent reasons: nothing in the extension ever wrote that array
+    // (a repo-wide grep found one hit — the read itself), and ask() evaluates in the PAGE
+    // world, where a content script's globals are invisible however Rocky is behaving.
+    //
+    // The producer now exists (content/error-collector.js) and the check now lives in
+    // test/interaction-live.js, which enumerates Runtime.executionContextCreated to reach the
+    // extension's own isolated world and asserts on __lpErrors AFTER exercising Rocky.
+    //
+    // It is not reinstated here, because this file only has the page world. A check that
+    // cannot fail is worse than an absent one: it reads as coverage.
 
     // Open Rocky's menu so the screenshot shows it. The panel replaced a radial ring that
     // sprayed buttons across the page; only a picture confirms the new one sits beside him.
