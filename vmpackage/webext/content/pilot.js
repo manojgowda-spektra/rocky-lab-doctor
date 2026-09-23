@@ -245,6 +245,12 @@
     });
 
     p.onChange(turn);
+
+    // Recovery rides the same perception stream. It also FEEDS the world model — until it
+    // starts, learner.attempts/errors/misclicks stay zero and stuck() is measuring nothing,
+    // so this is a prerequisite for stuck detection rather than an optional extra.
+    try { if (window.LabPilotRecovery) window.LabPilotRecovery.start(); } catch (e) {}
+
     turn(p.snapshot());               // act on what is already on screen
     return { ok: true, steps: guide.steps.length };
   }

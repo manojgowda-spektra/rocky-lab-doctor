@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LabPilot \u00b7 Rocky",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Rocky, your lab copilot, floats beside the exact next control and guides you click-by-click \u2014 and teaches: WHY each step matters, WHAT the technology is. Click Rocky to EXPLORE: rest on or circle any control and he explains it; destructive clicks are intercepted. Glows only on a uniquely resolved control; his mood comes only from deterministic facts.",
   "permissions": [
     "storage",
@@ -56,7 +56,8 @@
         "content/controls.js",
         "content/explain-cache.js",
         "content/explore.js",
-        "content/pilot.js"
+        "content/pilot.js",
+        "content/recovery.js"
       ],
       "css": [
         "content/overlay.css"

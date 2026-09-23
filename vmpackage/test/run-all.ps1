@@ -50,6 +50,9 @@ Gate 'Guides an uncaptured lab' { node (Join-Path $pkg 'test/pilot-live.js') | O
 Gate 'Explore mode' { node (Join-Path $pkg 'test/explore-test.js') | Out-Null } `
   'explanations actually run, cost one model call per control, and never fight the glow'
 
+Gate 'Recovery' { node (Join-Path $pkg 'test/recovery-test.js') | Out-Null } `
+  'the world model is actually fed, the ladder caps itself, and progress ends it'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 
