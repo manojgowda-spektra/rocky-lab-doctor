@@ -25,7 +25,7 @@ const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
-const { killEdgeTree, rmQuiet } = require('./edge-util');
+const { killEdgeTree, rmQuiet, sweepStaleProfiles } = require('./edge-util');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -108,6 +108,15 @@ function check(name, fn) {
 }
 
 (async () => {
+  // Sweep what earlier runs leaked BEFORE starting. Measured: with ~16 Edge processes and
+  // several background agents running, this test fails with symptoms that look exactly like
+  // code regressions - every resolve returning absent, the guide parsing 0 steps. It is the
+  // machine, not the product, and verify-loaded.js already guards itself this way.
+  try {
+    const swept = sweepStaleProfiles(os.tmpdir(), ['rockypilot-', 'rockybench-', 'rockylive-', 'rockymut-']);
+    if (swept) console.log(`  (swept ${swept} stale browser profile(s) from earlier runs)`);
+  } catch (e) { /* best effort */ }
+
   const port = 9800 + Math.floor(Math.random() * 190);
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'rockypilot-'));
   const edge = ['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -117,6 +126,12 @@ function check(name, fn) {
   const page = 'file:///' + path.join(__dirname, 'mock-lab.html').replace(/\\/g, '/');
   const child = spawn(edge, [`--remote-debugging-port=${port}`, `--user-data-dir=${prof}`,
     '--headless=new', '--no-first-run', '--no-default-browser-check',
+    // Edge otherwise opens a sync-confirmation dialog as its OWN page target, and a naive
+    // "first page target" pick attaches to that instead of the lab. The symptom is brutal to
+    // diagnose: every control resolves absent and the guide parses 0 steps, which reads
+    // exactly like a code regression. Same suppression verify-loaded.js already uses.
+    '--disable-sync', '--no-service-autorun', '--disable-background-networking',
+    '--disable-features=EdgeSyncPromo,msEdgeWelcomePage,msIdentityFre,ImplicitSignin',
     '--allow-file-access-from-files', '--window-size=1600,1000', page],
     { detached: true, stdio: 'ignore' });
 
@@ -127,7 +142,16 @@ function check(name, fn) {
       await sleep(400);
       try { targets = await getJSON(`http://127.0.0.1:${port}/json/list`); if (targets.some((t) => t.type === 'page')) break; } catch (e) {}
     }
-    client = await wsConnect(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
+    // Pick the MOCK LAB explicitly. Belt and braces with the flags above: if Edge ever opens
+    // another page target, attaching to the wrong one must fail loudly here rather than
+    // producing a test run that silently measures the wrong page.
+    const lab = targets.filter((t) => t.type === 'page')
+      .find((t) => /mock-lab\.html/i.test(t.url || ''));
+    if (!lab) {
+      throw new Error('mock-lab.html is not among the page targets: '
+        + targets.filter((t) => t.type === 'page').map((t) => t.url).join(' | '));
+    }
+    client = await wsConnect(lab.webSocketDebuggerUrl);
     await sleep(1200);
     const ev = async (expr) => {
       const r = await client.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
