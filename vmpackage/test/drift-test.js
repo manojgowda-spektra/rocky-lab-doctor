@@ -24,6 +24,7 @@ const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const { killEdgeTree, rmQuiet, sweepStaleProfiles } = require('./edge-util');
 
 const ROOT = path.join(__dirname, '..');
 const EXT = path.join(ROOT, 'webext');
@@ -158,6 +159,8 @@ const CASES = [
   { page: 'disabled',   sel: deploySel, want: 'no-click-me',  note: 'disabled control must not be offered as clickable' },
 ];
 
+
+
 async function main() {
   const edge = [`${process.env['ProgramFiles(x86)']}\\Microsoft\\Edge\\Application\\msedge.exe`,
                 `${process.env.ProgramFiles}\\Microsoft\\Edge\\Application\\msedge.exe`].find((p) => p && fs.existsSync(p));
@@ -229,8 +232,9 @@ async function main() {
   } finally {
     if (client) client.close();
     try { proc.kill(); } catch (e) {}
+    killEdgeTree(profile);   // the launcher exits; the browser tree does not
     if (mock) { try { mock.server.close(); } catch (e) {} setTimeout(() => { try { fs.rmSync(mock.dir, { recursive: true, force: true }); } catch (e) {} }, 400); }
-    setTimeout(() => { try { fs.rmSync(profile, { recursive: true, force: true }); } catch (e) {} }, 500);
+    rmQuiet(profile);
   }
   process.exit(fail ? 1 : 0);
 }

@@ -26,6 +26,7 @@ const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const { killEdgeTree, rmQuiet, sweepStaleProfiles } = require('./edge-util');
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
@@ -181,6 +182,8 @@ const EXPECTATIONS = [
     expect: 'not-resolved', why: 'absent must be absent' },
 ];
 
+
+
 async function main() {
   const edge = findEdge();
   const port = 9300 + Math.floor(Math.random() * 400);
@@ -268,7 +271,8 @@ async function main() {
   } finally {
     if (client) client.close();
     try { proc.kill(); } catch (e) {}
-    setTimeout(() => { try { fs.rmSync(profile, { recursive: true, force: true }); } catch (e) {} }, 500);
+    killEdgeTree(profile);   // the launcher exits; the browser tree does not
+    rmQuiet(profile);
   }
 }
 

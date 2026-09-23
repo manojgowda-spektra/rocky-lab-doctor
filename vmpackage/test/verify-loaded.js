@@ -21,6 +21,7 @@ const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const { killEdgeTree, rmQuiet, sweepStaleProfiles } = require('./edge-util');
 
 const args = process.argv.slice(2);
 const argOf = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
@@ -131,6 +132,8 @@ function serveMock(host) {
     server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port, dir: tls.dir }));
   });
 }
+
+
 
 async function main() {
   if (!fs.existsSync(path.join(EXT, 'manifest.json'))) {
@@ -346,8 +349,9 @@ async function main() {
   } finally {
     if (client) client.close();
     try { proc.kill(); } catch (e) {}
+    killEdgeTree(profile);   // the launcher exits; the browser tree does not
     if (mock) { try { mock.server.close(); } catch (e) {} setTimeout(() => { try { fs.rmSync(mock.dir, { recursive: true, force: true }); } catch (e) {} }, 500); }
-    setTimeout(() => { try { fs.rmSync(profile, { recursive: true, force: true }); } catch (e) {} }, 800);
+    rmQuiet(profile);
   }
 
   console.log(`\n=== ROCKY LOADS AND RUNS IN A REAL BROWSER ===`);
