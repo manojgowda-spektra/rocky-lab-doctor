@@ -250,9 +250,15 @@ async function main() {
       const res = await client.send('Runtime.evaluate', { expression: expr, returnByValue: true });
       const r = JSON.parse(res.result.value);
 
+      // A CRASH IS NOT A REFUSAL. The probe's catch returns status 'ERROR', which is not
+      // 'resolved', so `!resolved` passed every not-resolved case even when the engine threw.
+      // Four of the expectations here were green whether the engine worked or not. Refusing is
+      // a decision; throwing is a failure to make one. An 'any' case still tolerates ERROR,
+      // because that is what 'any' means — it asserts nothing either way.
       const resolved = r.status === 'resolved';
       let ok = true;
-      if (c.expect === 'resolved') ok = resolved && (!c.expectText || (r.text || '').includes(c.expectText));
+      if (r.status === 'ERROR' && c.expect !== 'any') ok = false;
+      else if (c.expect === 'resolved') ok = resolved && (!c.expectText || (r.text || '').includes(c.expectText));
       else if (c.expect === 'not-resolved') ok = !resolved;
 
       const score = r.score !== undefined && r.score !== null ? ` score=${Number(r.score).toFixed(2)}` : '';

@@ -215,8 +215,16 @@ async function main() {
         })()`, returnByValue: true });
       const res = JSON.parse(r.result.value);
 
+      // A CRASH IS NOT A REFUSAL. The probe's catch returns status 'ERROR', and 'ERROR' is
+      // not 'resolved' — so a plain `!== 'resolved'` test passed every non-resolution case
+      // even if the anchor engine threw on absolutely everything. Four of the six cases here
+      // were green whether the engine worked or was completely broken.
+      // The contract is "resolve the unique, REFUSE the ambiguous". Refusing is a decision the
+      // engine makes; throwing is the engine failing to make one. They are not the same, and
+      // only one of them is acceptable.
       let ok;
-      if (c.want === 'resolved') ok = res.status === 'resolved';
+      if (res.status === 'ERROR') ok = false;
+      else if (c.want === 'resolved') ok = res.status === 'resolved';
       else if (c.want === 'not-resolved') ok = res.status !== 'resolved';
       else ok = res.status !== 'resolved' || res.disabled === true; // resolved-but-disabled is reported, never a click-me glow
 
