@@ -128,12 +128,35 @@
     return false;
   }
 
-  function pointAt(verdict, step) {
+  /*
+   * PROGRESS, stated only when it is true.
+   *
+   * The world model tracks a BELIEF about which step the learner is on, not a fact. Rendering
+   * "Step 4 of 12" from a belief of 0.31 would be Rocky asserting something he does not know —
+   * the exact failure the project forbids everywhere else. So progress is shown only when the
+   * belief has actually converged; below that Rocky shows the step text and no number.
+   *
+   * CONF_SHOW is deliberately above the world model's own CONF_ADVANCE (0.65). Moving the
+   * internal pointer on decent evidence is fine; telling the learner a number needs more.
+   */
+  var CONF_SHOW = 0.80;
+
+  function progressFor(world) {
+    if (!world || world.index < 0 || !world.total) return null;
+    if (world.confidence < CONF_SHOW) return null;      // honest silence beats a wrong number
+    return { n: world.index + 1, total: world.total };
+  }
+
+  function pointAt(verdict, step, world) {
     var o = O();
     if (!o || !verdict.element) return false;
     try {
-      // overlay.guide(el, text) glows the element and flies Rocky to it.
-      o.guide(verdict.element, step.text || verdict.label);
+      // overlay.guide(el, text, meta) glows the element and flies Rocky to it. meta.progress
+      // drives the existing step counter and bar; omitted when Rocky is not sure.
+      var meta = {};
+      var p = progressFor(world);
+      if (p) meta.progress = p;
+      o.guide(verdict.element, step.text || verdict.label, meta);
     } catch (e) { return false; }
     st.glowing = verdict.label;
     return true;
@@ -181,7 +204,7 @@
 
     // 4. act
     if (d.act === "POINT") {
-      if (pointAt(verdict, world.step)) {
+      if (pointAt(verdict, world.step, world)) {
         st.lastSpoke = Date.now();
         st.lastPointAt = Date.now();
         st.lastTarget = verdict.label;
@@ -230,13 +253,17 @@
 
   function status() {
     var w = W();
+    var world = w ? w.current() : null;
     return {
       on: st.on,
       mode: st.mode,
       said: st.said,
       glowing: st.glowing,
       lastDecision: st.lastDecision || null,
-      world: w ? w.current() : null,
+      world: world,
+      // null when Rocky is not confident enough to claim a position. Callers must render the
+      // absence as "working on it", never as step 0.
+      progress: progressFor(world),
     };
   }
 

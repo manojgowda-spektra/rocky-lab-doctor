@@ -203,6 +203,34 @@ check('a new target still waits for the minimum gap', () => {
   assert.strictEqual(d.act, 'DEFER', `got ${d.act} — Rocky spoke twice in under the gap`);
 });
 
+// ---- progress: shown only when it is true -----------------------------------------------------
+check('no progress number while the belief is still forming', () => {
+  // The world model tracks a BELIEF. Rendering "step 4 of 12" from weak evidence would be
+  // Rocky asserting something he does not know - the one thing the project forbids everywhere.
+  W.reset(); W.ingest(GUIDE);
+  W.observe(screen(['Home', 'Dashboard']));
+  const st = P.status();
+  assert.strictEqual(st.progress, null, `claimed progress at confidence ${st.world.confidence}`);
+});
+
+check('a converged belief DOES show progress', () => {
+  W.reset(); W.ingest(GUIDE);
+  for (let i = 0; i < 12; i++) W.observe(screen(['Data source']));
+  const st = P.status();
+  assert.ok(st.progress, `no progress at confidence ${st.world.confidence}`);
+  assert.strictEqual(st.progress.n, 2, `showed step ${st.progress.n}`);
+  assert.strictEqual(st.progress.total, 3);
+});
+
+check('progress disappears again if the belief weakens', () => {
+  // A learner who wanders off-script must not keep seeing a confident number.
+  W.reset(); W.ingest(GUIDE);
+  for (let i = 0; i < 12; i++) W.observe(screen(['Data source']));
+  assert.ok(P.status().progress, 'setup failed: no progress after convergence');
+  for (let i = 0; i < 12; i++) W.observe(screen(['Something', 'Unrelated', 'Entirely']));
+  assert.strictEqual(P.status().progress, null, 'kept claiming a step after the evidence vanished');
+});
+
 // ---- cost -----------------------------------------------------------------------------------
 check('observe() stays in the millisecond budget', () => {
   W.reset(); W.ingest(GUIDE);
