@@ -24,7 +24,8 @@
   Everything else is optional. Run it again any time to upgrade; it is idempotent.
 #>
 param(
-  [Parameter(Mandatory = $true)] [string]$PackageUrl,   # blob URL + SAS of rocky-package.zip
+  [string]$PackageUrl = "",         # blob URL (+SAS) of rocky-package.zip
+  [string]$FromLocal  = "",         # ...or a copy already inside the VM (drag it over RDP)
   [string]$DeploymentID = "",       # from the lab's Environment Details tab
   [string]$ODLID        = "",       # optional; identity only
   [string]$LabCode      = "foundry-develop-ai",
@@ -54,19 +55,32 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
            ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) { Warn "Not running as Administrator: no desktop shortcut and no logon task. Everything else works." }
 
-Say "downloading the package"
+if (-not $PackageUrl -and -not $FromLocal) {
+  Write-Host "  Give me the package: -FromLocal <path to rocky-package.zip> or -PackageUrl <blob url>" -ForegroundColor Red
+  exit 1
+}
+
 $tmp = Join-Path $env:TEMP "rocky-manual-$(Get-Random)"
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 $zip = Join-Path $tmp 'rocky-package.zip'
-try {
-  (New-Object Net.WebClient).DownloadFile($PackageUrl, $zip)
-} catch {
-  Write-Host "  FAILED to download the package." -ForegroundColor Red
-  Write-Host "  $($_.Exception.Message)" -ForegroundColor Red
-  Write-Host "  Check the SAS has not expired, and that this VM has outbound HTTPS." -ForegroundColor Red
-  exit 1
+
+if ($FromLocal) {
+  if (-not (Test-Path $FromLocal)) { Write-Host "  No such file: $FromLocal" -ForegroundColor Red; exit 1 }
+  Say "using the package already in this VM"
+  Copy-Item $FromLocal $zip -Force
+} else {
+  Say "downloading the package"
+  try {
+    (New-Object Net.WebClient).DownloadFile($PackageUrl, $zip)
+  } catch {
+    Write-Host "  FAILED to download the package." -ForegroundColor Red
+    Write-Host "  $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "  Check the SAS has not expired, and that this VM has outbound HTTPS." -ForegroundColor Red
+    exit 1
+  }
 }
-Good "package downloaded ($([math]::Round((Get-Item $zip).Length / 1KB)) KB)"
+$kb = [math]::Round((Get-Item $zip).Length / 1KB)
+Good "package ready ($kb KB)"
 
 # The package carries the bootstrap. Using it (rather than a copy of the logic here) is what
 # makes this a real rehearsal of the automatic route.
