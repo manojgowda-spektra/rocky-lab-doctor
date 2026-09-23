@@ -470,9 +470,21 @@
         state.steps = [];
         return;
       }
-      // No guide on screen yet — the pane may still be rendering.
-      if (r && r.why === "no-guide-on-screen" && attempt < 6) {
-        setTimeout(function () { handOverToPilot(attempt + 1); }, 1500);
+      /*
+       * KEEP WATCHING. This used to give up after 6 tries at 1.5 s — nine seconds — and
+       * measured on the real platform that is not enough: CloudLabs renders the lab shell,
+       * then fetches and renders the guide pane afterwards. The handover window expired
+       * before the guide existed, so the pilot never started and Rocky sat silent on a lab
+       * he could have read. Verified live: guideFound was true and pilotOn was false.
+       *
+       * A learner can also open the guide minutes later, or switch challenge. So rather
+       * than a countdown, watch until there is something to read. The check is
+       * LabPilotGuide.read(), which is the same cheap DOM scan the reader already does, and
+       * it stops the moment the pilot takes over.
+       */
+      if (r && r.why === "no-guide-on-screen") {
+        var wait = attempt < 10 ? 1500 : 5000;      // eager at first, then patient
+        if (attempt < 120) setTimeout(function () { handOverToPilot(attempt + 1); }, wait);
       }
       return;
     }

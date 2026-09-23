@@ -195,6 +195,22 @@
       var lead = /^In\s+[^,]{2,40},\s*(.+)$/i.exec(text);
       var body = lead ? lead[1] : text;
 
+      /*
+       * A URL is scene-setting, not a target. Measured live on the Purview portal:
+       *
+       *   "In Microsoft Edge, open https://purview.microsoft.com, then open Solutions >
+       *    Insider Risk Management."
+       *
+       * The parser took "open https://purview..." as the instruction and kept only the last
+       * hop, losing "Solutions" — which is the control that actually resolves on the page
+       * (score 0.70, a real menuitem), while "Insider Risk Management" is absent until that
+       * menu is opened. Rocky therefore had exactly one target and it could never resolve.
+       *
+       * Drop the navigate-to-a-URL clause and keep what follows: the real click path.
+       */
+      var afterUrl = /\bhttps?:\/\/\S+[,.]?\s*(?:then\s+|and\s+then\s+|and\s+)?(.+)$/i.exec(body);
+      if (afterUrl && afterUrl[1] && afterUrl[1].length > 3) body = afterUrl[1];
+
       // Keep only the first sentence: "Select Create policy > Custom policy. Do not select
       // Quick policy." — the second sentence is a warning, and treating it as a target would
       // glow the thing the learner was told NOT to click.
