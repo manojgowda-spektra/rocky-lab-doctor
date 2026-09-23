@@ -132,6 +132,30 @@ check('a configured api-version beats our default', () => {
     'our default api-version overrode the configured one, which can reject a newer model');
 });
 
+// "Unsupported parameter" - the request BODY, not the URL. Newer Azure models renamed
+// max_tokens to max_completion_tokens and some reject temperature outright. The user's
+// working sample for this resource sends max_completion_tokens and no temperature.
+check('the chat body matches what current models accept', () => {
+  const r = req('https://rockyintelligence.cognitiveservices.azure.com/openai/deployments/gpt-6-luna/chat/completions?api-version=2024-12-01-preview');
+  assert.ok('max_completion_tokens' in r.body, 'missing max_completion_tokens');
+  assert.ok(!('max_tokens' in r.body), 'max_tokens is rejected by newer models');
+  assert.ok(!('temperature' in r.body), 'some reasoning models refuse temperature outright');
+});
+
+check('the model is named in the body, not only in the URL', () => {
+  // Some surfaces require it even when the deployment is already in the path.
+  const r = req('https://rockyintelligence.cognitiveservices.azure.com/openai/deployments/gpt-6-luna/chat/completions?api-version=2024-12-01-preview');
+  assert.strictEqual(r.body.model, 'luna-6');
+});
+
+check('a retry drops the field the service names, rather than guessing', () => {
+  // The durable approach: models disagree about parameters and the rules keep changing,
+  // so listen to the error instead of maintaining a table of which model wants what.
+  const src = fs.readFileSync(path.join(__dirname, '..', 'webext', 'background.js'), 'utf8');
+  assert.match(src, /unsupported\[_ \]\?parameter/i, 'no detection of an unsupported-parameter error');
+  assert.match(src, /attempt\(next, true\)/, 'no single retry with the field removed');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — the endpoint a user pastes is the endpoint Rocky calls.\n`);

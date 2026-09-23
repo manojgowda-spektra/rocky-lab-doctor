@@ -66,10 +66,38 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const req = buildAIRequest(v.lpAI || {}, msg.payload || {});
         if (req.error) { sendResponse({ error: req.error }); return; }
         const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
-        fetch(req.url, { method: "POST", headers: req.headers, body: JSON.stringify(req.body), signal: ctl.signal })
-          .then((r) => r.ok ? r.json() : r.text().then((tx) => { throw new Error(`HTTP ${r.status} ${tx.slice(0, 160)}`); }))
+
+        // Models disagree about which request fields they accept, and the rules change with
+        // every release. Rather than maintain a table of which model wants what, listen to
+        // the service: if it names an unsupported parameter, drop that one field and try
+        // again. One retry only - a second failure is a real problem worth reporting.
+        const attempt = (body, retried) => fetch(req.url, {
+          method: "POST", headers: req.headers, body: JSON.stringify(body), signal: ctl.signal,
+        })
+          .then((r) => (r.ok ? r.json() : r.text().then((tx) => {
+            const err = new Error(`HTTP ${r.status} ${tx.slice(0, 200)}`);
+            err.detail = tx;
+            throw err;
+          })))
           .then((j) => { clearTimeout(t); const txt = extractAIText(j); sendResponse(txt ? { text: txt } : { error: "empty answer" }); })
-          .catch((e) => { clearTimeout(t); sendResponse({ error: String(e && e.message || e) }); });
+          .catch((e) => {
+            const detail = String((e && e.detail) || (e && e.message) || "");
+            const named = /unsupported[_ ]?parameter|unrecognized request argument|is not supported with this model|unknown parameter/i.test(detail);
+            if (!retried && named) {
+              // Which field? The message usually names it; fall back to the usual suspects.
+              const next = Object.assign({}, body);
+              const m = /['"]([a-z_]+)['"]/i.exec(detail);
+              let dropped = null;
+              if (m && m[1] && m[1] in next) { delete next[m[1]]; dropped = m[1]; }
+              else if ("temperature" in next) { delete next.temperature; dropped = "temperature"; }
+              else if ("max_completion_tokens" in next) { delete next.max_completion_tokens; dropped = "max_completion_tokens"; }
+              if (dropped) return attempt(next, true);
+            }
+            clearTimeout(t);
+            sendResponse({ error: String((e && e.message) || e) });
+          });
+
+        attempt(req.body, false);
       });
       return true;
 
@@ -121,6 +149,17 @@ function normaliseEndpoint(raw) {
   return u.origin + u.pathname.replace(/\/+$/, "") + (u.search || "");
 }
 
+// The modern chat-completions shape. `model` is included because some surfaces require it
+// even when the deployment is already named in the URL, and max_completion_tokens is the
+// current spelling - max_tokens is rejected by newer models.
+function chatBody(model, turns) {
+  return {
+    model: model,
+    messages: [{ role: "system", content: ROCKY_SYSTEM }].concat(turns),
+    max_completion_tokens: 400,
+  };
+}
+
 function buildAIRequest(cfg, p) {
   const endpoint = normaliseEndpoint(cfg.endpoint);
   const model = String(cfg.deployment || "").trim();
@@ -161,11 +200,11 @@ function buildAIRequest(cfg, p) {
   // over our default: a model newer than the default version is rejected outright.
   if (/\/chat\/completions/i.test(endpoint)) {
     return { kind: "chat", url: endpoint, headers,
-             body: { messages: [{ role: "system", content: ROCKY_SYSTEM }].concat(turns), max_tokens: 320, temperature: 0.3 } };
+             body: chatBody(model, turns) };
   }
   const base = endpoint.replace(/\/openai.*$/i, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion || "2024-10-21")}`;
-  return { kind: "chat", url, headers, body: { messages: [{ role: "system", content: ROCKY_SYSTEM }].concat(turns), max_tokens: 320, temperature: 0.3 } };
+  return { kind: "chat", url, headers, body: chatBody(model, turns) };
 }
 function extractAIText(j) {
   if (!j) return "";
