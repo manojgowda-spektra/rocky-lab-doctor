@@ -81,8 +81,16 @@
 
     var el = (raw.closest && raw.closest('a,button,input,summary,label,[role],[tabindex]')) || raw;
     if (glowed && (el === glowed || (glowed.contains && glowed.contains(raw)))) {
-      // Correct click: that is progress. Reset everything — this is the aggressive exit.
-      w.note({ type: "complete" });
+      // Correct click: for the LADDER that is progress - whatever they were stuck on, they
+      // have just done it - so reset; this is the aggressive exit.
+      //
+      // It is NOT completion of the step. A click is an action; the step is done when the
+      // page reaches the state the guide describes ("wait for the success notification", the
+      // menu opening for the next hop), and that has to be observed. progress.js owns that
+      // judgement: hand it the glowed element and let the evidence decide.
+      var PG = window.LabPilotProgress;
+      if (PG && PG.arm) { try { PG.arm(glowed); } catch (e4) {} }
+      else w.note({ type: "complete" });           // no end-state module loaded: the old rule
       reset("correct-click");
       return;
     }
@@ -105,7 +113,11 @@
 
     var next = state.rung + 1;
     var step = world.step;
-    var label = (step.targets && step.targets[0] && step.targets[0].label) || "the next control";
+    // The hop the learner is actually on, not always the first: "Solutions > Insider Risk
+    // Management" is about the second once the menu has opened.
+    var tg = step.targets || [];
+    var ti = Math.max(0, Math.min(world.hop || 0, tg.length - 1));
+    var label = (tg[ti] && tg[ti].label) || "the next control";
 
     if (next === 1) {
       // POINT. The glow, if any, already happened. Add only WHERE we are.

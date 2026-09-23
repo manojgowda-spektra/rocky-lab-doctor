@@ -101,10 +101,19 @@
       if (sameTarget && (nowMs - state.lastPointAt) < RE_POINT_MS) {
         return { act: "SILENT", why: "already-pointing" };
       }
-      if ((nowMs - state.lastSpoke) < MIN_GAP_MS && !sameTarget) {
+      // A step boundary is the one moment interrupting is cheap (Bailey & Konstan): the
+      // learner has just finished something. When position moved FORWARD since the last glow
+      // - the next hop of the same instruction once its menu opened, or the next step once
+      // its end-state was observed - point straight away. Holding the gap here would leave
+      // the learner staring at an open menu for eight seconds with Rocky saying nothing.
+      // A backward move (the belief retreating) still waits: that is not the learner's doing.
+      var movedOn = state.lastIndex != null && (
+        (world.index === state.lastIndex && (world.hop || 0) > (state.lastHop || 0)) ||
+        (typeof world.index === "number" && world.index > state.lastIndex));
+      if ((nowMs - state.lastSpoke) < MIN_GAP_MS && !sameTarget && !movedOn) {
         return { act: "DEFER", why: "min-gap" };
       }
-      return { act: "POINT", why: "resolved", verdict: verdict, step: step };
+      return { act: "POINT", why: movedOn ? "resolved-after-progress" : "resolved", verdict: verdict, step: step };
     }
 
     if (verdict && verdict.status === "ambiguous") {
@@ -178,6 +187,21 @@
   // ---- the loop ------------------------------------------------------------------------------
 
   /*
+   * Which labels to hunt for on this step. An instruction with several ordered targets
+   * ("Solutions > Insider Risk Management") is walked one hop at a time: the world model
+   * records how many hops the page has been seen to satisfy (progress.js feeds it), and the
+   * pointer sits on the first unsatisfied one. Pure, so the hop walk is unit tested.
+   */
+  function labelsFor(step, hop) {
+    var tg = (step && step.targets) || [];
+    if (!tg.length) return [];
+    var t = tg[Math.max(0, Math.min(hop | 0, tg.length - 1))];
+    var labels = [t.label];
+    if (t.alt) labels = labels.concat(t.alt);
+    return labels.filter(Boolean);
+  }
+
+  /*
    * One turn. Called on a perception change, not on a timer. This is the whole hot path and it
    * should stay in single-digit milliseconds.
    */
@@ -189,19 +213,16 @@
     // 1. update the world model from what is on screen  (~1 ms)
     w.observe({ url: snap.url, title: snap.title, controls: snap.controls });
 
+    // 1b. a correct click armed an expected end-state (progress.js); judge it against THIS
+    //     screen before choosing a target, so a satisfied hop or step moves the pointer in
+    //     the same turn rather than waiting for a further change that may never come.
+    try { if (window.LabPilotProgress) window.LabPilotProgress.check(snap); } catch (e) { /* never block the turn */ }
+
     var world = w.current();
     if (!world.step) return;
 
-    // 2. resolve the current step's target against the live page  (~1 ms)
-    var labels = [];
-    var tg = world.step.targets || [];
-    for (var i = 0; i < tg.length; i++) {
-      // Only the FIRST unsatisfied target in an instruction matters: "(1) File then (2) Open
-      // Folder" means point at File until it is gone, then Open Folder.
-      labels.push(tg[i].label);
-      if (tg[i].alt) labels = labels.concat(tg[i].alt);
-      break;
-    }
+    // 2. resolve the current step's current hop against the live page  (~1 ms)
+    var labels = labelsFor(world.step, world.hop);
     var verdict = labels.length ? l.resolveAny(labels) : { status: "absent", reason: "no-labels" };
     w.setResolution({ status: verdict.status, score: verdict.score, label: verdict.label });
 
@@ -218,6 +239,8 @@
         st.lastSpoke = Date.now();
         st.lastPointAt = Date.now();
         st.lastTarget = verdict.label;
+        st.lastIndex = world.index;          // where the glow was, so decide() can tell
+        st.lastHop = world.hop || 0;         // forward progress from a retreating belief
         st.said++;
       }
     } else if (d.act === "ASK") {
@@ -227,7 +250,7 @@
       st.said++;
     } else if (d.act === "ESCALATE") {
       clearGlow();
-      var what = (world.step.targets && world.step.targets[0] && world.step.targets[0].label) || "the next control";
+      var what = labelsFor(world.step, world.hop)[0] || "the next control";
       say("I cannot find “" + what + "” on this page. " +
           (world.step.text ? "The guide says: " + world.step.text.slice(0, 120) : ""), "sad");
       st.lastSpoke = Date.now();
@@ -297,6 +320,8 @@
     status: status,
     mode: mode,
     _decide: decide,           // pure, unit-tested
+    _labelsFor: labelsFor,     // pure, unit-tested: the hop walk
+    _turn: turn,               // for the end-state gate, which drives a turn with a mocked screen
     _state: st,
   };
 })();

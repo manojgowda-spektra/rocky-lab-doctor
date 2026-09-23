@@ -84,7 +84,8 @@
         "content/explain-cache.js",
         "content/explore.js",
         "content/pilot.js",
-        "content/recovery.js"
+        "content/recovery.js",
+        "content/progress.js"
       ],
       "css": [
         "content/overlay.css"
