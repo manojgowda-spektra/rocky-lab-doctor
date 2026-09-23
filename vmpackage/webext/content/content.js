@@ -451,6 +451,34 @@
     scheduleEval();
   }
 
+  /*
+   * Hand the glow to the pilot: guide-driven guidance, for a lab nobody captured.
+   *
+   * Retries briefly because pilot.js loads after this file and a full-page navigation can
+   * race the guide pane's own render. Silent on failure: a page with no readable guide is a
+   * page Rocky has nothing to say about, which is the correct outcome, not an error.
+   */
+  function handOverToPilot(attempt) {
+    attempt = attempt || 0;
+    var P = window.LabPilotPilot;
+    if (P) {
+      var r = P.start();
+      if (r && r.ok) {
+        // The pilot now owns the glow. Stand the bundle loop down, or two engines would
+        // fight over the same overlay — the bundle would re-glow step 1 on every mutation
+        // while the pilot glowed the guide's actual step.
+        state.steps = [];
+        return;
+      }
+      // No guide on screen yet — the pane may still be rendering.
+      if (r && r.why === "no-guide-on-screen" && attempt < 6) {
+        setTimeout(function () { handOverToPilot(attempt + 1); }, 1500);
+      }
+      return;
+    }
+    if (attempt < 6) setTimeout(function () { handOverToPilot(attempt + 1); }, 400);
+  }
+
   // On startup RESTORE the persisted pointer (PLAN-V2 cross-nav §A): a full-page
   // navigation reloads this content script, so resuming at lpStepIndex (not 0) is what
   // lets guidance continue across navigations instead of restarting the flow. The capture
@@ -463,11 +491,28 @@
       if (v.lpBundle) {
         applyBundle(v.lpBundle);
       } else {
-        // Dev fallback: the packaged test bundle drives the V2-1 gate.
+        // No captured bundle for this lab, so decide who owns the glow.
+        //
+        // THE RULE: a readable lab guide on screen wins. The pilot reads it and works on any
+        // lab; the packaged fixture only ever matched one demo lab and carries no URL of its
+        // own, so there is no honest way to ask "is this fixture for this page". Asking "is
+        // there a guide here?" is answerable, and it is the question that actually matters.
+        //
+        // Ownership stays exclusive: whichever answers first drives the glow, and the other
+        // is never started.
+        var P = window.LabPilotPilot;
+        var started = P && P.start();
+        if (started && started.ok) return;
+
+        // No guide on screen. Fall back to the packaged fixture so the demo lab still works,
+        // and keep trying the pilot for a few seconds in case the guide pane renders late.
         fetch(chrome.runtime.getURL("bundle/test-bundle.json"))
           .then(function (r) { return r.json(); })
-          .then(applyBundle)
-          .catch(function () { O.checking("LabPilot: no bundle loaded."); });
+          .then(function (bundle) {
+            applyBundle(bundle);
+            handOverToPilot(1);          // a late-rendering guide still takes over
+          })
+          .catch(function () { handOverToPilot(1); });
       }
     });
   }

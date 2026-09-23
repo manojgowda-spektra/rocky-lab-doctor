@@ -98,6 +98,7 @@ const SCRIPTS = [
   'world-model.js',
   'label-resolver.js',
   'guide-reader.js',
+  'pilot.js',
 ];
 
 let pass = 0; const fails = [];
@@ -267,6 +268,35 @@ function check(name, fn) {
     check('a control added after load is noticed', () => {
       assert(woke.sees, 'a newly added control was not perceived');
       assert(woke.fired > 0, 'the change observer never fired for a real DOM change');
+    });
+
+    // ---- the pilot itself: does start() take ownership and reach a decision? ---------------
+    // Nothing tested this before: the loop was built but nothing ran it, which is exactly the
+    // gap that let "wired up" mean "not actually running".
+    const piloted = await ev('(function(){ ' +
+      'window.LabPilotWorld.reset(); ' +
+      'var r = window.LabPilotPilot.start(); ' +
+      'var s = window.LabPilotPilot.status(); ' +
+      'return { ok: !!(r && r.ok), why: r && r.why, steps: r && r.steps, ' +
+      'on: s.on, act: s.lastDecision && s.lastDecision.act, ' +
+      'why2: s.lastDecision && s.lastDecision.why, ' +
+      'stepText: s.world && s.world.step && s.world.step.text }; })()');
+    console.log(`         pilot.start() -> ok=${piloted.ok} steps=${piloted.steps} decision=${piloted.act} (${piloted.why2})`);
+
+    check('the pilot starts from the guide on screen', () => {
+      assert(piloted.ok, `start() refused: ${piloted.why}`);
+      assert(piloted.on, 'pilot did not stay on');
+      assert(piloted.steps >= 4, `ingested only ${piloted.steps} steps`);
+    });
+
+    check('the pilot reaches a decision on the first turn', () => {
+      assert(['POINT', 'ASK', 'SILENT', 'DEFER', 'ESCALATE'].includes(piloted.act),
+        `no decision made, got ${piloted.act}`);
+    });
+
+    check('the pilot decided about the step the guide actually starts with', () => {
+      assert(piloted.stepText && /create a resource/i.test(piloted.stepText),
+        `working on the wrong step: ${piloted.stepText}`);
     });
 
     console.log('');
