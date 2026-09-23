@@ -65,6 +65,9 @@ Gate 'Resolver on a hostile page' { node (Join-Path $pkg 'test/live-resolve.js')
 Gate 'Rocky loads and glows' { node (Join-Path $pkg 'test/verify-loaded.js') --ext (Join-Path $pkg 'webext') --shot | Out-Null } `
   'installed into Edge: content scripts inject, overlay mounts, a real bundle step glows'
 
+Gate 'What a learner clicks' { node (Join-Path $pkg 'test/interaction-live.js') | Out-Null } `
+  'in the extension own isolated world: explain(), the ask box, Enter, the button, the worker'
+
 Gate 'Confused learner' { node (Join-Path $pkg 'test/behaviour-test.js') | Out-Null } `
   'wrong click -> he names the control; portal error -> he explains it is not their fault'
 
