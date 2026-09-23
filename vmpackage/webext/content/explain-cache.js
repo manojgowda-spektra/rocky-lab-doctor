@@ -63,12 +63,29 @@
 
   function load(cb) {
     if (mem) { cb(mem); return; }
+
+    // A DEADLINE, because get() gates the WHOLE Ask-AI path behind this callback: askAI()
+    // consults the cache first, so if chrome.storage.local.get never calls back, ask() is
+    // never reached and the learner's question is not merely unanswered — it is never sent.
+    // No spinner, no error, nothing. An empty cache is a perfectly good answer here; being
+    // unable to read the cache must never cost the learner their question.
+    var done = false;
+    function settle(m, keep) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      // On a TIMEOUT we release the caller with an empty cache but deliberately do NOT store
+      // it in `mem`: storage was slow, not empty. Caching {} would make every later lookup a
+      // permanent miss for the rest of the session, turning a transient stall into a lasting
+      // loss of the cache. A real read (or a throw, which is terminal) does set `mem`.
+      if (keep) mem = m;
+      cb(m);
+    }
+    var timer = setTimeout(function () { settle({}, false); }, 3000);
+
     try {
-      chrome.storage.local.get([STORE], function (v) {
-        mem = (v && v[STORE]) || {};
-        cb(mem);
-      });
-    } catch (e) { mem = {}; cb(mem); }
+      chrome.storage.local.get([STORE], function (v) { settle((v && v[STORE]) || {}, true); });
+    } catch (e) { settle({}, true); }
   }
 
   function get(desc, cb) {

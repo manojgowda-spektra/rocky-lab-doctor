@@ -56,6 +56,9 @@ Gate 'Ask path' { node (Join-Path $pkg 'test/ask-path-test.js') | Out-Null } `
 Gate 'Explore mode' { node (Join-Path $pkg 'test/explore-test.js') | Out-Null } `
   'explanations actually run, cost one model call per control, and never fight the glow'
 
+Gate 'Nobody waits forever' { node (Join-Path $pkg 'test/ask-deadline-test.js') | Out-Null } `
+  'a dead service worker or a stalled storage read still releases the learner, with a reason'
+
 Gate 'Recovery' { node (Join-Path $pkg 'test/recovery-test.js') | Out-Null } `
   'the world model is actually fed, the ladder caps itself, and progress ends it'
 

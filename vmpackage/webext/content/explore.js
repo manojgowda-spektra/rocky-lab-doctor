@@ -117,17 +117,48 @@
     function ask() {
       R().explain(desc.el, kbText, { label: labelFor("ask"), mood: "think", ai: "Asking your Foundry deployment…", hint: "" });
       var payload = { name: desc.name, role: desc.role, context: desc.context, state: desc.state, route: location.pathname, title: document.title, kb: kbText };
+
+      // A DEADLINE. The spinner above is already on screen, so every path out of here must
+      // end by replacing it. In MV3 the background worker is killed aggressively: if it is
+      // asleep, dies, or throws before sendResponse, this callback NEVER FIRES and the
+      // learner sits on "Asking your Foundry deployment…" for the rest of the lab. That is
+      // not an exotic state, it is a routine one.
+      // `done` makes whichever arrives first win, so a late reply cannot overwrite the
+      // timeout message and the timeout cannot clobber a good answer.
+      var done = false;
+      function settle(text, isAnswer) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        if (isAnswer) { show(text, false); return; }
+        // A failure is NOT cached: the next attempt should really try again.
+        R().explain(desc.el, kbText, {
+          label: labelFor("ask"), mood: "explore", ai: text,
+          hint: "Click me to resume the lab · Alt+E",
+        });
+      }
+
+      var timer = setTimeout(function () {
+        settle("The model did not answer in time. The description above is what I can verify " +
+               "myself — ask again if you want another try.", false);
+      }, 20000);
+
       try {
         chrome.runtime.sendMessage({ type: "lp-ask-ai", payload: payload }, function (res) {
-          if (res && res.text) { show(res.text, false); return; }
-          // A failure is NOT cached: the next attempt should really try again.
-          R().explain(desc.el, kbText, {
-            label: labelFor("ask"), mood: "explore",
-            ai: "AI unavailable: " + (res && res.error || "no response") + ". The description above is what I can verify myself.",
-            hint: "Click me to resume the lab · Alt+E",
-          });
+          // lastError is set when the worker went away before replying. Reading it also stops
+          // Chrome logging "Unchecked runtime.lastError" over the console.
+          var gone = chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
+          if (res && res.text) { settle(res.text, true); return; }
+          settle("AI unavailable: " + ((res && res.error) || gone || "no response") +
+                 ". The description above is what I can verify myself.", false);
         });
-      } catch (e) {}
+      } catch (e) {
+        // The spinner is ALREADY on screen, so swallowing this would leave it there for good.
+        // This is the empty catch that made a question vanish in a live lab.
+        console.error("[Rocky] ask-AI send failed:", e);
+        settle("I could not reach the model (" + (e && e.message || "send failed") +
+               "). The description above is what I can verify myself.", false);
+      }
     }
 
     if (C) C.get(desc, function (hit) { hit ? show(hit, true) : ask(); });
