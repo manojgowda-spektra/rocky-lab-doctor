@@ -209,11 +209,16 @@
 
   function say(text, copyText, L, extra){
     var wantsAsk = !!(extra && extra.ask);
-    if(ask.open && !wantsAsk){                      // typing in progress: don't tear the box down
+    // `demand` marks something the learner explicitly asked for by clicking. Those must
+    // always render: deferring them made the AI-settings gear look broken whenever the Ask
+    // box happened to be open, which is exactly when a learner reaches for it.
+    var demanded = !!(extra && (extra.demand || extra.form));
+    if(ask.open && !wantsAsk && !demanded){         // typing in progress: don't tear the box down
       ask.queued = { text:text, copy:copyText, learn:L, extra:extra };
       if(text) learn.last = ask.queued;             // keep state honest for Learn toggles
       return;
     }
+    if(demanded){ ask.open=false; ask.queued=null; }   // the new panel replaces the box
     if(!text){ bub.style.opacity=0; learn.last=null; ask.open=false; ask.value=""; return; }
     learn.last = { text:text, copy:copyText, learn:L, extra:extra };
     bub.innerHTML="";
@@ -320,7 +325,7 @@
       try{ var sp=document.createElement("span"); sp.style.display="none"; document.body.appendChild(sp); setTimeout(function(){ sp.remove(); },30); }catch(e){} } },
     announce:function(text, opts){ opts=opts||{}; setMood(opts.mood||(state.exploring?"explore":"neutral")); show(); state.pending=null; say(text, null, null, opts); },
     explain:function(el, text, opts){
-      opts=opts||{}; var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      opts=opts||{}; opts.demand=true;   // the learner pointed at this; never defer it var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
       setMood(opts.mood||"explore"); if(r) reposition(r); show(); bub.style.opacity=0;
       state.pending={ text:text, copy:null, learn:null, extra:opts, onArrive:null }; state.arriveBy=performance.now()+1000;
     },

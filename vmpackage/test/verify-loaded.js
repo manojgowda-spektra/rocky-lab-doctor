@@ -361,6 +361,30 @@ async function main() {
 
     // Click the AI SETTINGS button and report what the bubble actually contains. "Nothing
     // opens" needs reproducing, not guessing at.
+    if (has('--askthensettings')) {
+      await ask(`(function(){ document.dispatchEvent(new CustomEvent('labpilot-rocky-click')); return 1; })()`);
+      await new Promise((r) => setTimeout(r, 600));
+      await ask(`(function(){ var b=document.querySelectorAll('#labpilot-rocky-menu button');
+        for(var i=0;i<b.length;i++) if(/Ask/i.test(b[i].innerText||'')) { b[i].click(); return 1; } return 0; })()`);
+      await new Promise((r) => setTimeout(r, 900));
+      const askOpen = await ask(`document.querySelectorAll('[data-labpilot="1"] input').length`);
+      await ask(`(function(){ document.dispatchEvent(new CustomEvent('labpilot-rocky-click')); return 1; })()`);
+      await new Promise((r) => setTimeout(r, 600));
+      await ask(`(function(){ var b=document.querySelectorAll('#labpilot-rocky-menu button');
+        for(var i=0;i<b.length;i++) if(/AI (on|off)/i.test(b[i].innerText||'')) { b[i].click(); return 1; } return 0; })()`);
+      await new Promise((r) => setTimeout(r, 1000));
+      const after = await ask(`(function(){
+        var ins=document.querySelectorAll('[data-labpilot="1"] input');
+        var txt=''; var n=document.querySelectorAll('[data-labpilot="1"]');
+        for(var i=0;i<n.length;i++){var t=(n[i].innerText||'').trim(); if(t&&t.length>txt.length) txt=t;}
+        return JSON.stringify({inputs:ins.length, showsSettings:/AI SETTINGS/i.test(txt)});
+      })()`);
+      console.log('   [ask->gear] ask box inputs: ' + askOpen + '  then gear -> ' + after);
+      const r = JSON.parse(after);
+      if (!r.showsSettings) fails.push('BUG REPRODUCED: gear does nothing when the Ask box is already open');
+      else oks.push('gear opens settings even with the Ask box open');
+    }
+
     if (has('--settings')) {
       const clicked = await ask(`(function(){          // lp-settings-probe
         document.dispatchEvent(new CustomEvent('labpilot-rocky-click'));
