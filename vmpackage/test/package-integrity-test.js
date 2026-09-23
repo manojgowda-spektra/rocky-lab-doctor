@@ -62,6 +62,12 @@ try {
 const zipExt = path.join(tmp, 'webext');
 const srcExt = path.join(PKG, 'webext');
 
+// Files that are declared in the manifest but must NEVER be packaged. ai.local.json holds a
+// live API key: it is gitignored precisely so a real key can sit beside the committed config
+// on a developer machine without being published. Rocky reads it when present and falls
+// through when it is not, so its absence from the package is correct, not drift.
+const MUST_NOT_SHIP = new Set(['ai.local.json']);
+
 // ---- 1. every declared file is present -----------------------------------------------------
 const manifestPath = path.join(zipExt, 'manifest.json');
 check('the package contains a manifest', () => {
@@ -82,7 +88,7 @@ if (fs.existsSync(manifestPath)) {
 
 check('every file the manifest declares is in the package', () => {
   assert(declared.length > 0, 'the manifest declared no files — parsed wrongly?');
-  const missing = declared.filter((f) => !fs.existsSync(path.join(zipExt, f)));
+  const missing = declared.filter((f) => !MUST_NOT_SHIP.has(f) && !fs.existsSync(path.join(zipExt, f)));
   assert(missing.length === 0,
     `declared but absent from the package: ${missing.join(', ')}`);
 });
@@ -180,10 +186,19 @@ check('lab.json and ai.json ship without a BOM', () => {
 // ---- 4. the package is built from current source ----------------------------------------------
 const norm = (buf) => buf.toString('utf8').replace(/\r\n/g, '\n').replace(/^﻿/, '');
 
+check('no local secret was packaged', () => {
+  // Far more important than staleness. A key that reaches dist/ has been published to every
+  // learner VM the package is installed on.
+  const leaked = [...MUST_NOT_SHIP].filter((f) => fs.existsSync(path.join(zipExt, f)));
+  assert(leaked.length === 0,
+    `a gitignored local secret was packaged and would ship to every lab VM: ${leaked.join(', ')}`);
+});
+
 check('the packaged content scripts match the source tree', () => {
   const drifted = [];
   const checked = [];
   for (const f of declared) {
+    if (MUST_NOT_SHIP.has(f)) continue;          // absence is the correct state, not drift
     const a = path.join(srcExt, f), b = path.join(zipExt, f);
     if (!fs.existsSync(a) || !fs.existsSync(b)) continue;
     checked.push(f);

@@ -189,6 +189,19 @@ foreach ($d in 'webext','bin','bundles','agent') {
 }
 Copy-Item (Join-Path $src 'VERSION.json') $stage -Force
 if (Test-Path (Join-Path $src 'README.txt')) { Copy-Item (Join-Path $src 'README.txt') $stage -Force }
+
+# NEVER PACKAGE A LOCAL SECRET. ai.local.json holds a real Azure OpenAI key and is gitignored
+# for exactly that reason — it exists so a developer can drop a live key beside the committed
+# ai.json without publishing it. The staging copy above is a wholesale -Recurse of webext\,
+# which .gitignore has no say over, so the key was being packed into the zip and would have
+# shipped to every learner VM the package is installed on.
+# Delete it from the STAGE, never from $src: the developer's own copy must survive a build.
+$secrets = @('webext\ai.local.json')
+foreach ($s in $secrets) {
+  $sp = Join-Path $stage $s
+  if (Test-Path $sp) { Remove-Item $sp -Force; Say "excluded from the package: $s (local secret)" }
+}
+
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip -CompressionLevel Optimal
 Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
 
