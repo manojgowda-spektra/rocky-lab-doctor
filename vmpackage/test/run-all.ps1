@@ -1,0 +1,58 @@
+﻿<#
+  run-all.ps1 — every gate, in order, in one command.
+
+  This is what to run before touching a lab, and again on demo morning. It answers one
+  question: is Rocky, as packaged right now, safe to put in front of a learner?
+#>
+param([switch]$SkipInstall)   # skip the install/uninstall rehearsal (needs to write to ProgramData)
+$ErrorActionPreference = 'Continue'
+$pkg = Split-Path $PSScriptRoot -Parent
+$repo = Split-Path $pkg -Parent
+$results = @()
+
+function Gate($name, $cmd, $what) {
+  Write-Host ""
+  Write-Host "=== $name ===" -ForegroundColor Cyan
+  Write-Host "    $what" -ForegroundColor DarkGray
+  & $cmd
+  $ok = ($LASTEXITCODE -eq 0)
+  $script:results += [pscustomobject]@{ Gate = $name; Passed = $ok }
+  if (-not $ok) { Write-Host "    ^ FAILED" -ForegroundColor Red }
+}
+
+Gate 'ARM template' { node (Join-Path $repo 'deploy/validate-arm.js') | Out-Null } `
+  'every reference resolves, outputs match VM Configuration, no secret on the command line'
+
+Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
+  'every step carries selectors that could clear the 0.70 floor'
+
+Gate 'Resolver on a hostile page' { node (Join-Path $pkg 'test/live-resolve.js') | Out-Null } `
+  'the shipped engine, in real Edge: resolves the unique, refuses the ambiguous'
+
+Gate 'Rocky loads and glows' { node (Join-Path $pkg 'test/verify-loaded.js') --ext (Join-Path $pkg 'webext') --shot | Out-Null } `
+  'installed into Edge: content scripts inject, overlay mounts, a real bundle step glows'
+
+Gate 'Portal drift' { node (Join-Path $pkg 'test/drift-test.js') | Out-Null } `
+  'rename, duplicate and disable the controls: Rocky must refuse, never guess'
+
+if (-not $SkipInstall) {
+  Gate 'Install rehearsal' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $pkg 'test/install-local.ps1') | Out-Null } `
+    'the CloudLabs install path end to end: bootstrap, lab.json, preflight, uninstall'
+}
+
+Write-Host ""
+Write-Host "=== SUMMARY ===" -ForegroundColor Cyan
+$results | ForEach-Object {
+  $mark = if ($_.Passed) { '[ok]  ' } else { '[FAIL]' }
+  $col  = if ($_.Passed) { 'Green' } else { 'Red' }
+  Write-Host ("  {0} {1}" -f $mark, $_.Gate) -ForegroundColor $col
+}
+$failed = @($results | Where-Object { -not $_.Passed }).Count
+Write-Host ""
+if ($failed -eq 0) {
+  Write-Host "ALL GATES GREEN - safe to put in front of a learner." -ForegroundColor Green
+  Write-Host "Screenshot proof: $(Join-Path $pkg 'test/rocky-proof.png')" -ForegroundColor DarkGray
+} else {
+  Write-Host "$failed GATE(S) FAILED - do not ship." -ForegroundColor Red
+}
+exit ([int]($failed -gt 0))

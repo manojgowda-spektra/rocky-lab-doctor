@@ -1,6 +1,25 @@
 # Rocky on a live CloudLabs lab — engineering plan
 
-**Date:** 22 September 2026 · **Owner:** Manoj Gowda · **Build:** the shared `Rocky-Extension.zip` (LabPilot · Rocky 0.7.1, Kiran's build) · **Status:** plan for approval, nothing built yet
+**Date:** 22 September 2026 (build status added 23 September)
+
+> **BUILD STATUS — 23 September 2026.** Phase P1 is complete and committed. The VM package,
+> the bootstrap, the ARM template, the generated lab guide, the bundle registry publisher and
+> six automated gates all exist and pass; `vmpackage/test/run-all.ps1` runs the lot in one
+> command. Rocky has been proven to load into real Edge, inject his content scripts, mount his
+> overlay and **glow the control that step 1 of the real bundle asks for**, with a screenshot as
+> evidence. He has also been made to fail on purpose: rename, duplicate or disable the control
+> and he refuses rather than guessing, in all six drift cases.
+>
+> What is NOT done, and needs you: publishing the artefacts to blob, creating the template and
+> the ODL, and the in-lab gate G2. Those are portal clicks and cloud spend. See §6 and the
+> runbook at `deploy/RUNBOOK.md`.
+>
+> Defects found and fixed while building, all in our own code, none in the shared extension:
+> the bootstrap claimed the logon task registered after it had failed; every PowerShell script
+> was BOM-less UTF-8, which PowerShell 5.1 reads as ANSI; and the browser tests leaked Edge
+> processes until a loaded machine made them fail for no product reason. One honest gap stands:
+> the vision template PNG is declared but absent, so that one step can only show its card. The
+> demo bundle has no vision steps. · **Owner:** Manoj Gowda · **Build:** the shared `Rocky-Extension.zip` (LabPilot · Rocky 0.7.1, Kiran's build) · **Status:** plan for approval, nothing built yet
 
 Labels used throughout: **VERIFIED** (read in code or docs, or tested today) · **INFERRED** (reasonable, untested) · **UNKNOWN** (must test or ask) · **ASK** (a human at Spektra decides).
 
