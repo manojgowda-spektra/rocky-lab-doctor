@@ -40,7 +40,11 @@
 
   // Same contract as the anchor engine: a result must be genuinely good, and clearly better
   // than the next one, or there is no answer.
-  var MIN_SCORE = 3.0;
+  // Measured, not guessed. Across the test questions, genuine CloudLabs questions score
+  // 6.5 and above ("what is an ODL" 6.5, "cloud shell will not launch" 21.6) while
+  // off-topic ones plateau at 2.8 - they match only incidental words. 4.0 sits in the gap
+  // with room either side. Re-measure if the corpus changes substantially.
+  var MIN_SCORE = 4.0;
   var MARGIN = 1.15;        // best must beat runner-up by this ratio
 
   var STOP = {};
@@ -54,6 +58,29 @@
   ('lab labs cloudlabs work works working about write need want use using used get got ' +
    'please help make made see also new page click select enter open')
     .split(' ').forEach(function (w) { STOP[w] = 1; });
+
+  // The vocabulary gap: people type the acronym, documentation writes it out. This is a
+  // glossary, not knowledge - the ANSWERS still come entirely from the corpus.
+  var SYNONYM = {
+    odl: ['demand', 'ondemand'],
+    vm: ['virtual', 'machine'],
+    rdp: ['remote', 'desktop'],
+    arm: ['template', 'resource', 'manager'],
+    sku: ['size', 'tier'],
+    rbac: ['role', 'access', 'permission'],
+    spn: ['service', 'principal'],
+    mfa: ['multi', 'factor', 'authentication'],
+    tap: ['temporary', 'access', 'pass'],
+  };
+
+  function expand(terms) {
+    var out = terms.slice();
+    for (var i = 0; i < terms.length; i++) {
+      var syn = SYNONYM[terms[i]];
+      if (syn) for (var j = 0; j < syn.length; j++) if (out.indexOf(syn[j]) < 0) out.push(syn[j]);
+    }
+    return out;
+  }
 
   function tokenise(s) {
     var raw = String(s || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/);
@@ -86,7 +113,7 @@
 
   function search(q, n) {
     if (!KB) { load(); return []; }   // kicks off the fetch; the caller retries via ready()
-    var terms = tokenise(q);
+    var terms = expand(tokenise(q));
     if (!terms.length) return [];
     var N = KB.docs.length;
     var scores = Object.create(null);
@@ -97,19 +124,26 @@
 
     var matchedTerms = 0;
     var perDoc = Object.create(null);      // id -> how many DISTINCT query terms it matched
+    var typed = {};
+    var askedNow = tokenise(q);
+    for (var y = 0; y < askedNow.length; y++) typed[askedNow[y]] = 1;
 
     for (var i = 0; i < uniq.length; i++) {
       var posting = KB.idx[uniq[i]];
       if (!posting) continue;
       matchedTerms++;
+      // A synonym exists to break a tie, not to drive the ranking. Scored equally, the
+      // expansion of "ODL" ("demand", a word in hundreds of sections) buried the acronym
+      // the learner actually typed.
+      var weight = typed[uniq[i]] ? 1 : 0.35;
       // A term in 3 documents is more informative than one in 3,000 - but cap it. Without a
       // cap a single freak word ("capital", present in one section) outscores a genuine
       // two-word match, which is how an unrelated question gets a confident answer.
       var idf = Math.min(Math.log(1 + N / posting.length), 4.5);
       for (var j = 0; j < posting.length; j++) {
         var id = posting[j];
-        scores[id] = (scores[id] || 0) + idf;
-        perDoc[id] = (perDoc[id] || 0) + 1;
+        scores[id] = (scores[id] || 0) + idf * weight;
+        if (typed[uniq[i]]) perDoc[id] = (perDoc[id] || 0) + 1;
       }
     }
 
@@ -119,8 +153,13 @@
     // COVERAGE. If the corpus matched one word of a four-word question, it does not answer
     // that question however rare the word was. This is the check that turns "capital of
     // France" from a confident wrong answer into an honest silence.
-    var coverage = matchedTerms / uniq.length;
-    if (uniq.length > 1 && coverage < 0.5) return [];
+    // Coverage is judged on the words the learner typed; a synonym that happens to miss
+    // should not count against them.
+    var asked = tokenise(q);
+    var askedMatched = 0;
+    for (var a = 0; a < asked.length; a++) if (KB.idx[asked[a]]) askedMatched++;
+    var coverage = asked.length ? askedMatched / asked.length : 0;
+    if (asked.length > 1 && coverage < 0.5) return [];
 
     // At least one matched term must be reasonably specific. A question whose only hits are
     // words appearing in thousands of sections is not answered by this corpus, whatever the
@@ -146,8 +185,12 @@
       s *= (1 + 0.55 * (inHead / terms.length));
 
       // A section matching three of the question's words is a better answer than one
-      // matching a single rare word, whatever the idf arithmetic says.
-      s *= (perDoc[id] / uniq.length);
+      // matching a single rare word, whatever the idf arithmetic says. A section that
+      // matched ONLY synonyms has no typed-term count - that must read as zero, not as
+      // undefined, which produced NaN scores that sorted unpredictably.
+      var typedHits = perDoc[id] || 0;
+      var asked2 = askedNow.length || 1;
+      s *= (0.25 + 0.75 * (typedHits / asked2));
 
       // A resolved issue beats a doc page on the same subject: it is what actually happened,
       // with a fix someone verified.

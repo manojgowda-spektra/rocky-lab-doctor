@@ -92,8 +92,14 @@ function sections(body, maxChars = 1200) {
   };
   for (const line of lines) {
     const h = /^(#{1,4})\s+(.+?)\s*$/.exec(line);
-    if (h) { flush(); head = h[2].replace(/\[.*?\]\(.*?\)/g, '').replace(/[​#]/g, '').trim(); }
-    else buf.push(line);
+    if (h) {
+      flush();
+      head = h[2].replace(/\[.*?\]\(.*?\)/g, '').replace(/[​#*]/g, '').trim();
+      // "Section 2:", "Step 3", "Overview" tell a reader nothing about WHAT the section
+      // covers. Left in, dozens of them from one page crowd out the page that actually
+      // answers the question.
+      if (/^(section|step|part|phase)\s*\d*[:.]?$/i.test(head)) head = '';
+    } else buf.push(line);
   }
   flush();
   return out;
@@ -167,9 +173,19 @@ function ingestMirror(root) {
       // Rocky serves a learner in a lab. Manoj's meeting notes, cost models and personal
       // notes are not his to quote, and indexing them only adds noise. Keep the platform
       // documentation, the resolved-issue register and the onboarding playbooks.
-      const wanted = /Platform_Documentation|Known_Issues|Troubleshooting|Playbooks|CloudLabs\//.test(rel);
-      const excluded = /Meetings|Personal_Work_Notes|_Templates|Intake\//.test(rel);
+      // Rocky answers a LEARNER. The platform's documentation and the register of real
+      // resolved issues are his to quote. Our internal playbooks are how WE work - useful to
+      // us, not an answer to "why did my deployment fail" - so they stay out.
+      const wanted = /Platform_Documentation|Known_Issues|Troubleshooting|CloudLabs\//.test(rel);
+      const excluded = /Meetings|Personal_Work_Notes|_Templates|Intake\/|Playbooks\//.test(rel);
       if (!wanted || excluded) continue;
+
+      // Index / manifest pages list other pages. They mention everything, so they match
+      // everything, and they answer nothing. A learner needs the page that explains the
+      // thing, not the catalogue that mentions it.
+      const isIndex = /MANIFEST\.md$|_Indexes\/|MASTER_INDEX|full ingest knowledge record/i
+        .test(rel + ' ' + (meta.title || ''));
+      if (isIndex) continue;
 
       const isIssue = meta.type === 'issue' || /Known_Issues/.test(rel);
       const title = meta.title || path.basename(p, '.md');

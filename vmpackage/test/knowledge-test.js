@@ -123,6 +123,35 @@ const SHOULD_REFUSE = [
   if (a && a.title) { pass++; console.log(`  [ok]   answers carry a title (${a.source || 'no source'}${a.url ? ', linkable' : ''})`); }
   else { fails.push('answers do not carry a title'); console.log('  [FAIL] an answer arrived with no title'); }
 
+  // A NaN score sorts unpredictably and can float above a real answer. It appeared when a
+  // section matched only SYNONYMS: the typed-term counter was never set for it, so the
+  // weighting multiplied by undefined. Guard every score, on every query.
+  console.log('');
+  console.log('--- every score must be a real number ---');
+  let nan = 0;
+  for (const c of QUESTIONS) {
+    for (const h of CL.search(c.q, 5)) {
+      if (!Number.isFinite(h.score)) { nan++; console.log(`  [FAIL] "${c.q}" produced a ${h.score} score on "${h.title}"`); }
+    }
+  }
+  if (!nan) { pass++; console.log('  [ok]   no NaN or Infinity in any ranking'); }
+  else fails.push(`${nan} non-finite score(s)`);
+
+  // The floor is measured, not guessed: real questions must clear it comfortably and
+  // off-topic ones must not come close. If the corpus changes enough to close that gap,
+  // this fails and the number gets re-measured rather than silently drifting.
+  console.log('');
+  console.log('--- the refusal threshold must sit in a real gap ---');
+  const realTop = Math.min(...QUESTIONS.map((c) => { const h = CL.search(c.q, 1)[0]; return h ? h.score : 0; }));
+  const junkTop = Math.max(...SHOULD_REFUSE.map((q) => { const h = CL.search(q, 1)[0]; return h ? h.score : 0; }));
+  console.log(`         worst real question: ${realTop.toFixed(1)}   best nonsense: ${junkTop.toFixed(1)}   floor: ${CL._test.MIN_SCORE}`);
+  if (realTop > CL._test.MIN_SCORE && junkTop < CL._test.MIN_SCORE) {
+    pass++; console.log('  [ok]   the floor separates real questions from nonsense');
+  } else {
+    fails.push(`floor ${CL._test.MIN_SCORE} does not separate real (${realTop.toFixed(1)}) from nonsense (${junkTop.toFixed(1)})`);
+    console.log('  [FAIL] the floor no longer separates them - re-measure it');
+  }
+
   console.log('');
   if (fails.length) {
     console.log(`${pass} passed, ${fails.length} FAILED\n`);
