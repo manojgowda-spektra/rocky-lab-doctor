@@ -114,6 +114,24 @@ check('an http endpoint is rejected - a key must never cross plain http', () => 
   assert.ok(r.error, 'http was accepted');
 });
 
+// A user's working Python sample for a real resource used the CHAT COMPLETIONS surface
+// with api-version 2024-12-01-preview. Rocky must be able to call exactly that: forcing our
+// own older api-version can get a newer model rejected outright.
+check('a full chat-completions URL is called exactly as pasted', () => {
+  const ep = 'https://rockyintelligence.cognitiveservices.azure.com/openai/deployments/gpt-6-luna/chat/completions?api-version=2024-12-01-preview';
+  const r = req(ep);
+  assert.ok(!r.error, `unexpected error: ${r.error}`);
+  assert.strictEqual(r.url, ep, 'the URL was rewritten');
+  assert.strictEqual(r.kind, 'chat');
+  assert.ok(Array.isArray(r.body.messages), 'chat completions needs a messages array');
+});
+
+check('a configured api-version beats our default', () => {
+  const r = req('https://x.openai.azure.com', '2024-12-01-preview');
+  assert.match(r.url, /api-version=2024-12-01-preview/,
+    'our default api-version overrode the configured one, which can reject a newer model');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — the endpoint a user pastes is the endpoint Rocky calls.\n`);

@@ -156,7 +156,14 @@ function buildAIRequest(cfg, p) {
     }
     return { kind: "responses", url, headers, body: { model, instructions: ROCKY_SYSTEM, input: turns, max_output_tokens: 320, temperature: 0.3 } };
   }
-  const base = endpoint.replace(/\/openai.*$/i, "");                    // legacy chat completions
+  // Chat completions. If the user pasted a full chat-completions URL, honour it exactly -
+  // including its api-version. Otherwise build one, preferring the version they configured
+  // over our default: a model newer than the default version is rejected outright.
+  if (/\/chat\/completions/i.test(endpoint)) {
+    return { kind: "chat", url: endpoint, headers,
+             body: { messages: [{ role: "system", content: ROCKY_SYSTEM }].concat(turns), max_tokens: 320, temperature: 0.3 } };
+  }
+  const base = endpoint.replace(/\/openai.*$/i, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion || "2024-10-21")}`;
   return { kind: "chat", url, headers, body: { messages: [{ role: "system", content: ROCKY_SYSTEM }].concat(turns), max_tokens: 320, temperature: 0.3 } };
 }
