@@ -36,7 +36,26 @@
   try { chrome.storage.local.get(["lpStepIndex"], function (v) { st.stepIndex = (v && v.lpStepIndex) || 0; }); } catch (e) {}
 
   // ---- Ask-AI config (optional; set in the popup; stored locally only) ------------------
-  function loadAI() { try { chrome.storage.local.get(["lpAI"], function (v) { var a = v && v.lpAI; st.ai = (a && a.endpoint && a.deployment && a.apiKey) ? a : null; }); } catch (e) {} }
+  // AI config comes from ai.json, written by the installer from the install command line.
+  // There is no in-page settings UI: Rocky is configured before the browser opens, so
+  // there is nothing to click and nothing that another panel can swallow. chrome.storage is
+  // still honoured first, so the toolbar popup keeps working for anyone who prefers it.
+  function loadAI() {
+    try {
+      chrome.storage.local.get(["lpAI"], function (v) {
+        var a = v && v.lpAI;
+        if (a && a.endpoint && a.deployment && a.apiKey) { st.ai = a; return; }
+        fetch(chrome.runtime.getURL("ai.json"))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            st.ai = (j && j.endpoint && j.deployment && j.apiKey) ? j : null;
+            // background.js answers the question and reads storage, so mirror it there
+            if (st.ai) { try { chrome.storage.local.set({ lpAI: st.ai }); } catch (e) {} }
+          })
+          .catch(function () { st.ai = null; });
+      });
+    } catch (e) {}
+  }
   loadAI();
   try { chrome.storage.onChanged.addListener(function (ch, area) { if (area === "local" && ch.lpAI) loadAI(); if (area === "local" && ch.lpStepIndex) st.stepIndex = ch.lpStepIndex.newValue || 0; if (area === "local" && ch.lpExplore && !!ch.lpExplore.newValue !== st.on) { ch.lpExplore.newValue ? start(true) : stop(true); } }); } catch (e) {}
 
@@ -125,44 +144,6 @@
     return c;
   }
   function askBox(placeholder, focus) { return { placeholder: placeholder || "Ask Rocky anything about this lab…", onAsk: askRocky, focus: !!focus }; }
-  // Settings beside Rocky rather than in the toolbar popup, which is easy to miss and
-  // covers a lot of the screen. Same storage key, so whichever you use, both agree.
-  function openSettings() {
-    closeMenu(); if (!R()) return;
-    chrome.storage.local.get(['lpAI'], function (v) {
-      var a = (v && v.lpAI) || {};
-      R().announce(a.endpoint ? 'Connected. Change it here, or Test to check it still works.'
-                              : 'Paste your Foundry model here and I can answer wider questions. Lab facts and CloudLabs docs work without it.', {
-        label: 'ROCKY · AI SETTINGS',
-        mood: 'think',
-        form: {
-          fields: [
-            { key: 'endpoint',   label: 'Endpoint',   value: a.endpoint || '',   placeholder: 'https://<resource>.services.ai.azure.com/openai/v1/responses' },
-            { key: 'deployment', label: 'Model name', value: a.deployment || '', placeholder: 'your deployment name' },
-            { key: 'apiKey',     label: 'Key',        value: a.apiKey || '',     placeholder: 'paste the key', password: true },
-          ],
-          save: 'Save & test',
-          onSave: function (vals, say) {
-            if (!vals.endpoint || !vals.deployment || !vals.apiKey) { say('All three, please.'); return; }
-            if (!/^https:\/\//i.test(vals.endpoint)) { say('The endpoint must start with https://'); return; }
-            chrome.storage.local.set({ lpAI: vals }, function () {
-              st.ai = vals;
-              say('Saved. Testing…');
-              chrome.runtime.sendMessage({ type: 'lp-ask-ai', payload: { question: 'Reply with exactly: Rocky online.' } }, function (res) {
-                // Report what actually came back. A vague failure here is the thing most
-                // likely to cost time on the day.
-                if (res && res.text) say('Working — ' + res.text.slice(0, 60));
-                else say('Saved, but the test failed: ' + ((res && res.error) || 'no response'));
-              });
-            });
-          },
-        },
-        hint: 'Stored in this browser only · never sent anywhere but your own endpoint'
-              + (function(){ try { return '  ·  build ' + chrome.runtime.getManifest().version_name; } catch (e) { return ''; } })(),
-      });
-    });
-  }
-
   function openAsk() {
     closeMenu(); if (!R()) return;
     // ALWAYS open the box. Two rungs of the answer ladder need no model at all - facts about
@@ -361,8 +342,7 @@
       { icon: "\u2753", label: "Ask", title: "Ask about this step, this lab or CloudLabs \u00B7 Alt+A", on: function () { openAsk(); } },
       st.on ? { icon: "\u25B6", label: "Resume", title: "Back to guiding \u00B7 Alt+E", on: function () { stop(); } }
             : { icon: "\u25CE", label: "Explore", title: "Pause and explore anything on screen \u00B7 Alt+E", on: function () { start(); } },
-      { icon: "\u2139", label: learnOn ? "Learn on" : "Learn off", title: "WHY / WHAT under each step \u00B7 Alt+L", on: function () { R().toggleLearn && R().toggleLearn(); } },
-      { icon: "\u2699", label: st.ai ? "AI on" : "AI off", title: "Connect a Foundry model", on: function () { openSettings(); } }
+      { icon: "\u2139", label: learnOn ? "Learn on" : "Learn off", title: "WHY / WHAT under each step \u00B7 Alt+L", on: function () { R().toggleLearn && R().toggleLearn(); } }
     ];
   }
 

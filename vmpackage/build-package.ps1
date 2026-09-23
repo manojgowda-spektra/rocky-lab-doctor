@@ -120,13 +120,6 @@ if ($node) {
     $err = ($bt | Where-Object { $_ -match 'PORTAL ERROR' } | Select-Object -First 1)
     if ($err) { Say ("behaviour: " + $err.Trim()) }
 
-    # The gear looked dead whenever the Ask box was open, because say() deferred it. Gate
-    # the sequence a learner actually performs, not just a click from a clean state.
-    Say "opening Ask, then the AI settings gear..."
-    $sg = & node (Join-Path $src 'test/verify-loaded.js') --ext (Join-Path $src 'webext') --askthensettings 2>&1
-    if ($LASTEXITCODE -ne 0) { $sg | ForEach-Object { Write-Host "    $_" }; Die "the AI settings gear does not open" }
-    Say "settings gear opens even with the Ask box open"
-
     Say "breaking the portal on purpose to check Rocky refuses..."
     $dt = & node (Join-Path $src 'test/drift-test.js') 2>&1
     if ($LASTEXITCODE -ne 0) { $dt | ForEach-Object { Write-Host "    $_" }; Die "Rocky did not degrade safely under portal drift" }

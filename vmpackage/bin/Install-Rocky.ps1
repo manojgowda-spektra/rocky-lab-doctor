@@ -21,7 +21,14 @@
     .\i.ps1 -PackageUrl 'https://<acct>.blob.core.windows.net/rocky/rocky-package.zip?<sas>' `
             -DeploymentID 912345
 
-  Everything else is optional. Run it again any time to upgrade; it is idempotent.
+  To switch on free-text questions, add your Foundry model to the same command:
+
+    .\i.ps1 -FromLocal .ocky-package.zip `
+            -AiEndpoint 'https://<res>.services.ai.azure.com/openai/v1/responses' `
+            -AiModel '<deployment name>' -AiKey '<key>'
+
+  The key is written to the install folder on this machine and used only to call your own
+  endpoint. Everything else is optional. Run it again any time to upgrade; it is idempotent.
 #>
 param(
   [string]$PackageUrl = "",         # blob URL (+SAS) of rocky-package.zip
@@ -32,6 +39,9 @@ param(
   [string]$LearnerUpn   = "",       # the lab user, if you want Rocky to know it
   [string]$BundleBaseUrl = "",      # optional bundle registry
   [string]$StartUrl     = "https://ai.azure.com",
+  [string]$AiEndpoint = "",         # e.g. https://<resource>.services.ai.azure.com/openai/v1/responses
+  [string]$AiModel    = "",         # the DEPLOYMENT name from Foundry, not the model's catalogue name
+  [string]$AiKey      = "",         # from Keys and Endpoint
   [switch]$NoLaunch,                # install without opening the browser
   [switch]$Uninstall
 )
@@ -136,6 +146,23 @@ Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 if (-not (Test-Path (Join-Path $Root 'webext\manifest.json'))) {
   Write-Host "  Install did not complete - see C:\WindowsAzure\Logs\RockyBootstrap.txt" -ForegroundColor Red
   exit 1
+}
+
+# ---- optional: the AI, supplied on the command line ---------------------------------
+# Written as a file the extension reads at startup rather than through a settings panel,
+# so there is nothing to click and nothing that can fail to open.
+if ($AiEndpoint -and $AiModel -and $AiKey) {
+  if ($AiEndpoint -notmatch '^https://') {
+    Warn "the endpoint must start with https:// - skipping the AI configuration"
+  } else {
+    $aiPath = Join-Path (Join-Path $Root 'webext') 'ai.json'
+    $ai = [ordered]@{ endpoint = $AiEndpoint; deployment = $AiModel; apiKey = $AiKey }
+    # No BOM: JSON.parse in the browser rejects one outright.
+    [IO.File]::WriteAllText($aiPath, ($ai | ConvertTo-Json -Compress), (New-Object Text.UTF8Encoding($false)))
+    Good "AI configured - Rocky can answer wider questions"
+  }
+} elseif ($AiEndpoint -or $AiModel -or $AiKey) {
+  Warn "AI needs all three: -AiEndpoint, -AiModel and -AiKey. Skipping."
 }
 
 Write-Host ""
