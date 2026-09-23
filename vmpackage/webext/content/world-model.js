@@ -264,7 +264,12 @@
 
   function reset() { M = blank(); return M; }
 
+  // The whole step list. Explore mode uses it to tell a model what comes next, which is the
+  // difference between answering "what do I do after this" from the lab and inventing it.
+  function steps() { return (M && M.steps) || []; }
+
   window.LabPilotWorld = {
+    steps: steps,
     ingest: ingest,
     observe: observe,
     note: note,

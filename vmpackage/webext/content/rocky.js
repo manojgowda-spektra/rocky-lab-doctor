@@ -325,7 +325,8 @@
       try{ var sp=document.createElement("span"); sp.style.display="none"; document.body.appendChild(sp); setTimeout(function(){ sp.remove(); },30); }catch(e){} } },
     announce:function(text, opts){ opts=opts||{}; setMood(opts.mood||(state.exploring?"explore":"neutral")); show(); state.pending=null; say(text, null, null, opts); },
     explain:function(el, text, opts){
-      opts=opts||{}; opts.demand=true;   // the learner pointed at this; never defer it var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      opts=opts||{}; opts.demand=true;   // the learner pointed at this; never defer it
+      var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
       setMood(opts.mood||"explore"); if(r) reposition(r); show(); bub.style.opacity=0;
       state.pending={ text:text, copy:null, learn:null, extra:opts, onArrive:null }; state.arriveBy=performance.now()+1000;
     },

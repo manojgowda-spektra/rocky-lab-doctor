@@ -101,14 +101,37 @@
   }
   function askAI(desc, kbText) {
     if (!R()) return;
-    R().explain(desc.el, kbText, { label: labelFor("ask"), mood: "think", ai: "Asking your Foundry deployment…", hint: "" });
-    var payload = { name: desc.name, role: desc.role, context: desc.context, state: desc.state, route: location.pathname, title: document.title, kb: kbText };
-    try {
-      chrome.runtime.sendMessage({ type: "lp-ask-ai", payload: payload }, function (res) {
-        var ans = res && res.text ? res.text : ("AI unavailable: " + (res && res.error || "no response") + ". The description above is what I can verify myself.");
-        R().explain(desc.el, kbText, { label: labelFor("ask"), mood: "explore", ai: ans, hint: "Click me to resume the lab · Alt+E" });
+    var C = window.LabPilotExplainCache;
+
+    function show(ans, cached) {
+      R().explain(desc.el, kbText, {
+        label: labelFor("ask"), mood: "explore", ai: ans,
+        hint: "Click me to resume the lab · Alt+E",
       });
-    } catch (e) {}
+      if (!cached && C) C.put(desc, ans);
+    }
+
+    // A control the learner already asked about has one answer, and it does not change. Serve
+    // it from the cache with no spinner and no round trip — the difference between "instant"
+    // and "a second of nothing" is most of how responsive Rocky feels.
+    function ask() {
+      R().explain(desc.el, kbText, { label: labelFor("ask"), mood: "think", ai: "Asking your Foundry deployment…", hint: "" });
+      var payload = { name: desc.name, role: desc.role, context: desc.context, state: desc.state, route: location.pathname, title: document.title, kb: kbText };
+      try {
+        chrome.runtime.sendMessage({ type: "lp-ask-ai", payload: payload }, function (res) {
+          if (res && res.text) { show(res.text, false); return; }
+          // A failure is NOT cached: the next attempt should really try again.
+          R().explain(desc.el, kbText, {
+            label: labelFor("ask"), mood: "explore",
+            ai: "AI unavailable: " + (res && res.error || "no response") + ". The description above is what I can verify myself.",
+            hint: "Click me to resume the lab · Alt+E",
+          });
+        });
+      } catch (e) {}
+    }
+
+    if (C) C.get(desc, function (hit) { hit ? show(hit, true) : ask(); });
+    else ask();
   }
 
   // ---- ASK ROCKY: free-text questions (both modes) --------------------------------------------
@@ -116,6 +139,24 @@
     var step = st.steps[st.stepIndex] || null, L = step && step.learn || null;
     var c = { lab: st.lab, title: document.title, route: location.pathname, history: st.history.slice(-4) };
     if (step) { c.step = step.text; c.stepNo = st.stepIndex + 1; if (L) c.learn = [L.why, L.what].filter(Boolean).join(" "); }
+
+    // On a lab nobody captured there IS no bundle, so st.steps is empty and everything above
+    // contributes nothing — the model would be asked "what is this step" with no step. The
+    // world model knows, because the pilot read it off the guide. Prefer it when it is
+    // confident, and say nothing about position when it is not: an unanswered question beats
+    // a confidently wrong one, which is the same rule the progress display follows.
+    try {
+      var P = window.LabPilotPilot && window.LabPilotPilot.status();
+      if (P && P.on && P.world && P.world.step) {
+        c.step = P.world.step.text || c.step;
+        c.lab = P.world.lab || c.lab;
+        if (P.progress) c.stepNo = P.progress.n;
+        else delete c.stepNo;                       // believed, not known — do not assert it
+        if (P.world.step.surface && P.world.step.surface !== "browser") {
+          c.surface = "This step happens in " + P.world.step.surface + ", which I cannot see from the browser.";
+        }
+      }
+    } catch (e) {}
     if (st.on && st.lastDesc) { c.name = st.lastDesc.name; c.role = st.lastDesc.role; c.context = st.lastDesc.context; c.state = st.lastDesc.state; }
 
     // GROUNDING. The model is told what is actually true — which lab, which environment,
@@ -136,10 +177,20 @@
     } catch (e) {}
 
     // Next steps, so "what do I do after this" is answered from the lab, not imagination.
+    // Same precedence as above: the world model's steps when the pilot is driving, the
+    // captured bundle otherwise.
     try {
-      var ahead = st.steps.slice(st.stepIndex + 1, st.stepIndex + 4)
-        .map(function (x, i) { return (st.stepIndex + 2 + i) + '. ' + x.text; });
-      if (ahead.length) c.upcoming = ahead.join(' | ');
+      var W = window.LabPilotWorld && window.LabPilotWorld.current();
+      var Pw = window.LabPilotPilot && window.LabPilotPilot.status();
+      var ahead;
+      if (Pw && Pw.on && W && W.index >= 0 && window.LabPilotWorld.steps) {
+        ahead = window.LabPilotWorld.steps().slice(W.index + 1, W.index + 4)
+          .map(function (x, i) { return (W.index + 2 + i) + '. ' + x.text; });
+      } else {
+        ahead = st.steps.slice(st.stepIndex + 1, st.stepIndex + 4)
+          .map(function (x, i) { return (st.stepIndex + 2 + i) + '. ' + x.text; });
+      }
+      if (ahead && ahead.length) c.upcoming = ahead.join(' | ');
     } catch (e) {}
     return c;
   }

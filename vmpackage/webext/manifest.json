@@ -54,6 +54,7 @@
         "content/content.js",
         "content/skip.js",
         "content/controls.js",
+        "content/explain-cache.js",
         "content/explore.js",
         "content/pilot.js"
       ],
