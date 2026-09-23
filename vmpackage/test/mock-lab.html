@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+  mock-lab.html — a CloudLabs-shaped page for end-to-end testing.
+
+  Two panes, like the real thing: a guide on the left with instruction lines written in the
+  exact idiom CloudLabs authors use, and a "portal" on the right holding the controls those
+  instructions refer to.
+
+  Deliberately hostile in the ways real portals are:
+    - two controls named "Create" (ambiguity the contract must refuse)
+    - a control inside a SHADOW ROOT (missed entirely by a naive querySelectorAll)
+    - a disabled control with a wanted name
+    - decorative text that matches an instruction but is not a control
+  If Rocky glows correctly here, the behaviour is real rather than staged.
+-->
+<meta charset="utf-8">
+<title>Deploy a Virtual Machine - CloudLabs</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; display: flex; height: 100vh; }
+  #guide { width: 38%; padding: 20px; background: #f3f2f1; overflow: auto; }
+  #portal { flex: 1; padding: 20px; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  li { margin: 10px 0; }
+  button, a.cmd { display: inline-block; padding: 8px 16px; margin: 6px 8px 6px 0;
+    border: 1px solid #8a8886; background: #fff; border-radius: 2px; cursor: pointer; font: inherit; }
+  button.primary { background: #0078d4; color: #fff; border-color: #0078d4; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .panel { border: 1px solid #edebe9; padding: 14px; margin: 14px 0; }
+  .muted { color: #605e5c; }
+</style>
+
+<div id="guide">
+  <h2>Exercise 1: Deploy a Virtual Machine</h2>
+  <ol>
+    <li>Click on <b>Create a resource</b> to begin.</li>
+    <li>Select <b>Virtual machine</b> from the list.</li>
+    <li>Enter the <b>Resource group name</b> (1) and then click <b>Review + create</b> (2).</li>
+    <li>Click on <b>Deploy</b>.</li>
+    <li>Click on the <b>Visual Studio Code</b> from the VM desktop.</li>
+  </ol>
+  <p class="muted">Note: deployment can take up to 10 minutes to complete.</p>
+</div>
+
+<div id="portal">
+  <h2>Home</h2>
+
+  <div class="panel">
+    <button id="btn-create-resource">Create a resource</button>
+    <button id="btn-vm">Virtual machine</button>
+    <!-- decorative text that matches an instruction but is not a control -->
+    <p class="muted">Deploy your first resource to get started.</p>
+  </div>
+
+  <div class="panel">
+    <label for="rg">Resource group name</label>
+    <input id="rg" type="text" placeholder="e.g. rg-lab-01">
+  </div>
+
+  <!-- two controls named Create: the contract must refuse to point at either -->
+  <div class="panel">
+    <button id="btn-create-a">Create</button>
+    <button id="btn-create-b">Create</button>
+  </div>
+
+  <div class="panel">
+    <button id="btn-review" class="primary">Review + create</button>
+    <button id="btn-deploy-disabled" disabled>Deploy</button>
+  </div>
+
+  <!-- a real control hidden inside a shadow root -->
+  <div id="shadow-host"></div>
+</div>
+
+<script>
+  // The shadow-DOM case. Enterprise portals do this constantly, and a perception layer that
+  // does not pierce shadow roots simply cannot see this button.
+  const host = document.getElementById('shadow-host');
+  const root = host.attachShadow({ mode: 'open' });
+  root.innerHTML = '<style>button{padding:8px 16px;border:1px solid #8a8886;background:#fff;'
+    + 'border-radius:2px;cursor:pointer;font:inherit;margin:6px 0}</style>'
+    + '<div class="panel"><button id="btn-shadow">Publish</button></div>';
+
+  // Let a test enable the disabled Deploy button, to prove Rocky notices state changes.
+  window.enableDeploy = () => { document.getElementById('btn-deploy-disabled').disabled = false; };
+  // And add a late control, to prove the MutationObserver path fires.
+  window.addLateControl = (name) => {
+    const b = document.createElement('button');
+    b.id = 'btn-late'; b.textContent = name;
+    document.getElementById('portal').appendChild(b);
+  };
+</script>

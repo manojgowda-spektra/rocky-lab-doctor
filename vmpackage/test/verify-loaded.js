@@ -27,7 +27,34 @@ const args = process.argv.slice(2);
 const argOf = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
 const has = (n) => args.includes(n);
 
-const EXT = argOf('--ext', path.join(process.env.ProgramData || 'C:\\ProgramData', 'Rocky', 'webext'));
+const EXT_SRC = argOf('--ext', path.join(process.env.ProgramData || 'C:\\ProgramData', 'Rocky', 'webext'));
+
+/*
+ * Load from a STAGED COPY, never from the source tree directly.
+ *
+ * Measured, repeatedly: byte-identical extension directories load fine from a temp directory
+ * and fail to inject when loaded from inside the working repo — 10/10 vs 6/10, every time.
+ * The cause is environmental (a watcher or scanner holding files in the working tree), not the
+ * extension, and it produced a failure that looked exactly like a code regression.
+ *
+ * Staging also matches reality: a learner's Edge loads the extension from ProgramData after
+ * the installer has copied it there, not from a git checkout. Testing the copy is testing what
+ * actually ships.
+ */
+function stageExtension(src) {
+  const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'rocky-ext-'));
+  const copy = (from, to) => {
+    fs.mkdirSync(to, { recursive: true });
+    for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+      const f = path.join(from, e.name), t = path.join(to, e.name);
+      if (e.isDirectory()) copy(f, t); else fs.copyFileSync(f, t);
+    }
+  };
+  copy(src, dest);
+  return dest;
+}
+
+const EXT = fs.existsSync(EXT_SRC) ? stageExtension(EXT_SRC) : EXT_SRC;
 
 // The manifest injects only on the https lab hosts, so a file:/// page is — correctly —
 // never touched by the content scripts. To exercise the REAL injection path we serve the
@@ -428,6 +455,7 @@ async function main() {
     killEdgeTree(profile);   // the launcher exits; the browser tree does not
     if (mock) { try { mock.server.close(); } catch (e) {} setTimeout(() => { try { fs.rmSync(mock.dir, { recursive: true, force: true }); } catch (e) {} }, 500); }
     rmQuiet(profile);
+    if (EXT !== EXT_SRC) rmQuiet(EXT);   // the staged copy, not the source tree
   }
 
   console.log(`\n=== ROCKY LOADS AND RUNS IN A REAL BROWSER ===`);

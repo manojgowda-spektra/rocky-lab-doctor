@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "labCode": "foundry-develop-ai",
+  "odlId": "ODL-ROCKYQA-0001",
+  "deploymentId": "912345",
+  "learnerUpn": "odl_user_912345@contoso.onmicrosoft.com",
+  "resourceGroup": "ODL-AZURE-912345",
+  "region": "eastus",
+  "vmName": "labvm-912345"
+}

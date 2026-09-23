@@ -41,6 +41,12 @@ Gate 'Guide reading' { node (Join-Path $pkg 'test/guide-test.js') | Out-Null } `
 Gate 'Desktop agent parser' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $pkg 'agent/rocky-agent.ps1') -ParseTest | Out-Null } `
   'the VM agent reads the same guide lines as the browser half, and splits them the same way'
 
+Gate 'World model and monitor' { node (Join-Path $pkg 'test/pilot-test.js') | Out-Null } `
+  'Rocky tracks his position as a belief, and stays quiet when he has nothing to say'
+
+Gate 'Guides an uncaptured lab' { node (Join-Path $pkg 'test/pilot-live.js') | Out-Null } `
+  'real Edge, a lab with no bundle: reads the guide, pierces shadow DOM, refuses the ambiguous'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 
