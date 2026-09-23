@@ -23,6 +23,9 @@ function Gate($name, $cmd, $what) {
 Gate 'ARM template' { node (Join-Path $repo 'deploy/validate-arm.js') | Out-Null } `
   'every reference resolves, outputs match VM Configuration, no secret on the command line'
 
+Gate 'Interruption budget' { node (Join-Path $pkg 'test/watcher-test.js') | Out-Null } `
+  'a smooth run stays silent; dismissal makes him rarer; errors always get through'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 
@@ -31,6 +34,9 @@ Gate 'Resolver on a hostile page' { node (Join-Path $pkg 'test/live-resolve.js')
 
 Gate 'Rocky loads and glows' { node (Join-Path $pkg 'test/verify-loaded.js') --ext (Join-Path $pkg 'webext') --shot | Out-Null } `
   'installed into Edge: content scripts inject, overlay mounts, a real bundle step glows'
+
+Gate 'Confused learner' { node (Join-Path $pkg 'test/behaviour-test.js') | Out-Null } `
+  'wrong click -> he names the control; portal error -> he explains it is not their fault'
 
 Gate 'Portal drift' { node (Join-Path $pkg 'test/drift-test.js') | Out-Null } `
   'rename, duplicate and disable the controls: Rocky must refuse, never guess'

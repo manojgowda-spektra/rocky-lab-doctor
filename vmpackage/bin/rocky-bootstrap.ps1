@@ -95,7 +95,12 @@ try {
     installedAt    = (Get-Date).ToUniversalTime().ToString('o')
   }
   $labPath = Join-Path $Root 'lab.json'
-  ($lab | ConvertTo-Json -Depth 4) | Set-Content -Path $labPath -Encoding UTF8
+  $labJson = $lab | ConvertTo-Json -Depth 4
+  $labJson | Set-Content -Path $labPath -Encoding UTF8
+  # A content script cannot read the filesystem, so Rocky gets his own copy inside the
+  # extension folder, declared web-accessible in the manifest. This is how he can answer
+  # "which lab am I in" from record rather than from guesswork.
+  $labJson | Set-Content -Path (Join-Path $Root 'webext\lab.json') -Encoding UTF8
   Step "lab.json written: rg=$($lab.resourceGroup) region=$($lab.region) vm=$($lab.vmName)"
 
   # ---- 3. this lab's bundle -------------------------------------------------------

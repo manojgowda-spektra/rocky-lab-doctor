@@ -23,7 +23,8 @@
   var Vz = window.LabPilotVision; // scoped pixel fallback for surface:"vision" (may be absent)
   if (!A || !O) return;
 
-  var state = { steps: [], stepIndex: 0, capture: false, captureIndex: 0, bundleId: null, visionRect: null };
+  var state = { steps: [], stepIndex: 0, capture: false, captureIndex: 0, bundleId: null, visionRect: null,
+                absentStep: -1, absentSince: 0, absentTold: false };
   var evalScheduled = false;
   var visionPoll = 0; // interval id while the current step is a vision step (see below)
 
@@ -45,7 +46,12 @@
     if (!bundle || !bundle.labs) return out;
     bundle.labs.forEach(function (lab) {
       (lab.tasks || []).forEach(function (task) {
-        (task.steps || []).forEach(function (s) { out.push(s); });
+        (task.steps || []).forEach(function (s) {
+          // tag the owning task so the watcher can mark a genuine milestone rather than
+          // an arbitrary step number
+          s._taskId = task.id; s._taskTitle = task.title || task.name || "";
+          out.push(s);
+        });
       });
     });
     return out;
@@ -167,7 +173,11 @@
     // never by inferring position from which future control happens to be in the DOM.
     // Glowing a later step the user hasn't reached is a guess (PLAN-V2 accuracy #2/#3).
     if (state.stepIndex >= state.steps.length) {
-      if (state.celebrate && !state.celebrated && O.celebrate) { state.celebrated = true; O.celebrate(state.celebrateMsg); }
+      if (state.celebrate && !state.celebrated && O.celebrate) {
+        state.celebrated = true;
+        try { if (window.LabPilotWatcher) window.LabPilotWatcher.note({ type: 'complete' }); } catch (e) {}
+        O.celebrate(state.celebrateMsg);
+      }
       else if (!state.celebrate) { O.hide(); }
       return;
     }
@@ -218,6 +228,7 @@
       gmeta.progress = { n: idx + 1, total: state.steps.length };
       if (step.hint) gmeta.hint = step.hint;
       if (step.learn) gmeta.learn = step.learn;   // authored WHY / WHAT / TIP, rendered verbatim by Rocky
+      state.absentStep = -1; state.absentTold = false;
       O.guide(r.element, step.text || target.label, gmeta);
       return;
     }
@@ -249,6 +260,7 @@
       if (gotNext.r && gotNext.r.status === "resolved" && !gotNext.r.disabled) {
         state.stepIndex = nextIdx;
         try { chrome.storage.local.set({ lpStepIndex: state.stepIndex }); } catch (e2) {}
+      reportStep(state.stepIndex - 1, state.stepIndex);
         scheduleEval();
         return;
       }
@@ -257,6 +269,18 @@
     // (2) User is on the right screen but the control isn't present yet (still loading, or
     //     it needs a sub-action to reveal it) => honest "finding this step".
     if (onCurScreen) {
+      // Time how long this step has been unresolvable HERE. A slow page resolves in a
+      // second or two; a step that never resolves on the right screen is portal drift, and
+      // the watcher turns that into an honest admission instead of an endless spinner.
+      if (state.absentStep !== idx) { state.absentStep = idx; state.absentSince = Date.now(); }
+      else if (!state.absentTold && Date.now() - state.absentSince > 20000) {
+        state.absentTold = true;
+        try {
+          if (window.LabPilotWatcher) window.LabPilotWatcher.note({
+            type: "absent", index: idx, text: step.text || "", persistedMs: Date.now() - state.absentSince,
+          });
+        } catch (e3) {}
+      }
       O.checking("One sec - finding this step…",
         "Step " + (idx + 1) + " of " + state.steps.length + ": " + ((step.text || "").slice(0, 120)));
       return;
@@ -372,6 +396,7 @@
     if (O.tracked && raw && (raw === O.tracked || (O.tracked.contains && O.tracked.contains(raw)))) {
       state.stepIndex = Math.min(state.stepIndex + 1, state.steps.length);
       try { chrome.storage.local.set({ lpStepIndex: state.stepIndex }); } catch (e2) {}
+      reportStep(state.stepIndex - 1, state.stepIndex);
       scheduleEval();
       return;
     }
@@ -391,12 +416,38 @@
   }, true);
 
   // ---- state load + sync ----
+  // The watcher needs the step list to say anything useful about where the learner is.
+  function startWatcher() {
+    try {
+      if (window.LabPilotWatcher) {
+        window.LabPilotWatcher.start({ steps: state.steps, stepIndex: state.stepIndex, lab: state.bundleId });
+      }
+    } catch (e) {}
+  }
+
+  // Tell the watcher where the learner now is. A task boundary is the only milestone
+  // worth celebrating: it means a real chunk of the lab is finished.
+  function reportStep(prevIdx, nextIdx) {
+    try {
+      if (!window.LabPilotWatcher) return;
+      var prev = state.steps[prevIdx], next = state.steps[nextIdx];
+      state.absentStep = -1; state.absentTold = false;
+      window.LabPilotWatcher.note({
+        type: "step",
+        index: nextIdx,
+        taskChanged: !!(prev && next && prev._taskId !== next._taskId),
+        taskTitle: prev ? prev._taskTitle : "",
+      });
+    } catch (e) {}
+  }
+
   function applyBundle(bundle) {
     state.steps = flatten(bundle);
     state.bundleId = bundle && (bundle.labId || bundle.title) || "bundle";
     state.celebrate = !!(bundle && bundle.celebrateOnComplete);
     state.celebrateMsg = (bundle && bundle.celebrateMsg) || "Lab complete!";
     state.celebrated = false;
+    startWatcher();
     scheduleEval();
   }
 
@@ -423,7 +474,11 @@
 
   chrome.storage.onChanged.addListener(function (changes, area) {
     if (area !== "local") return;
-    if (changes.lpStepIndex) state.stepIndex = changes.lpStepIndex.newValue || 0;
+    if (changes.lpStepIndex) {
+      var prev = state.stepIndex;
+      state.stepIndex = changes.lpStepIndex.newValue || 0;
+      reportStep(prev, state.stepIndex);
+    }
     if (changes.lpCapture) state.capture = !!changes.lpCapture.newValue;
     if (changes.lpCaptureIndex) state.captureIndex = changes.lpCaptureIndex.newValue || 0;
     if (changes.lpBundle && changes.lpBundle.newValue) { applyBundle(changes.lpBundle.newValue); return; }

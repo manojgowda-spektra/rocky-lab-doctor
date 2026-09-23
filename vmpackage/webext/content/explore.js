@@ -98,6 +98,30 @@
     var c = { lab: st.lab, title: document.title, route: location.pathname, history: st.history.slice(-4) };
     if (step) { c.step = step.text; c.stepNo = st.stepIndex + 1; if (L) c.learn = [L.why, L.what].filter(Boolean).join(" "); }
     if (st.on && st.lastDesc) { c.name = st.lastDesc.name; c.role = st.lastDesc.role; c.context = st.lastDesc.context; c.state = st.lastDesc.state; }
+
+    // GROUNDING. The model is told what is actually true — which lab, which environment,
+    // where the learner is, what has gone wrong — and what Rocky cannot see. A model given
+    // real context answers from it; a model given none invents something plausible, which
+    // is the one failure this whole product exists to avoid.
+    try { if (window.LabPilotLab) c.grounding = window.LabPilotLab.summary(); } catch (e) {}
+    try {
+      var w = window.LabPilotWatcher && window.LabPilotWatcher.snapshot();
+      if (w) {
+        c.observed = 'Step ' + (w.stepIndex + 1) + ' of ' + w.totalSteps +
+          '; ' + Math.round(w.onStepMs / 1000) + 's on this step' +
+          (w.errorsSeen.length ? '; errors on the page: ' + w.errorsSeen.join(', ') : '') +
+          (w.recentClicks.length ? '; last clicks: ' + w.recentClicks.map(function (k) {
+            return (k.name || '?') + (k.onTarget ? ' (correct)' : ' (not the step target)');
+          }).join(', ') : '');
+      }
+    } catch (e) {}
+
+    // Next steps, so "what do I do after this" is answered from the lab, not imagination.
+    try {
+      var ahead = st.steps.slice(st.stepIndex + 1, st.stepIndex + 4)
+        .map(function (x, i) { return (st.stepIndex + 2 + i) + '. ' + x.text; });
+      if (ahead.length) c.upcoming = ahead.join(' | ');
+    } catch (e) {}
     return c;
   }
   function askBox(placeholder, focus) { return { placeholder: placeholder || "Ask Rocky anything about this lab…", onAsk: askRocky, focus: !!focus }; }
@@ -109,6 +133,28 @@
   }
   function askRocky(q) {
     if (!R()) return;
+
+    // Deterministic first. "Which lab am I in", "how far am I", "what is my resource group"
+    // are matters of record, not opinion: answering them from lab.json is instant, free and
+    // cannot be wrong. Only genuinely open questions reach the model.
+    try {
+      var known = window.LabPilotLab && window.LabPilotLab.answer(q);
+      if (known) {
+        st.history.push({ q: q, a: known }); if (st.history.length > 8) st.history.shift();
+        R().announce('“' + q + '”', { label: 'ASK ROCKY', mood: 'happy', ai: known,
+          ask: askBox('Follow-up…', true), hint: 'From the lab itself — not generated' });
+        return;
+      }
+    } catch (e) {}
+
+    if (!st.ai) {
+      R().announce('I can only answer that with my AI switched on — and I would rather say so than guess. ' +
+        'Open the extension popup → Ask Rocky and paste an endpoint, model name and key. ' +
+        'Facts about this lab and every control on screen I can still answer without it.',
+        { label: 'I CANNOT ANSWER THAT YET', mood: 'concerned', hint: 'Popup → Ask Rocky (AI)' });
+      return;
+    }
+
     var c = context(); c.question = q;
     R().announce("“" + q + "”", { label: "ASK ROCKY", mood: "think", ai: "Thinking…", ask: askBox(null, false) });
     try {

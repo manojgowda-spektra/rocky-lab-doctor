@@ -67,6 +67,13 @@ Say "no secrets found"
 # glow when it should. A package that cannot pass these has no business reaching a learner.
 $node = (Get-Command node -ErrorAction SilentlyContinue)
 if ($node) {
+  # Does Rocky know when to stay quiet? The interruption budget is what separates a
+  # companion from Clippy, so it is gated like anything else.
+  Say "checking the interruption budget..."
+  & node (Join-Path $src 'test/watcher-test.js') | Out-Null
+  if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/watcher-test.js'); Die "watcher decision logic failed" }
+  Say "watcher logic clean"
+
   Say "auditing bundles..."
   & node (Join-Path $src 'test/resolve-bundle.js') | Out-Null
   if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/resolve-bundle.js'); Die "bundle audit failed" }
@@ -92,6 +99,16 @@ if ($node) {
 
     # The safety claim, made to fail on purpose: rename, duplicate and disable the controls
     # a real step depends on, and assert Rocky refuses rather than guessing.
+    # Drive the browser like a confused learner: wrong click, portal error. Asserts on the
+    # text Rocky actually rendered, so a silent wiring regression cannot reach a demo.
+    Say "behaving like a confused learner..."
+    $bt = & node (Join-Path $src 'test/behaviour-test.js') 2>&1
+    if ($LASTEXITCODE -ne 0) { $bt | ForEach-Object { Write-Host "    $_" }; Die "Rocky did not react correctly to a confused learner" }
+    $wrong = ($bt | Where-Object { $_ -match 'WRONG CLICK' } | Select-Object -First 1)
+    if ($wrong) { Say ("behaviour: " + $wrong.Trim()) }
+    $err = ($bt | Where-Object { $_ -match 'PORTAL ERROR' } | Select-Object -First 1)
+    if ($err) { Say ("behaviour: " + $err.Trim()) }
+
     Say "breaking the portal on purpose to check Rocky refuses..."
     $dt = & node (Join-Path $src 'test/drift-test.js') 2>&1
     if ($LASTEXITCODE -ne 0) { $dt | ForEach-Object { Write-Host "    $_" }; Die "Rocky did not degrade safely under portal drift" }
