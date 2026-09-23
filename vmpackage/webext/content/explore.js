@@ -125,11 +125,57 @@
     return c;
   }
   function askBox(placeholder, focus) { return { placeholder: placeholder || "Ask Rocky anything about this lab…", onAsk: askRocky, focus: !!focus }; }
+  // Settings beside Rocky rather than in the toolbar popup, which is easy to miss and
+  // covers a lot of the screen. Same storage key, so whichever you use, both agree.
+  function openSettings() {
+    closeMenu(); if (!R()) return;
+    chrome.storage.local.get(['lpAI'], function (v) {
+      var a = (v && v.lpAI) || {};
+      R().announce(a.endpoint ? 'Connected. Change it here, or Test to check it still works.'
+                              : 'Paste your Foundry model here and I can answer wider questions. Lab facts and CloudLabs docs work without it.', {
+        label: 'ROCKY · AI SETTINGS',
+        mood: 'think',
+        form: {
+          fields: [
+            { key: 'endpoint',   label: 'Endpoint',   value: a.endpoint || '',   placeholder: 'https://<resource>.services.ai.azure.com/openai/v1/responses' },
+            { key: 'deployment', label: 'Model name', value: a.deployment || '', placeholder: 'your deployment name' },
+            { key: 'apiKey',     label: 'Key',        value: a.apiKey || '',     placeholder: 'paste the key', password: true },
+          ],
+          save: 'Save & test',
+          onSave: function (vals, say) {
+            if (!vals.endpoint || !vals.deployment || !vals.apiKey) { say('All three, please.'); return; }
+            if (!/^https:\/\//i.test(vals.endpoint)) { say('The endpoint must start with https://'); return; }
+            chrome.storage.local.set({ lpAI: vals }, function () {
+              st.ai = vals;
+              say('Saved. Testing…');
+              chrome.runtime.sendMessage({ type: 'lp-ask-ai', payload: { question: 'Reply with exactly: Rocky online.' } }, function (res) {
+                // Report what actually came back. A vague failure here is the thing most
+                // likely to cost time on the day.
+                if (res && res.text) say('Working — ' + res.text.slice(0, 60));
+                else say('Saved, but the test failed: ' + ((res && res.error) || 'no response'));
+              });
+            });
+          },
+        },
+        hint: 'Stored in this browser only · never sent anywhere but your own endpoint',
+      });
+    });
+  }
+
   function openAsk() {
     closeMenu(); if (!R()) return;
-    if (!st.ai) { R().announce("I can answer free questions once my Foundry deployment is set: open the extension popup → Ask Rocky and paste the endpoint, model name and key (they stay in this browser). Until then I still explain any control you rest on or circle in Explore mode.", { label: "ASK ROCKY", mood: "think", hint: "Popup → Ask Rocky (AI)" }); return; }
-    R().announce(st.on ? "Ask me anything — about this page, the lab, or the control you just looked at." : "Ask me anything about this step or the lab. I'll keep pointing at the current step while we talk.",
-      { label: "ASK ROCKY", mood: st.on ? "explore" : "think", ask: askBox(null, true), hint: "Enter to send · Esc closes" });
+    // ALWAYS open the box. Two rungs of the answer ladder need no model at all - facts about
+    // this lab, and the CloudLabs documentation - so refusing to even show an input because
+    // no key is set was both unhelpful and, from the outside, indistinguishable from broken.
+    var prompt = st.ai
+      ? 'Ask me anything about this step, this lab, or CloudLabs.'
+      : 'Ask away. I can answer from this lab and the CloudLabs docs right now; for anything wider, add a model in the extension popup.';
+    R().announce(prompt, {
+      label: 'ASK ROCKY',
+      mood: st.on ? 'explore' : 'think',
+      ask: askBox(null, true),
+      hint: st.ai ? 'Enter to send · Esc closes' : 'Enter to send · no AI key needed for lab and docs questions',
+    });
   }
   function askRocky(q) {
     if (!R()) return;
@@ -312,6 +358,7 @@
       { icon: "✕",  label: "Hide", title: "Hide Rocky · Alt+H (he returns on the next step)", on: function () { try { window.LabPilotOverlay && window.LabPilotOverlay.hide(); } catch (e) {} R().hide(); } },
       { icon: "↻",  label: "Restart", title: "Restart the walkthrough from step 1", on: function () { C.restart && C.restart(); } },
       { icon: "📘", label: learnOn ? "Learn: on" : "Learn: off", title: "WHY / WHAT panel under each step · Alt+L", on: function () { R().toggleLearn && R().toggleLearn(); } },
+      { icon: "⚙", label: st.ai ? "AI: on" : "AI: off", title: "Connect a Foundry model — right here, no toolbar hunting", on: function () { openSettings(); } },
       st.on ? { icon: "▶", label: "Resume", title: "Resume guiding — back to the current step · Alt+E", on: function () { stop(); }, accent: true }
             : { icon: "🧭", label: "Explore", title: "Let me explore — pause the lab; rest on or circle anything and Rocky explains it · Alt+E", on: function () { start(); }, accent: true },
       { icon: "‹",  label: "Back", title: "Previous step · Alt+P", on: function () { C.back && C.back(); }, big: true }

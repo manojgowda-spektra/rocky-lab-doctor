@@ -252,6 +252,34 @@
         }catch(x){} },30);
       }
     }
+    if(extra && extra.form){          // inline settings: label + input rows, then one button
+      var F=extra.form, vals={}, rows=document.createElement("div");
+      rows.style.cssText="margin-top:9px;display:flex;flex-direction:column;gap:6px;pointer-events:auto";
+      F.fields.forEach(function(f){
+        vals[f.key]=f.value||"";
+        var lb=document.createElement("div"); lb.textContent=f.label;
+        lb.style.cssText="font:600 10px 'Segoe UI',system-ui,sans-serif;letter-spacing:.8px;color:#7f8bb5;text-transform:uppercase";
+        var ip=document.createElement("input"); ip.type=f.password?"password":"text";
+        ip.value=f.value||""; ip.placeholder=f.placeholder||""; ip.setAttribute("data-labpilot","1");
+        ip.autocomplete="off"; ip.spellcheck=false;
+        ip.style.cssText="width:100%;box-sizing:border-box;background:#0b0f1e;color:#eef2ff;border:1px solid rgba(140,160,255,.4);"+
+          "border-radius:7px;padding:5px 8px;font:500 11.5px 'Segoe UI',system-ui,sans-serif;outline:none;pointer-events:auto";
+        // the portal must never see these keystrokes
+        ["keydown","keyup","keypress","input","paste","cut","mousedown","click","focus"].forEach(function(t){
+          ip.addEventListener(t,function(e){ e.stopPropagation(); vals[f.key]=ip.value;
+            if(t==="keydown"&&e.key==="Escape"){ e.preventDefault(); bub.style.opacity=0; } });
+        });
+        rows.appendChild(lb); rows.appendChild(ip);
+      });
+      var st2=document.createElement("div");
+      st2.style.cssText="font:500 11px 'Segoe UI',system-ui,sans-serif;color:#9ff0e0;min-height:14px";
+      var bt=document.createElement("button"); bt.type="button"; bt.textContent=F.save||"Save";
+      bt.style.cssText="margin-top:2px;pointer-events:auto;cursor:pointer;background:#6d7cff;color:#fff;border:0;"+
+        "border-radius:8px;padding:6px 12px;font:600 12px 'Segoe UI',system-ui,sans-serif";
+      bt.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation();
+        try{ F.onSave(vals,function(msg){ st2.textContent=msg; }); }catch(x){ st2.textContent=String(x&&x.message||x); } });
+      rows.appendChild(bt); rows.appendChild(st2); bub.appendChild(rows);
+    }
     if(extra && extra.hint){ var hn=document.createElement("div"); hn.textContent=extra.hint; hn.style.cssText="margin-top:7px;font:500 10.5px 'Segoe UI',system-ui,sans-serif;color:#6f7ba3"; bub.appendChild(hn); }
     if(copyText){
       var row=document.createElement("div"); row.style.cssText="margin-top:8px;display:flex;gap:8px;align-items:center";
