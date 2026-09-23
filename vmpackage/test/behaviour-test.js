@@ -197,6 +197,10 @@ async function main() {
     console.log('   [diag] page saw:', await ask(P.readClickProbe));
     console.log('   [diag] watcher saw:', await ask(P.crumb('data-lp-lastclick')));
     console.log('   [diag] watcher live with steps:', await ask(P.crumb('data-lp-watching')));
+    if (process.argv.includes('--shot')) {
+      const shot = await client.send('Page.captureScreenshot', { format: 'png' });
+      fs.writeFileSync(path.join(__dirname, 'rocky-wrongclick.png'), Buffer.from(shot.data, 'base64'));
+    }
     const afterWrong = await ask(P.bubbleText);
     if (/deploy model|not that one|the step wants/i.test(afterWrong)) {
       oks.push('WRONG CLICK -> Rocky named it: "' + afterWrong.replace(/\s+/g, ' ').slice(0, 100) + '"');
@@ -213,6 +217,10 @@ async function main() {
     // Wait out the watcher's minimum gap between remarks (12s) plus a scan tick. Rushing
     // this would be testing against a budget the product deliberately enforces.
     await new Promise((r) => setTimeout(r, 16000));
+    if (process.argv.includes('--shot')) {
+      const shot2 = await client.send('Page.captureScreenshot', { format: 'png' });
+      fs.writeFileSync(path.join(__dirname, 'rocky-error.png'), Buffer.from(shot2.data, 'base64'));
+    }
     const afterErr = await bubble();
     if (/quota|capacity|not a mistake|region/i.test(afterErr)) {
       oks.push(`PORTAL ERROR -> Rocky diagnosed it: "${afterErr.split('\n').slice(0, 2).join(' ').slice(0, 90)}"`);

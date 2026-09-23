@@ -13,3 +13,5 @@ node_modules/
 TeamAlpha-Submission/
 vmpackage/dist/
 vmpackage/test/rocky-proof.png
+vmpackage/test/rocky-wrongclick.png
+vmpackage/test/rocky-error.png
