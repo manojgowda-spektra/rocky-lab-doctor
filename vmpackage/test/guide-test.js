@@ -140,6 +140,53 @@ check('an ordinary portal step stays on the browser surface', () => {
   assert.strictEqual(r.surface, 'browser');
 });
 
+// ---- the OTHER real idiom: bold as the target marker -------------------------------------
+// Verbatim from Know Your Data (SMB), template 15549 — the lab actually being demoed. Its
+// instructions carry NO (1)(2) markers, so the original parser managed 4% of them: one target
+// out of 27 instructions. The authors mark what you click in **bold** instead, left to right.
+check('a breadcrumb path yields each hop in order', () => {
+  const r = G.parseLine('Open **Data loss prevention** > **Settings** > **Endpoint DLP settings**.');
+  assert.ok(r, 'nothing parsed');
+  const labels = r.targets.map((t) => t.label);
+  assert.deepStrictEqual(labels, ['Data loss prevention', 'Settings', 'Endpoint DLP settings'],
+    `got ${JSON.stringify(labels)}`);
+});
+
+check('a compound instruction yields both actions', () => {
+  const r = G.parseLine('Select **Create or customize advanced DLP rules**, then create a rule named **Zava Discovery Sensitive Data Rule**.');
+  assert.ok(r);
+  assert.strictEqual(r.targets.length, 2, `got ${r.targets.length}`);
+  assert.strictEqual(r.targets[0].label, 'Create or customize advanced DLP rules');
+});
+
+check('a value to TYPE is not treated as a control to find', () => {
+  // Backticked values are things the learner invents and types. Glowing one would be a wrong
+  // glow at a control that does not exist yet.
+  const r = G.parseLine('Choose **Common rules** and create the rule `Zava High-Risk Identity Data Rule`.');
+  assert.ok(r);
+  const labels = r.targets.map((t) => t.label);
+  assert.deepStrictEqual(labels, ['Common rules'], `a typed value became a target: ${JSON.stringify(labels)}`);
+});
+
+check('most of the REAL demo lab now yields targets', () => {
+  // Verbatim instruction lines from the four challenge files.
+  const page = [
+    'Open **OneDrive**, create a folder named **Zava Discovery Documents**, and confirm that the folder opens successfully.',
+    'Select **Create or customize advanced DLP rules**, then create a rule named **Zava Discovery Sensitive Data Rule**.',
+    'Select **Custom** > **Custom policy**, then enter the policy name `Zava Auto-Label Policy`.',
+    'Select `Zava Highly Confidential` as the label to auto-apply. Keep the administrative-unit scope at **Full directory**.',
+    'Choose **Common rules** and create the rule `Zava High-Risk Identity Data Rule`.',
+    'Open **Settings** > **Device onboarding** > **Device report**.',
+    'Set **Service domains** to **Block**.',
+    'Open **Data loss prevention** > **Settings** > **Endpoint DLP settings** > **Browser and domain restrictions to sensitive data**.',
+  ];
+  const steps = G.parseGuide(page);
+  const ratio = steps.length / page.length;
+  const targets = steps.reduce((n, s) => n + s.targets.length, 0);
+  console.log(`         ${steps.length}/${page.length} lines (${Math.round(ratio * 100)}%), ${targets} click targets`);
+  assert.ok(ratio >= 0.7, `only ${Math.round(ratio * 100)}% of the demo lab parsed`);
+});
+
 // ---- the whole-guide measurement ---------------------------------------------------------------
 check('most of a real guide page yields targets', () => {
   const page = [

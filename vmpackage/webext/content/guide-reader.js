@@ -144,6 +144,33 @@
       }
     }
 
+    /*
+     * BOLD AS THE TARGET MARKER. Measured against a real CloudLabs lab (Know Your Data, SMB):
+     * the (1)(2) idiom parsed 4% of its instructions, because this lab writes compound
+     * instructions instead:
+     *
+     *   "Open **Data loss prevention** > **Settings** > **Endpoint DLP settings**."
+     *   "Select **Create or customize advanced DLP rules**, then create a rule named **X**."
+     *   "Select **Custom** > **Custom policy**, then enter the policy name `Y`."
+     *
+     * Every control the learner must click is in **bold**, and the order is left to right.
+     * That is an authored signal exactly as reliable as (1)(2), and far more common: the
+     * authors bolded the things you click and left everything else plain.
+     *
+     * Backticked `values` are deliberately NOT treated as targets — they are things to TYPE,
+     * not controls to find. Glowing a name the learner has to invent would be a wrong glow.
+     */
+    if (!targets.length && /\*\*/.test(text)) {
+      var bold = text.match(/\*\*([^*]{2,60})\*\*/g) || [];
+      for (var b = 0; b < bold.length && b < 6; b++) {
+        var lab2 = tidy(bold[b]);
+        // Skip a bold run that is plainly prose rather than a control name.
+        if (!plausibleLabel(lab2)) continue;
+        if (/\s(and|then|the|a|to)\s/i.test(lab2) && lab2.split(/\s+/).length > 6) continue;
+        targets.push({ n: b + 1, label: lab2 });
+      }
+    }
+
     // Otherwise: a single instruction, "Click on X" — purpose clause removed first.
     if (!targets.length) {
       var head = dropPurpose(text.replace(/[.]\s*$/, ""));
