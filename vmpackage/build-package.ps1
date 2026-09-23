@@ -89,6 +89,13 @@ if ($node) {
     if ($LASTEXITCODE -ne 0) { $vl | ForEach-Object { Write-Host "    $_" }; Die "Rocky did not load correctly in the browser" }
     $glow = ($vl | Where-Object { $_ -match 'GLOWING' } | Select-Object -First 1)
     if ($glow) { Say ("browser check: " + $glow.Trim()) } else { Say "browser check: loaded (no glow on the mock page)" }
+
+    # The safety claim, made to fail on purpose: rename, duplicate and disable the controls
+    # a real step depends on, and assert Rocky refuses rather than guessing.
+    Say "breaking the portal on purpose to check Rocky refuses..."
+    $dt = & node (Join-Path $src 'test/drift-test.js') 2>&1
+    if ($LASTEXITCODE -ne 0) { $dt | ForEach-Object { Write-Host "    $_" }; Die "Rocky did not degrade safely under portal drift" }
+    Say ("drift check: " + (($dt | Where-Object { $_ -match 'passed,' } | Select-Object -Last 1)).Trim())
   }
 } else { Say "node not found - skipping the resolver tests (NOT recommended for a release build)" }
 

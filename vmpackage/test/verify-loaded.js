@@ -178,8 +178,8 @@ async function main() {
     if (!ver) throw new Error('Edge never opened its debug port');
     oks.push(`Edge started (${ver.Browser})`);
 
-    // Give the extension time to install and the content scripts to run at document_idle.
-    await new Promise((r) => setTimeout(r, 3500));
+    // Do not guess how long Edge needs. Poll for the content scripts' own evidence.
+    await new Promise((r) => setTimeout(r, 1200));
 
     const targets = await getJson(port, '/json/list');
     // An MV3 service worker target proves the extension was actually installed by Edge.
@@ -228,6 +228,16 @@ async function main() {
     // The dependable, learner-visible evidence is what the scripts PUT IN THE DOM, plus the
     // extension's own world reporting itself. We read the DOM (shared between worlds) and
     // the stylesheet the content scripts inject.
+    // Wait (up to 20s) for the content scripts to actually produce their DOM. On a busy
+    // machine Edge can take several seconds to install an unpacked extension and reach
+    // document_idle; a fixed sleep produced a false failure during a full build.
+    const readyBy = Date.now() + 20000;
+    let injected = false;
+    while (Date.now() < readyBy && !injected) {
+      injected = await ask(`!!document.querySelector('[data-labpilot="1"]')`);
+      if (!injected) await new Promise((r) => setTimeout(r, 500));
+    }
+
     const domEvidence = await ask(`(function(){
       var tagged = document.querySelectorAll('[data-labpilot="1"]');
       var root = document.getElementById('labpilot-overlay-root');
