@@ -51,6 +51,8 @@
     lastPointAt: 0,
     said: 0,
     glowing: null,
+    announced: {},        // guide title -> true, once the pre-flight summary has been said
+    preflight: null,      // a summary held back (ask box open / Rocky mid-flight), said on a later turn
   };
 
   function W() { return window.LabPilotWorld; }
@@ -175,6 +177,68 @@
     st.glowing = null;
   }
 
+  // ---- pre-flight summary ---------------------------------------------------------------------
+
+  /*
+   * Said once per guide title, when the guide is first read: how many steps Rocky can point at
+   * in the browser, and how many happen somewhere he cannot see (VS Code, a terminal, the VM
+   * desktop). The counts come straight from the guide reader's surface field — nothing is
+   * inferred, so the sentence is honest by construction. Pure, and unit tested.
+   */
+  function summarise(steps) {
+    steps = steps || [];
+    var web = 0, outside = 0, where = [];
+    for (var i = 0; i < steps.length; i++) {
+      var s = steps[i] || {};
+      if (!s.surface || s.surface === "browser") { web++; continue; }
+      outside++;
+      if (where.indexOf(s.surface) < 0) where.push(s.surface);
+    }
+    if (!web && !outside) return null;
+    var n = function (k) { return k === 1 ? "1 step" : k + " steps"; };
+    var away = " outside the browser (" + where.join(", ") + "), where I will say so and step back.";
+    var text;
+    if (!outside)  text = "This page has " + n(web) + " I can point at.";
+    else if (!web) text = "This page has no steps I can point at: " + (outside === 1 ? "its one step happens" : "all " + outside + " happen") + away;
+    else           text = "This page has " + n(web) + " I can point at, and " + outside + " that happen" + (outside === 1 ? "s" : "") + away;
+    return { web: web, outside: outside, where: where, text: text };
+  }
+
+  // Queue the summary for this guide, keyed on its title, and say it now if that is allowed.
+  // Returns true only when Rocky actually spoke.
+  function preflight(guide) {
+    var key = String((guide && guide.title) || "");
+    if (st.announced[key]) return false;
+    var s = summarise(guide && guide.steps);
+    if (!s) return false;
+    st.preflight = { key: key, text: s.text };
+    return flushPreflight();
+  }
+
+  /*
+   * Say the held summary, unless now is a bad moment:
+   *   - an ask box is open: the learner's question beats anything proactive, always
+   *   - Rocky is mid-flight: announce() clears his pending arrival, and the glow is revealed
+   *     ON arrival — so speaking now would leave the target un-glowed for the whole step
+   * Both clear on a later turn; the summary waits. Never a demand, and a calm mood: this is
+   * orientation, not an instruction. It does not count as "speaking" for MIN_GAP either,
+   * because the first glow should follow it at once, not eight seconds later.
+   */
+  function flushPreflight() {
+    var p = st.preflight;
+    if (!p) return false;
+    var asking = false;
+    try { asking = !!document.querySelector('input[data-labpilot]'); } catch (e) { asking = false; }
+    if (asking) return false;
+    if (Date.now() - st.lastPointAt < 1500) return false;
+    var R = window.LabPilotRocky;
+    if (!R || !R.announce) { st.preflight = null; return false; }     // no Rocky, no voice
+    st.preflight = null;
+    st.announced[p.key] = true;
+    try { R.announce(p.text, { label: "THIS PAGE", mood: "neutral" }); } catch (e) { return false; }
+    return true;
+  }
+
   // ---- the loop ------------------------------------------------------------------------------
 
   /*
@@ -209,6 +273,10 @@
     // decide() is pure and unit-tested, so the live "is the ask box open" check happens here
     // and is passed in rather than read inside it.
     try { st.asking = !!document.querySelector('input[data-labpilot]'); } catch (e) { st.asking = false; }
+
+    // A summary held back earlier (ask box open, or Rocky mid-flight) gets its turn here,
+    // BEFORE any new flight starts — announce() would cancel one. One boolean on the hot path.
+    if (st.preflight && !st.asking) flushPreflight();
 
     var d = decide(world, verdict, Date.now(), st);
 
@@ -246,12 +314,13 @@
       return { ok: false, why: "no-guide-on-screen" };
     }
     w.ingest(guide);
+    preflight(guide);                 // once per title: what Rocky can and cannot do on this page
     st.on = true;
 
     // re-ingest when the learner turns the page
     g.onChange(function (gg) {
       if (!st.on) return;
-      if (gg && gg.steps && gg.steps.length) w.ingest(gg);
+      if (gg && gg.steps && gg.steps.length) { w.ingest(gg); preflight(gg); }
     });
 
     p.onChange(turn);
@@ -297,6 +366,9 @@
     status: status,
     mode: mode,
     _decide: decide,           // pure, unit-tested
+    _summary: summarise,       // pure, unit-tested
+    _preflight: preflight,
+    _flushPreflight: flushPreflight,
     _state: st,
   };
 })();
