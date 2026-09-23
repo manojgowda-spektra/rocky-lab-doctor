@@ -68,6 +68,24 @@ Gate 'Nobody waits forever' { node (Join-Path $pkg 'test/ask-deadline-test.js') 
 Gate 'Recovery' { node (Join-Path $pkg 'test/recovery-test.js') | Out-Null } `
   'the world model is actually fed, the ladder caps itself, and progress ends it'
 
+Gate 'URL as position' { node (Join-Path $pkg 'test/url-position-test.js') | Out-Null } `
+  'the URL tells Rocky where he is, and cannot by itself tell him wrong'
+
+Gate 'End-state' { node (Join-Path $pkg 'test/progress-test.js') | Out-Null } `
+  'a step completes when the PAGE reaches the described state, not when the mouse clicks'
+
+Gate 'Guide assist' { node (Join-Path $pkg 'test/guide-assist-test.js') | Out-Null } `
+  'the model reads what the rules cannot, and can only return labels the guide actually wrote'
+
+Gate 'Ghost cursor and pre-flight' { node (Join-Path $pkg 'test/ghost-preflight-test.js') | Out-Null } `
+  'the pointer only points - it never clicks - and Rocky says once what he can do here'
+
+Gate 'Cross-tab' { node (Join-Path $pkg 'test/crosstab-test.js') | Out-Null } `
+  'the glow follows the learner to the tab where the work is'
+
+Gate 'No feedback loops' { node (Join-Path $pkg 'test/no-feedback-loop-test.js') | Out-Null } `
+  'Rocky never wakes himself up, and the glow arrives even if the animation does not'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 
