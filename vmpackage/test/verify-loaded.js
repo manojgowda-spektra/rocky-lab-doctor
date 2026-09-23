@@ -162,6 +162,9 @@ async function main() {
     // a naive "first page target" pick attaches to. Suppress the whole first-run funnel.
     '--disable-sync', '--no-service-autorun', '--disable-background-networking',
     '--disable-features=DisableLoadExtensionCommandLineSwitch,EdgeSyncPromo,msEdgeWelcomePage,msIdentityFre,ImplicitSignin',
+    // A lab VM is 1280+ wide. At the default headless 800x600 the menu panel hits the
+    // viewport clamp, so geometry measured here would not be the geometry a learner sees.
+    '--window-size=1280,860',
     '--edge-skip-compat-layer-relaunch', '--force-first-run-ui=0',
     ...(mock ? [
       `--host-resolver-rules=MAP ${SERVE_HOST}:443 127.0.0.1:${mock.port}`,
@@ -207,6 +210,11 @@ async function main() {
     }
     client = await wsConnect(page.webSocketDebuggerUrl);
     await client.send('Runtime.enable');
+    // Measure at lab-VM size. At the headless default the menu panel hits the viewport
+    // clamp, so the geometry would not be what a learner sees.
+    try {
+      await client.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 860, deviceScaleFactor: 1, mobile: false });
+    } catch (e) {}
 
     const ask = async (expr) => {
       const r = await client.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
@@ -333,6 +341,23 @@ async function main() {
     const errs = await ask(`JSON.stringify(window.__lpErrors || [])`);
     const list = JSON.parse(errs || '[]');
     if (list.length) fails.push(`page errors: ${list.slice(0, 3).join(' | ')}`);
+
+    // Open Rocky's menu so the screenshot shows it. The panel replaced a radial ring that
+    // sprayed buttons across the page; only a picture confirms the new one sits beside him.
+    if (has('--menu')) {
+      await ask(`(function(){ document.dispatchEvent(new CustomEvent('labpilot-rocky-click')); return true; })()`);   // lp-menu-shot
+      await new Promise((r) => setTimeout(r, 900));
+      const geo = await ask(`(function(){
+        var m=document.getElementById('labpilot-rocky-menu');
+        var p=m&&m.firstChild; var rk=document.getElementById('labpilot-rocky');
+        if(!p||!rk) return JSON.stringify({open:false});
+        var a=p.getBoundingClientRect(), b=rk.getBoundingClientRect();
+        return JSON.stringify({open:true,panel:{w:Math.round(a.width),h:Math.round(a.height),x:Math.round(a.left),y:Math.round(a.top)},
+          rocky:{x:Math.round(b.left),y:Math.round(b.top),w:Math.round(b.width)},
+          gap:Math.round(b.left-(a.left+a.width)), buttons:p.querySelectorAll('button').length});
+      })()`);
+      console.log('   [menu] ' + geo);
+    }
 
     // A screenshot is the one artefact a human can check without trusting this script.
     if (has('--shot') || has('--visible')) {

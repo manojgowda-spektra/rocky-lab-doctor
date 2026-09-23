@@ -351,19 +351,20 @@
   function menuItems() {
     var C = window.__lpControls || {};
     var learnOn = R() && R().learnOn !== false;
+    // SIX, not nine. Every extra item costs screen space and makes the useful ones harder
+    // to find. Restart, Finish and Hide are rarely wanted mid-lab and stay on Alt+ keys,
+    // which the panel footer lists so nothing becomes undiscoverable.
     return [
-      { icon: "💬", label: "Ask", title: "Ask Rocky anything about the lab · Alt+A", on: function () { openAsk(); } },
-      { icon: "›",  label: "Next", title: "Next step · Alt+N", on: function () { C.next && C.next(); }, big: true },
-      { icon: "🎉", label: "Finish", title: "Celebrate the finish · Alt+C", on: function () { C.celebrate && C.celebrate(); } },
-      { icon: "✕",  label: "Hide", title: "Hide Rocky · Alt+H (he returns on the next step)", on: function () { try { window.LabPilotOverlay && window.LabPilotOverlay.hide(); } catch (e) {} R().hide(); } },
-      { icon: "↻",  label: "Restart", title: "Restart the walkthrough from step 1", on: function () { C.restart && C.restart(); } },
-      { icon: "📘", label: learnOn ? "Learn: on" : "Learn: off", title: "WHY / WHAT panel under each step · Alt+L", on: function () { R().toggleLearn && R().toggleLearn(); } },
-      { icon: "⚙", label: st.ai ? "AI: on" : "AI: off", title: "Connect a Foundry model — right here, no toolbar hunting", on: function () { openSettings(); } },
-      st.on ? { icon: "▶", label: "Resume", title: "Resume guiding — back to the current step · Alt+E", on: function () { stop(); }, accent: true }
-            : { icon: "🧭", label: "Explore", title: "Let me explore — pause the lab; rest on or circle anything and Rocky explains it · Alt+E", on: function () { start(); }, accent: true },
-      { icon: "‹",  label: "Back", title: "Previous step · Alt+P", on: function () { C.back && C.back(); }, big: true }
+      { icon: "\u203A", label: "Next", title: "Next step \u00B7 Alt+N", on: function () { C.next && C.next(); }, accent: true },
+      { icon: "\u2039", label: "Back", title: "Previous step \u00B7 Alt+P", on: function () { C.back && C.back(); } },
+      { icon: "\u2753", label: "Ask", title: "Ask about this step, this lab or CloudLabs \u00B7 Alt+A", on: function () { openAsk(); } },
+      st.on ? { icon: "\u25B6", label: "Resume", title: "Back to guiding \u00B7 Alt+E", on: function () { stop(); } }
+            : { icon: "\u25CE", label: "Explore", title: "Pause and explore anything on screen \u00B7 Alt+E", on: function () { start(); } },
+      { icon: "\u2139", label: learnOn ? "Learn on" : "Learn off", title: "WHY / WHAT under each step \u00B7 Alt+L", on: function () { R().toggleLearn && R().toggleLearn(); } },
+      { icon: "\u2699", label: st.ai ? "AI on" : "AI off", title: "Connect a Foundry model", on: function () { openSettings(); } }
     ];
   }
+
   function closeMenu() {
     var m = st.menu; if (!m) return; st.menu = null;
     try { R() && R().dimBubble && R().dimBubble(false); R() && R().react && R().react(false); } catch (e) {}
@@ -376,39 +377,75 @@
   }
   function openMenu() {
     closeMenu(); if (!R()) return;
-    var rk = R().rect ? R().rect() : { left: innerWidth - 200, top: innerHeight - 260, width: 150, height: 172 };
-    var cx0 = rk.left + rk.width / 2, cy0 = rk.top + rk.height * 0.55;          // Rocky's body centre
+    var rk = R().rect ? R().rect() : { left: innerWidth - 120, top: innerHeight - 140, width: 93, height: 107 };
     var items = menuItems();
-    var lay = radialLayout(cx0, cy0, items.length, RING_R, innerWidth, innerHeight, BTN);
-    var m = document.createElement("div"); m.id = "labpilot-rocky-menu"; m.setAttribute("data-labpilot", "1");
-    m.setAttribute("data-cx", lay.cx); m.setAttribute("data-cy", lay.cy);
+
+    var m = document.createElement("div");
+    m.id = "labpilot-rocky-menu"; m.setAttribute("data-labpilot", "1");
     m.style.cssText = "position:fixed;inset:0;z-index:2147483646;pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif";
-    var ring = document.createElement("div"); ring.setAttribute("data-ring", "1");
-    ring.style.cssText = "position:fixed;left:" + (lay.cx - RING_R) + "px;top:" + (lay.cy - RING_R) + "px;width:" + (2 * RING_R) + "px;height:" + (2 * RING_R) + "px;border-radius:50%;border:1.5px dashed rgba(255,207,90,.6);box-shadow:0 0 60px rgba(255,207,90,.18) inset,0 0 24px rgba(255,207,90,.25);transform:scale(0);opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1.1),opacity .3s";
-    if (!lay.arc && !lay.shifted) m.appendChild(ring);
-    items.forEach(function (it, i) {
-      var b = document.createElement("button"); b.type = "button"; b.setAttribute("data-labpilot", "1"); b.setAttribute("data-ring-item", "1");
-      b.setAttribute("aria-label", it.title); b.title = it.title;
-      var bg = it.accent ? "linear-gradient(135deg,#6d7cff,#8b5cf6)" : "#0d1426f5";
-      b.style.cssText = "position:fixed;width:" + BTN + "px;height:" + BTN + "px;border-radius:50%;border:1.5px solid " + (it.accent ? "rgba(255,255,255,.35)" : "rgba(140,160,255,.45)") + ";background:" + bg + ";color:#fff;cursor:pointer;pointer-events:auto;" +
-        "display:flex;align-items:center;justify-content:center;font:" + (it.big ? "800 28px/1" : "600 20px/1") + " 'Segoe UI',system-ui,sans-serif;box-shadow:0 10px 26px rgba(0,0,0,.45);" +
-        "left:" + (lay.cx - BTN / 2) + "px;top:" + (lay.cy - BTN / 2) + "px;transform:scale(.2);opacity:0;" +
-        "transition:left .42s cubic-bezier(.2,.8,.2,1.18),top .42s cubic-bezier(.2,.8,.2,1.18),transform .42s cubic-bezier(.2,.8,.2,1.18),opacity .25s,border-color .15s;transition-delay:" + (i * 38) + "ms";
-      var ic = document.createElement("span"); ic.textContent = it.icon; ic.style.cssText = "pointer-events:none"; b.appendChild(ic);
+
+    // A compact panel rather than a ring: 2 columns beside Rocky instead of a 304px circle
+    // sweeping across the page.
+    var COLS = 2, CW = 94, CH = 46, PAD = 8;
+    var pw = COLS * CW + PAD * 2;
+    var ph = Math.ceil(items.length / COLS) * CH + PAD * 2 + 16;
+
+    // He lives bottom-right, so prefer his left; flip or clamp only when there is no room.
+    var GAP = 18;                  // he has transparent padding, so a small gap looks like none
+    var px = rk.left - pw - GAP;
+    var onLeft = true;
+    if (px < 8) { px = rk.left + rk.width + GAP; onLeft = false; }
+    if (px + pw > innerWidth - 8) { px = Math.max(8, innerWidth - pw - 8); }
+    var py = Math.max(8, Math.min(rk.top + rk.height / 2 - ph / 2, innerHeight - ph - 8));
+
+    var panel = document.createElement("div");
+    panel.setAttribute("data-labpilot", "1");
+    panel.style.cssText = "position:fixed;left:" + px + "px;top:" + py + "px;width:" + pw + "px;" +
+      "background:#0d1426f2;border:1px solid rgba(140,160,255,.4);border-radius:14px;padding:" + PAD + "px;" +
+      "box-shadow:0 14px 40px rgba(0,0,0,.55);pointer-events:auto;display:grid;" +
+      "grid-template-columns:repeat(" + COLS + ",1fr);gap:4px;" +
+      // ONE transition, and only on transform and opacity - both GPU-composited, so this
+      // cannot stutter the way transitioning left/top with staggered delays did. The origin
+      // points at Rocky so the panel appears to grow out of him.
+      "opacity:0;transform:scale(.9);transform-origin:" + (onLeft ? "right" : "left") + " center;" +
+      "transition:opacity .15s ease-out,transform .18s cubic-bezier(.2,.9,.3,1.08)";
+
+    items.forEach(function (it) {
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("data-labpilot", "1");
+      b.title = it.title; b.setAttribute("aria-label", it.title);
+      var idle = it.accent ? "linear-gradient(135deg,#6d7cff,#8b5cf6)" : "rgba(255,255,255,.05)";
+      var edge = it.accent ? "rgba(255,255,255,.3)" : "rgba(140,160,255,.25)";
+      b.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;" +
+        "height:" + (CH - 5) + "px;border-radius:9px;cursor:pointer;pointer-events:auto;" +
+        "border:1px solid " + edge + ";background:" + idle + ";color:#eef2ff;" +
+        "font:600 10.5px 'Segoe UI',system-ui,sans-serif;transition:background .12s,border-color .12s";
+      var ic = document.createElement("span"); ic.textContent = it.icon;
+      ic.style.cssText = "font-size:15px;line-height:1.1;pointer-events:none";
       var lb = document.createElement("span"); lb.textContent = it.label;
-      lb.style.cssText = "position:absolute;top:" + (BTN + 4) + "px;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 11px 'Segoe UI',system-ui,sans-serif;color:#eef2ff;letter-spacing:.3px;text-shadow:0 1px 3px #000,0 0 8px #000;pointer-events:none";
-      b.appendChild(lb);
-      b.addEventListener("mouseenter", function () { b.style.borderColor = "#ffcf5a"; b.style.transform = "scale(1.14)"; b.style.transitionDelay = "0ms"; });
-      b.addEventListener("mouseleave", function () { b.style.borderColor = it.accent ? "rgba(255,255,255,.35)" : "rgba(140,160,255,.45)"; b.style.transform = "scale(1)"; });
-      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); closeMenu(); setTimeout(function () { try { it.on(); } catch (x) {} }, 40); });
-      m.appendChild(b);
-      var pos = lay.items[i];
-      requestAnimationFrame(function () { requestAnimationFrame(function () {
-        b.style.left = (pos.x - BTN / 2) + "px"; b.style.top = (pos.y - BTN / 2) + "px"; b.style.transform = "scale(1)"; b.style.opacity = "1";
-        ring.style.transform = "scale(1)"; ring.style.opacity = "1";
-      }); });
+      lb.style.cssText = "pointer-events:none";
+      b.appendChild(ic); b.appendChild(lb);
+      b.addEventListener("mouseenter", function () {
+        b.style.background = it.accent ? "linear-gradient(135deg,#7d8bff,#9b6cff)" : "rgba(255,255,255,.12)";
+        b.style.borderColor = "#ffcf5a";
+      });
+      b.addEventListener("mouseleave", function () { b.style.background = idle; b.style.borderColor = edge; });
+      b.addEventListener("click", function (e) {
+        e.preventDefault(); e.stopPropagation(); closeMenu();
+        setTimeout(function () { try { it.on(); } catch (x) {} }, 30);
+      });
+      panel.appendChild(b);
     });
+
+    var foot = document.createElement("div");
+    foot.textContent = "Alt+C finish \u00B7 Alt+H hide \u00B7 Alt+R restart";
+    foot.style.cssText = "grid-column:1/-1;text-align:center;padding-top:2px;pointer-events:none;" +
+      "font:500 9.5px 'Segoe UI',system-ui,sans-serif;color:#6f7ba3";
+    panel.appendChild(foot);
+
+    m.appendChild(panel);
     document.body.appendChild(m);
+    requestAnimationFrame(function () { panel.style.opacity = "1"; panel.style.transform = "scale(1)"; });
     st.menu = m;
     try { R().dimBubble && R().dimBubble(true); R().react && R().react(true); } catch (e) {}
   }
