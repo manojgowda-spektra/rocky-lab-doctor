@@ -119,6 +119,40 @@ check('the knowledge base cannot block a question forever', () => {
   assert.match(body, /setTimeout/, 'no deadline on a 6 MB fetch that questions queue behind');
 });
 
+// ---- 1d. the menu: every button must do its OWN thing -------------------------------------
+// Reported from a live lab: "any button in the popup I click, it opens AI chat". All five
+// buttons rendered correctly and all five handlers were distinct - but say() DEFERS every
+// message while the ask box is open, and the menu never closed the box. So once a learner
+// had opened Ask, Next/Back/Explore/Learn all had their output queued behind it and the ask
+// box just sat there. From the outside, every button opened the AI chat.
+check('a menu button closes the ask box before acting', () => {
+  const src = fs.readFileSync(path.join(SRC, 'explore.js'), 'utf8');
+  const i = src.indexOf('b.addEventListener("click"');
+  assert.ok(i > 0, 'menu click handler not found');
+  const handler = src.slice(i, i + 900);
+  assert.match(handler, /closeAsk/,
+    'the menu never closes the ask box, so say() queues every other button behind it');
+  assert.match(handler, /it\.label !== "Ask"/,
+    'Ask itself must NOT close the box it is about to open');
+});
+
+check('Rocky exposes a way to close the ask box without hiding himself', () => {
+  const src = fs.readFileSync(path.join(SRC, 'rocky.js'), 'utf8');
+  assert.match(src, /closeAsk:\s*function/, 'no closeAsk on the Rocky API');
+  const i = src.indexOf('closeAsk:function');
+  const body = src.slice(i, i + 120);
+  assert.ok(!/state\.visible\s*=\s*false/.test(body),
+    'closeAsk hides Rocky entirely - it must only close the box');
+});
+
+check('a menu action that throws says so instead of vanishing', () => {
+  const src = fs.readFileSync(path.join(SRC, 'explore.js'), 'utf8');
+  const i = src.indexOf('b.addEventListener("click"');
+  const handler = src.slice(i, i + 900);
+  assert.ok(!/catch\s*\(\s*x\s*\)\s*\{\s*\}/.test(handler.slice(handler.indexOf('it.on()'))),
+    'the menu action is wrapped in an empty catch - a broken button would look like a dead one');
+});
+
 // ---- 2. the explanation cache ------------------------------------------------------------------
 function loadCache() {
   const code = fs.readFileSync(path.join(SRC, 'explain-cache.js'), 'utf8');

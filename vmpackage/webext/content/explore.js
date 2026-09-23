@@ -505,7 +505,21 @@
       b.addEventListener("mouseleave", function () { b.style.background = idle; b.style.borderColor = edge; });
       b.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation(); closeMenu();
-        setTimeout(function () { try { it.on(); } catch (x) {} }, 30);
+        // A MENU CLICK IS AN EXPLICIT ACTION, so whatever it produces must be shown now.
+        // say() defers any message while the ask box is open, to avoid tearing the box down
+        // mid-sentence. But the menu buttons never cleared the box, so once a learner had
+        // opened Ask, EVERY later button - Next, Back, Explore, Learn - had its output
+        // queued behind it and the ask box simply stayed on screen. From the outside every
+        // button looked like it opened the AI chat.
+        if (it.label !== "Ask") { try { R() && R().closeAsk && R().closeAsk(); } catch (x) {} }
+        setTimeout(function () {
+          try { it.on(); }
+          catch (x) {
+            console.error("[Rocky] menu action failed:", it.label, x);
+            try { R().announce("That button broke: " + (x && x.message || x) + ". My bug, not yours.",
+              { label: "I BROKE", mood: "sad", demand: true }); } catch (y) {}
+          }
+        }, 30);
       });
       panel.appendChild(b);
     });

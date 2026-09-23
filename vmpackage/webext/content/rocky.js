@@ -341,6 +341,10 @@
     checking:function(title){ setMood("think"); show(); say(title||"One sec — finding this step…"); },
     celebrate:function(msg){ setMood("celebrate"); state.tx=window.innerWidth/2-75; state.ty=window.innerHeight/2-30; show(); say(msg||"Lab complete! 🎉"); confetti(); },
     happy:function(text){ setMood("happy"); show(); say(text); },
+    // Close the ask box WITHOUT hiding Rocky. The menu needs this: say() defers every
+    // message while the box is open, so a button whose output was queued behind it looked
+    // like it did nothing at all - or worse, like it had opened the ask box itself.
+    closeAsk:function(){ askClose(); ask.queued=null; },
     hide:function(){ askClose(); ask.queued=null; state.visible=false; host.style.opacity=0; bub.style.opacity=0; },
     explore:function(on){ if(!on) askClose(); state.exploring=!!on; setMood(on?"explore":"neutral"); if(on){ show(); } },
     get exploring(){ return state.exploring; },
