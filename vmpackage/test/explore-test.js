@@ -91,6 +91,34 @@ check('Shift+Enter does not submit', () => {
   assert.match(src, /!e\.shiftKey/, 'Shift+Enter would submit the question mid-sentence');
 });
 
+// ---- 1c. NOTHING may fail silently -------------------------------------------------------
+// The defect class behind "I clicked Ask and nothing happened". Every await in the ask path
+// must have a deadline, because a callback that never fires leaves the learner staring at a
+// spinner with no error, which is the least diagnosable failure a product can have.
+function slice(src, startMarker, len) {
+  const i = src.indexOf(startMarker);
+  if (i < 0) return null;
+  return src.slice(i, i + len);
+}
+
+check('the AI request cannot hang forever', () => {
+  const src = fs.readFileSync(path.join(SRC, 'explore.js'), 'utf8');
+  const body = slice(src, 'function askModel', 2200);
+  assert.ok(body, 'askModel not found');
+  assert.match(body, /setTimeout/, 'no timeout: a dead service worker leaves "Thinking..." forever');
+  assert.match(body, /answered/, 'no guard against answering twice');
+  assert.match(body, /lastError/, 'chrome.runtime.lastError is never read, so the real cause is lost');
+});
+
+check('the knowledge base cannot block a question forever', () => {
+  // askRocky queues the question behind CloudLabs.ready(). The corpus is ~6 MB; if that
+  // fetch stalls the callback never fires and the question is lost with no error at all.
+  const src = fs.readFileSync(path.join(SRC, 'cloudlabs-kb.js'), 'utf8');
+  const body = slice(src, 'function load()', 1200);
+  assert.ok(body, 'load() not found');
+  assert.match(body, /setTimeout/, 'no deadline on a 6 MB fetch that questions queue behind');
+});
+
 // ---- 2. the explanation cache ------------------------------------------------------------------
 function loadCache() {
   const code = fs.readFileSync(path.join(SRC, 'explain-cache.js'), 'utf8');

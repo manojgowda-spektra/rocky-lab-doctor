@@ -107,6 +107,20 @@
   function load() {
     if (loading) return;
     loading = true;
+
+    // A HARD DEADLINE. The corpus is ~6 MB, and askRocky() queues the learner's question
+    // behind ready(). If this fetch ever stalls — a slow lab VM, a throttled disk, a
+    // service worker restart mid-read — done() never runs, the callback never fires, and
+    // the question disappears with no error and no spinner. From the outside that is
+    // indistinguishable from "I clicked Ask and nothing happened", which is precisely what
+    // was reported from a live lab.
+    //
+    // Answering without the corpus is a small loss. Answering NEVER is a broken product,
+    // so after 8 seconds we give up on it and let the question continue to the model.
+    setTimeout(function () {
+      if (KB === null) { KB = false; done(false); }   // done() is idempotent: it drains the queue
+    }, 8000);
+
     try {
       fetch(chrome.runtime.getURL('knowledge/cloudlabs-kb.json'))
         .then(function (r) { return r.ok ? r.json() : null; })

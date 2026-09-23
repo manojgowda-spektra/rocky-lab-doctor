@@ -271,13 +271,43 @@
 
     var c = context(); c.question = q;
     R().announce("“" + q + "”", { label: "ASK ROCKY", mood: "think", ai: "Thinking…", ask: askBox(null, false) });
+
+    /*
+     * NEVER LEAVE THE LEARNER ON "Thinking…".
+     *
+     * sendMessage's callback is not guaranteed to fire: an MV3 service worker can be evicted
+     * mid-request, and a hung fetch inside it produces no callback at all. The learner then
+     * sees "Thinking…" forever, which is reported — accurately — as "I clicked Ask and
+     * nothing happened". An error the learner can read is always better than silence.
+     */
+    var answered = false;
+    function reply(text, ok) {
+      if (answered) return;
+      answered = true;
+      if (ok) { st.history.push({ q: q, a: text }); if (st.history.length > 8) st.history.shift(); }
+      R().announce("“" + q + "”", {
+        label: "ASK ROCKY", mood: ok ? (st.on ? "explore" : "happy") : "sad", ai: text,
+        ask: askBox("Follow-up…", true),
+        hint: st.on ? "Click me to resume the lab · Alt+E" : "Esc closes · the glow still marks your step",
+      });
+    }
+
+    setTimeout(function () {
+      reply("The AI did not answer within 30 seconds. Check the endpoint and key in ai.json — " +
+            "I can still explain any control you rest on or circle.", false);
+    }, 30000);
+
     try {
       chrome.runtime.sendMessage({ type: "lp-ask-ai", payload: c }, function (res) {
-        var ans = res && res.text ? res.text : ("I couldn't reach the AI (" + (res && res.error || "no response") + "). I can still explain any control you rest on or circle.");
-        if (res && res.text) { st.history.push({ q: q, a: res.text }); if (st.history.length > 8) st.history.shift(); }
-        R().announce("“" + q + "”", { label: "ASK ROCKY", mood: st.on ? "explore" : "happy", ai: ans, ask: askBox("Follow-up…", true), hint: st.on ? "Click me to resume the lab · Alt+E" : "Esc closes · the glow still marks your step" });
+        var err = (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError)
+          ? chrome.runtime.lastError.message : null;
+        if (res && res.text) { reply(res.text, true); return; }
+        reply("I couldn't reach the AI (" + (err || (res && res.error) || "no response") +
+              "). I can still explain any control you rest on or circle.", false);
       });
-    } catch (e) {}
+    } catch (e) {
+      reply("I couldn't reach the AI (" + e.message + "). I can still explain any control you rest on or circle.", false);
+    }
   }
 
   // ---- watchers (active only while exploring) --------------------------------------------
