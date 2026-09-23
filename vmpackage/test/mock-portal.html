@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--
+  mock-portal.html — the OTHER tab. A portal page with controls and NO guide.
+
+  The real lab splits like this: the guide is on experience.cloudlabs.ai (mock-lab.html plays
+  that part) and the work is on purview.microsoft.com. This page stands in for the work tab. It
+  carries the controls the guide's steps name, and deliberately no instruction-shaped prose, so
+  LabPilotGuide.read() must find nothing here and the pilot can only start as a FOLLOWER.
+-->
+<meta charset="utf-8">
+<title>Microsoft Purview (mock)</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; }
+  header { background: #0f6cbd; color: #fff; padding: 12px 20px; }
+  main { padding: 20px; }
+  button { display: inline-block; padding: 8px 16px; margin: 6px 8px 6px 0;
+    border: 1px solid #8a8886; background: #fff; border-radius: 2px; cursor: pointer; font: inherit; }
+  .panel { border: 1px solid #edebe9; padding: 14px; margin: 14px 0; }
+</style>
+
+<header>Microsoft Purview</header>
+<main>
+  <h2>Home</h2>
+  <div class="panel">
+    <button id="btn-create-resource">Create a resource</button>
+    <button id="btn-vm">Virtual machine</button>
+    <button id="btn-settings">Settings</button>
+    <button id="btn-home">Home</button>
+  </div>
+  <div class="panel">
+    <label for="rg">Resource group name</label>
+    <input id="rg" type="text" placeholder="e.g. rg-lab-01">
+  </div>
+</main>
+
+<script>
+  // Let a test mutate the page, to prove a DOM change no longer wipes the pilot's glow.
+  window.addLateControl = (name) => {
+    const b = document.createElement('button');
+    b.id = 'btn-late'; b.textContent = name;
+    document.querySelector('main').appendChild(b);
+  };
+</script>

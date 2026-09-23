@@ -31,6 +31,7 @@
  *   observe(screen)    update the model from a perception snapshot  (the hot path)
  *   current()          the whole state, for the monitor and for a model prompt
  *   note(event)        record a learner event (click, error, dismissal)
+ *   adopt(i, conf)     take on a position another tab has evidence for (cross-tab)
  *   reset()
  */
 (function () {
@@ -398,6 +399,35 @@
   }
 
   /*
+   * ADOPT a position another tab has evidence for.
+   *
+   * A lab usually splits across tabs: the guide is on the CloudLabs tab, the controls are on
+   * the portal tab. Each tab runs its own world model, and only the portal tab observes the
+   * controls the steps refer to. It publishes its belief; the other tabs take it on here, so
+   * "which step" converges from where the evidence is.
+   *
+   * This seeds the belief rather than pinning the index: local evidence still moves it
+   * afterwards, and a tab that then sees nothing relevant decays back to not claiming a
+   * number, exactly as it would on its own. A weak belief is not worth importing.
+   */
+  function adopt(index, confidence) {
+    if (!M || typeof index !== "number" || index < 0 || index >= M.steps.length) return false;
+    var c = Math.max(0, Math.min(1, Number(confidence) || 0));
+    if (c < CONF_ADVANCE) return false;
+    if (M.belief[index] < c) M.belief[index] = c;
+    if (index !== M.index) {
+      // same rule as observe(): moving to a step means the ones before it were satisfied
+      for (var d = 0; d < index; d++) if (!M.done[M.steps[d].id]) M.done[M.steps[d].id] = now();
+      M.index = index;
+      M.learner.enteredStep = now();
+      M.learner.attempts = 0;
+    }
+    M.confidence = M.belief[index];
+    M.updatedAt = now();
+    return true;
+  }
+
+  /*
    * STUCK — cheap behavioural signals, each with support in the literature.
    * Returns a reason string, or null. The monitor decides what to do about it.
    */
@@ -457,6 +487,7 @@
     observe: observe,
     note: note,
     setResolution: setResolution,
+    adopt: adopt,
     current: current,
     currentStep: currentStep,
     stuck: stuck,

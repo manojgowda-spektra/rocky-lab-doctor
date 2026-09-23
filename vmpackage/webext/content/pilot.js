@@ -30,10 +30,22 @@
  *     and adds up to 106% annoyance (Bailey & Konstan, N=50). Non-urgent nudges wait.
  *   - a budget. Silence is a feature; a companion with nothing to say should say nothing.
  *
+ * CROSS-TAB. Measured live (Know Your Data SMB, template 15549): the guide renders on
+ * experience.cloudlabs.ai and the learner works on purview.microsoft.com. The guide reader finds
+ * the guide only on the CloudLabs tab, so until now the pilot never started where the clicks
+ * happen and nothing could glow there. The tab that can read the guide is the OWNER: it
+ * publishes the parsed steps and its belief to chrome.storage.local under one small key. A lab
+ * tab with no guide of its own is a FOLLOWER: it ingests those steps into ITS OWN world model
+ * and runs this same loop against its own page, so resolution and the glow happen where the
+ * controls are. Each tab glows only its own page. The follower is the tab with the evidence, so
+ * its belief is published back and the owner adopts it; the owner's belief (formed from the
+ * CloudLabs shell, not the work) is published for status but never imported. Storage events are
+ * the only trigger: chrome.storage.onChanged fires in every tab the moment one writes.
+ *
  * window.LabPilotPilot:
- *   start()      begin guiding from the guide on screen
+ *   start()      begin guiding from the guide on screen, or follow the guide another tab published
  *   stop()
- *   status()     what Rocky currently believes and is doing
+ *   status()     what Rocky currently believes and is doing, and which role this tab has
  *   mode(name)   guided | observe | assessment
  */
 (function () {
@@ -42,6 +54,12 @@
 
   var MIN_GAP_MS = 8000;      // never speak twice inside this window
   var RE_POINT_MS = 20000;    // re-glow the same target only this often
+
+  // cross-tab (see the header)
+  var SHARED_KEY = "lpSharedGuide";
+  var FRESH_MS = 30 * 60 * 1000;      // older than this is another lab, or an abandoned one
+  var HEARTBEAT_MS = 10 * 60 * 1000;  // republish on a real turn once the record is this old
+  var TAB = Math.random().toString(36).slice(2, 10);   // so a tab can tell its own echo apart
 
   var st = {
     on: false,
@@ -53,6 +71,13 @@
     glowing: null,
     announced: {},        // guide title -> true, once the pre-flight summary has been said
     preflight: null,      // a summary held back (ask box open / Rocky mid-flight), said on a later turn
+    role: null,          // "owner" (guide on this tab) | "follower" (guide relayed from another tab)
+    guide: null,         // { title, steps } as ingested: compact, the same shape that is published
+    sharedSig: "",       // identity of the ingested steps, so a re-render is not a re-ingest
+    sharedAt: 0,         // updatedAt of the record we ingested; anything older is ignored
+    sourceUrl: "",       // where the guide actually is
+    pubIndex: -2, pubConf: -1, pubAt: 0,   // what this tab last published
+    stopped: false,
   };
 
   function W() { return window.LabPilotWorld; }
@@ -285,7 +310,14 @@
     var world = w.current();
     if (!world.step) return;
 
-    // 2. resolve the current step's current hop against the live page  (~1 ms)
+    // cross-tab: tell the other tabs when the belief moved. One storage write, and only when
+    // the position or confidence actually changed (or the record is getting old).
+    if (st.role && (world.index !== st.pubIndex || Math.abs(world.confidence - st.pubConf) >= 0.1 ||
+        (Date.now() - st.pubAt) > HEARTBEAT_MS)) publish();
+
+    // 2. resolve the current step's current HOP against the live page  (~1 ms).
+    // labelsFor walks to the first unsatisfied hop: "Solutions > Insider Risk Management"
+    // points at Solutions until its menu opens, then at Insider Risk Management.
     var labels = labelsFor(world.step, world.hop);
     var verdict = labels.length ? l.resolveAny(labels) : { status: "absent", reason: "no-labels" };
     w.setResolution({ status: verdict.status, score: verdict.score, label: verdict.label });
@@ -327,37 +359,235 @@
     st.lastDecision = d;
   }
 
-  function start() {
-    if (st.on) return { ok: false, why: "already-running" };
-    var g = G(), w = W(), p = P();
-    if (!g || !w || !p) return { ok: false, why: "missing-dependency" };
+  // ---- cross-tab: the shared guide ---------------------------------------------------------
 
-    var guide = g.read();
-    if (!guide || !guide.steps || !guide.steps.length) {
-      return { ok: false, why: "no-guide-on-screen" };
-    }
-    w.ingest(guide);
-    preflight(guide);                 // once per title: what Rocky can and cannot do on this page
-    st.on = true;
-
-    // re-ingest when the learner turns the page
-    g.onChange(function (gg) {
-      if (!st.on) return;
-      if (gg && gg.steps && gg.steps.length) { w.ingest(gg); preflight(gg); }
-    });
-
-    p.onChange(turn);
-
-    // Recovery rides the same perception stream. It also FEEDS the world model — until it
-    // starts, learner.attempts/errors/misclicks stay zero and stuck() is measuring nothing,
-    // so this is a prerequisite for stuck detection rather than an optional extra.
-    try { if (window.LabPilotRecovery) window.LabPilotRecovery.start(); } catch (e) {}
-
-    turn(p.snapshot());               // act on what is already on screen
-    return { ok: true, steps: guide.steps.length };
+  function store() {
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) return chrome.storage;
+    } catch (e) { /* not an extension context */ }
+    return null;
   }
 
-  function stop() { st.on = false; clearGlow(); }
+  function hereUrl() {
+    try { return String(location.href || "").slice(0, 300); } catch (e) { return ""; }
+  }
+
+  /*
+   * The steps in the shape that is both ingested and published: text, ordered targets with
+   * their alternative readings, and the surface when it is not the browser. Small on purpose:
+   * the record is written on every belief change and read by every lab tab.
+   */
+  function compactSteps(steps) {
+    var out = [];
+    for (var i = 0; i < steps.length && i < 60; i++) {
+      var s = steps[i];
+      if (!s || !s.targets || !s.targets.length) continue;
+      var tg = [];
+      for (var j = 0; j < s.targets.length && j < 6; j++) {
+        var t = s.targets[j];
+        if (!t || !t.label) continue;
+        var c = { n: t.n, label: String(t.label).slice(0, 60) };
+        if (t.alt && t.alt.length) c.alt = t.alt.slice(0, 3);
+        tg.push(c);
+      }
+      if (!tg.length) continue;
+      var cs = { text: String(s.text || "").slice(0, 240), targets: tg };
+      if (s.surface && s.surface !== "browser") {
+        cs.surface = s.surface;
+        if (s.surfaceWhy) cs.surfaceWhy = s.surfaceWhy;
+      }
+      out.push(cs);
+    }
+    return out;
+  }
+
+  // What makes one step list the same as another: the title and the click path. The guide
+  // pane re-renders often; the steps change only on a page turn or a new challenge.
+  function sigOf(title, steps) {
+    var parts = [String(title || "")];
+    for (var i = 0; i < steps.length; i++) {
+      var tg = steps[i].targets || [], labs = [];
+      for (var j = 0; j < tg.length; j++) labs.push(tg[j].label);
+      parts.push(labs.join(">"));
+    }
+    return parts.join("|");
+  }
+
+  function publish() {
+    var s = store();
+    if (!s || !st.on || !st.guide) return false;
+    var w = W();
+    var world = w ? w.current() : null;
+    var rec = {
+      v: 1,
+      title: st.guide.title,
+      steps: st.guide.steps,
+      index: world ? world.index : -1,
+      confidence: world ? world.confidence : 0,
+      role: st.role,
+      from: TAB,
+      sourceUrl: st.sourceUrl,
+      updatedAt: Date.now(),
+    };
+    // remembered BEFORE the write: onChanged fires re-entrantly in this same tab
+    st.pubIndex = rec.index; st.pubConf = rec.confidence; st.pubAt = rec.updatedAt;
+    try { var o = {}; o[SHARED_KEY] = rec; s.local.set(o); } catch (e) { return false; }
+    return true;
+  }
+
+  /*
+   * Take on the position in a shared record — but only from a FOLLOWER. The follower is the tab
+   * that sees the controls the steps refer to; the owner's belief is formed from the CloudLabs
+   * shell, where a stray "Save" button is evidence of nothing. The world model applies its own
+   * floor (CONF_ADVANCE) and a stronger local belief is never overwritten.
+   */
+  function adoptFrom(rec) {
+    if (!rec || rec.role !== "follower") return false;
+    var w = W();
+    if (!w || !w.adopt) return false;
+    var world = w.current();
+    var idx = Number(rec.index), conf = Number(rec.confidence) || 0;
+    if (!(idx >= 0) || idx === world.index || !(conf > world.confidence)) return false;
+    if (!w.adopt(idx, conf)) return false;
+    st.pubIndex = idx; st.pubConf = conf;    // adopted, not discovered: do not echo it back
+    st.lastTarget = "";                      // the step changed; the next turn may point afresh
+    return true;
+  }
+
+  var subscribed = false;
+  function subscribe() {
+    if (subscribed) return;
+    var s = store();
+    if (!s) return;
+    subscribed = true;
+    // listener first, then the initial read, so nothing written in between is missed
+    try {
+      s.onChanged.addListener(function (changes, area) {
+        if (area !== "local" || !changes || !changes[SHARED_KEY]) return;
+        onShared(changes[SHARED_KEY].newValue);
+      });
+    } catch (e) { /* ignore */ }
+    try { s.local.get([SHARED_KEY], function (v) { onShared(v && v[SHARED_KEY]); }); } catch (e) { /* ignore */ }
+  }
+
+  function ignore(why) { return { act: "ignore", why: why }; }
+
+  /*
+   * A shared guide arrived, or changed. What it means for THIS tab:
+   *   our own echo, empty, stale, or older than what we hold   -> nothing
+   *   not running, and this page has no guide of its own        -> follow it
+   *   following, and the OWNER's steps changed (page turn)      -> re-ingest
+   *   same steps, from a follower that is more confident        -> adopt its position
+   * Returns what it did, so the decision can be unit tested without a browser.
+   */
+  function onShared(rec) {
+    if (!rec || typeof rec !== "object") return ignore("empty");
+    if (rec.from === TAB) return ignore("own-echo");
+    if (!rec.steps || !rec.steps.length) return ignore("empty");
+    var at = Number(rec.updatedAt) || 0;
+    if (Date.now() - at > FRESH_MS) return ignore("stale");
+    if (st.stopped) return ignore("stopped");
+
+    if (!st.on) {
+      var g = G(), w = W(), p = P();
+      if (!g || !w || !p) return ignore("missing-dependency");
+      var own = null;
+      try { own = g.read(); } catch (e) { /* ignore */ }
+      if (own && own.steps && own.steps.length) return ignore("own-guide");   // never follow when this tab can lead
+      var r = begin({ title: rec.title, steps: rec.steps }, "follower", { sourceUrl: rec.sourceUrl, seed: rec });
+      return r.ok ? { act: "follow", steps: r.steps } : ignore(r.why);
+    }
+
+    if (at < st.sharedAt) return ignore("older");
+    if (sigOf(rec.title, rec.steps) !== st.sharedSig) {
+      // Different steps. Only the owner's word changes what a follower is working on; an owner
+      // keeps the guide it can see.
+      if (st.role === "follower" && rec.role === "owner") {
+        var r2 = begin({ title: rec.title, steps: rec.steps }, "follower", { sourceUrl: rec.sourceUrl, seed: rec });
+        return r2.ok ? { act: "reingest", steps: r2.steps } : ignore(r2.why);
+      }
+      return ignore("not-ours");
+    }
+    return adoptFrom(rec) ? { act: "adopt", index: Number(rec.index) } : ignore("no-change");
+  }
+
+  // The guide on THIS tab changed: a page turn, a new challenge, or a guide appearing on a page
+  // that was following another tab's. Owners re-ingest and republish; a follower whose own page
+  // grew a guide is promoted, because the guide on screen always beats one relayed from elsewhere.
+  function onOwnGuide(gg) {
+    if (!st.on || !gg || !gg.steps || !gg.steps.length) return;
+    var steps = compactSteps(gg.steps);
+    if (!steps.length) return;
+    if (st.role === "owner" && sigOf(gg.title, steps) === st.sharedSig) return;   // re-rendered, not changed
+    begin(gg, "owner");
+  }
+
+  // ---- starting ------------------------------------------------------------------------------
+
+  /*
+   * Ingest a step list and run the loop against this page, as owner (the guide is here) or
+   * follower (it came through storage). Called again on a page turn or a role change, so the
+   * one-off wiring (perception, recovery, the handover event) happens only the first time.
+   */
+  function begin(guide, role, opts) {
+    opts = opts || {};
+    var w = W(), p = P(), g = G();
+    var steps = compactSteps((guide && guide.steps) || []);
+    if (!steps.length) return { ok: false, why: "no-guide-on-screen" };
+
+    st.guide = { title: String((guide && guide.title) || "").slice(0, 160), steps: steps };
+    st.sharedSig = sigOf(st.guide.title, steps);
+    st.sharedAt = (opts.seed && Number(opts.seed.updatedAt)) || Date.now();
+    st.sourceUrl = role === "owner" ? hereUrl() : String(opts.sourceUrl || "").slice(0, 300);
+    w.ingest({ title: st.guide.title, page: guide && guide.page, steps: steps });
+    // Once per guide title, in whichever tab is about to guide: what Rocky can point at here
+    // and what he cannot. The cross-tab restructure moved start()'s body into begin(), so the
+    // summary hooks in here to cover the follower path as well as the owner's.
+    preflight({ title: st.guide.title, steps: steps });
+    if (opts.seed) adoptFrom(opts.seed);
+
+    var fresh = !st.on;
+    st.on = true;
+    st.stopped = false;
+    st.role = role;
+    st.lastTarget = ""; st.lastPointAt = 0;   // a new step list may be pointed at straight away
+    if (!fresh) clearGlow();                  // the old page's glow is about the old step
+
+    if (fresh) {
+      g.onChange(onOwnGuide);
+      p.onChange(turn);
+      // Recovery rides the same perception stream. It also FEEDS the world model — until it
+      // starts, learner.attempts/errors/misclicks stay zero and stuck() is measuring nothing,
+      // so this is a prerequisite for stuck detection rather than an optional extra.
+      try { if (window.LabPilotRecovery) window.LabPilotRecovery.start(); } catch (e) {}
+      // Tell content.js the pilot owns the glow now. Its bundle loop may have taken the overlay
+      // while this tab had no guide, and a follower can start long after its retries gave up.
+      try { window.dispatchEvent(new CustomEvent("lp-pilot-start", { detail: { role: role } })); } catch (e) {}
+    }
+    subscribe();
+    publish();
+    turn(p.snapshot());                       // act on what is already on screen
+    return { ok: true, role: role, steps: steps.length };
+  }
+
+  function start() {
+    if (st.on) return { ok: false, why: "already-running", role: st.role };
+    var g = G(), w = W(), p = P();
+    if (!g || !w || !p) return { ok: false, why: "missing-dependency" };
+    st.stopped = false;
+
+    var guide = g.read();
+    if (guide && guide.steps && guide.steps.length) return begin(guide, "owner");
+
+    // No guide on this tab. It may be on ANOTHER tab — the CloudLabs guide beside a Purview tab,
+    // measured live. Subscribe to the shared record; if a fresh one is already there the
+    // follower starts inside subscribe(), otherwise it starts the moment one is published.
+    subscribe();
+    if (st.on) return { ok: true, role: st.role, steps: st.guide.steps.length };
+    return { ok: false, why: "no-guide-on-screen" };
+  }
+
+  function stop() { st.on = false; st.role = null; st.stopped = true; clearGlow(); }
 
   function status() {
     var w = W();
@@ -365,6 +595,8 @@
     return {
       on: st.on,
       mode: st.mode,
+      role: st.role,                       // owner | follower | null
+      sourceUrl: st.sourceUrl || null,     // where the guide is, when it is on another tab
       said: st.said,
       glowing: st.glowing,
       lastDecision: st.lastDecision || null,
@@ -395,5 +627,7 @@
     _preflight: preflight,
     _flushPreflight: flushPreflight,
     _state: st,
+    // cross-tab internals, unit-tested with a mocked chrome.storage (test/crosstab-test.js)
+    _shared: { KEY: SHARED_KEY, FRESH_MS: FRESH_MS, TAB: TAB, onShared: onShared, publish: publish, sigOf: sigOf, compactSteps: compactSteps },
   };
 })();
