@@ -23,6 +23,9 @@ function Gate($name, $cmd, $what) {
 Gate 'Source integrity' { node (Join-Path $pkg 'test/source-integrity-test.js') | Out-Null } `
   'no mangled escape in a shipped file: the class of bug that reached a learner VM'
 
+Gate 'Package integrity' { node (Join-Path $pkg 'test/package-integrity-test.js') | Out-Null } `
+  'the bytes inside the shipped zip and the loose installers, which source integrity never reads'
+
 Gate 'ARM template' { node (Join-Path $repo 'deploy/validate-arm.js') | Out-Null } `
   'every reference resolves, outputs match VM Configuration, no secret on the command line'
 

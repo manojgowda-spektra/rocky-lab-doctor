@@ -195,6 +195,13 @@ Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
 # the bootstrap is fetched separately by the CSE, so publish it alongside the zip
 Copy-Item (Join-Path $src 'bin\rocky-bootstrap.ps1') $Out -Force
 
+# ...and so is the manual installer. This was NOT copied for a long time, so dist/ kept a
+# hand-placed copy that every rebuild left untouched. It was a pre-fix version carrying the
+# 'agent\rocky-agent.ps1' -> 'agent<CR>ocky-agent.ps1' defect months after bin/ was fixed:
+# anyone installing by hand got the bug we had already fixed. Publish it from bin/ so the
+# published file cannot drift from the one we maintain.
+Copy-Item (Join-Path $src 'bin\Install-Rocky.ps1') $Out -Force
+
 $size = '{0} KB' -f [math]::Round((Get-Item $zip).Length / 1024)
 Say "packed: $zip  -  $size"
 $bootOut = Join-Path $Out 'rocky-bootstrap.ps1'
