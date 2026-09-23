@@ -15,3 +15,5 @@ vmpackage/dist/
 vmpackage/test/rocky-proof.png
 vmpackage/test/rocky-wrongclick.png
 vmpackage/test/rocky-error.png
+# compiled by tools/build-knowledge.js - not source
+vmpackage/webext/knowledge/cloudlabs-kb*.json

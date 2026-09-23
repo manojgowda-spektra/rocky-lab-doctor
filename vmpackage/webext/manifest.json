@@ -46,6 +46,7 @@
         "content/foundry-kb.js",
         "content/watcher.js",
         "content/lab-context.js",
+        "content/cloudlabs-kb.js",
         "content/content.js",
         "content/skip.js",
         "content/controls.js",
@@ -63,7 +64,9 @@
       "resources": [
         "bundle/test-bundle.json",
         "vision-templates/*",
-        "lab.json"
+        "lab.json",
+        "knowledge/cloudlabs-kb.json",
+        "knowledge/cloudlabs-kb-full.json"
       ],
       "matches": [
         "https://ai.azure.com/*",

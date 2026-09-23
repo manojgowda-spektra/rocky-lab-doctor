@@ -147,6 +147,35 @@
       }
     } catch (e) {}
 
+    // Rung 2: the CloudLabs corpus. Compiled from the platform's own docs and the team's
+    // resolved-issue register, searched offline, and QUOTED with its source. Only if it has
+    // nothing does the question reach a model.
+    var CL = window.LabPilotCloudLabs;
+    if (CL) {
+      CL.ready(function () {
+        var found = null;
+        try { found = CL.answer(q); } catch (e) {}
+        if (found) {
+          st.history.push({ q: q, a: found.text }); if (st.history.length > 8) st.history.shift();
+          var where = found.title + (found.heading ? ' — ' + found.heading : '');
+          R().announce(found.text, {
+            label: found.kind === 'issue' ? 'A KNOWN ISSUE' : 'FROM THE CLOUDLABS DOCS',
+            mood: found.kind === 'issue' ? 'concerned' : 'happy',
+            ask: askBox('Follow-up…', true),
+            hint: where + (found.url ? '  ·  ' + found.url : ''),
+          });
+          return;
+        }
+        askModel(q);            // the corpus does not cover it
+      });
+      return;
+    }
+    askModel(q);
+  }
+
+  // Rung 3: a model, over the lab context - used only when neither the lab record nor the
+  // documentation answers the question.
+  function askModel(q) {
     if (!st.ai) {
       R().announce('I can only answer that with my AI switched on — and I would rather say so than guess. ' +
         'Open the extension popup → Ask Rocky and paste an endpoint, model name and key. ' +

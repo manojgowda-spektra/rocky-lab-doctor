@@ -26,6 +26,9 @@ Gate 'ARM template' { node (Join-Path $repo 'deploy/validate-arm.js') | Out-Null
 Gate 'Interruption budget' { node (Join-Path $pkg 'test/watcher-test.js') | Out-Null } `
   'a smooth run stays silent; dismissal makes him rarer; errors always get through'
 
+Gate 'CloudLabs knowledge' { node (Join-Path $pkg 'test/knowledge-test.js') | Out-Null } `
+  'answers real platform questions from the docs; refuses what the corpus does not cover'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 

@@ -74,6 +74,17 @@ if ($node) {
   if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/watcher-test.js'); Die "watcher decision logic failed" }
   Say "watcher logic clean"
 
+  # Rocky's CloudLabs knowledge: does it answer real questions, and - just as important -
+  # does it refuse questions the corpus does not cover?
+  if (Test-Path (Join-Path $src 'webext/knowledge/cloudlabs-kb.json')) {
+    Say "checking the CloudLabs knowledge..."
+    & node (Join-Path $src 'test/knowledge-test.js') | Out-Null
+    if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/knowledge-test.js'); Die "CloudLabs knowledge retrieval failed" }
+    Say "knowledge answers the real questions and refuses the rest"
+  } else {
+    Say "no knowledge index (build it with: node tools/build-knowledge.js)"
+  }
+
   Say "auditing bundles..."
   & node (Join-Path $src 'test/resolve-bundle.js') | Out-Null
   if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/resolve-bundle.js'); Die "bundle audit failed" }
