@@ -45,10 +45,29 @@
       chrome.storage.local.get(["lpAI"], function (v) {
         var a = v && v.lpAI;
         if (a && a.endpoint && a.deployment && a.apiKey) { st.ai = a; return; }
-        fetch(chrome.runtime.getURL("ai.json"))
+        /*
+         * ai.local.json FIRST, then ai.json.
+         *
+         * The endpoint and deployment are not secret and are committed in ai.json. The KEY
+         * is, and this repo is public — a key pushed there is scraped and auto-revoked
+         * within minutes, which costs more time than it saves. ai.local.json is gitignored,
+         * so a developer or a lab operator can drop a real key in beside the committed
+         * config and Rocky picks it up with no code change and no risk of publishing it.
+         *
+         * Missing is the normal case, not an error: the fetch simply falls through.
+         */
+        var usable = function (j) { return (j && j.endpoint && j.deployment && j.apiKey) ? j : null; };
+        fetch(chrome.runtime.getURL("ai.local.json"))
           .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; })
+          .then(function (localCfg) {
+            if (usable(localCfg)) return localCfg;
+            return fetch(chrome.runtime.getURL("ai.json"))
+              .then(function (r) { return r.ok ? r.json() : null; })
+              .catch(function () { return null; });
+          })
           .then(function (j) {
-            st.ai = (j && j.endpoint && j.deployment && j.apiKey) ? j : null;
+            st.ai = usable(j);
             // background.js answers the question and reads storage, so mirror it there
             if (st.ai) { try { chrome.storage.local.set({ lpAI: st.ai }); } catch (e) {} }
           })
@@ -275,7 +294,12 @@
     if (CL) {
       CL.ready(function () {
         var found = null;
-        try { found = CL.answer(q); } catch (e) {}
+        // Falling through to the model is the right RECOVERY — the learner still gets an
+        // answer — but it must not be silent. A throw here makes Rocky deny knowledge he
+        // actually has, and without this line there is nothing anywhere to say why. Rung 1
+        // above already logs its own failure; this one used to swallow without a trace.
+        try { found = CL.answer(q); }
+        catch (e) { console.error('[Rocky] CloudLabs corpus lookup failed, falling through to the model:', e); }
         if (found) {
           st.history.push({ q: q, a: found.text }); if (st.history.length > 8) st.history.shift();
           var where = found.title + (found.heading ? ' — ' + found.heading : '');
