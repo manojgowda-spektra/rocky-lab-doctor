@@ -68,6 +68,29 @@ check('the explain() body executes without throwing', () => {
   assert.strictEqual(fn(el, 'hello', {}, stubs.setMood, stubs.reposition, stubs.show, stubs.bub), true);
 });
 
+// ---- 1b. the ask box: Enter must submit ---------------------------------------------------
+check('Enter submits the ask box, not just the Ask button', () => {
+  // Reported from a live lab: the learner typed a question, pressed Enter, and nothing
+  // happened - while the Ask button worked. The box is a <form>, so implicit submission
+  // SHOULD fire, but every key is stopPropagation'd to keep the portal from seeing the
+  // learner type, and in several portals the implicit submit never reaches the form.
+  // Both routes must call the same path.
+  const src = fs.readFileSync(path.join(SRC, 'rocky.js'), 'utf8');
+  const m = /function submitAsk\(\)[\s\S]{0,400}/.exec(src);
+  assert.ok(m, 'no explicit submit path - Enter depends on implicit form submission');
+  assert.match(src, /e\.key==="Enter"|e\.keyCode===13/,
+    'the keydown handler never checks for Enter');
+  // and exactly one submit handler, or a button click would fire the question twice
+  const submits = (src.match(/row\.addEventListener\("submit"/g) || []).length;
+  assert.strictEqual(submits, 1, `${submits} submit handlers - a click would ask twice`);
+});
+
+check('Shift+Enter does not submit', () => {
+  // A learner writing a longer question should be able to break a line without sending it.
+  const src = fs.readFileSync(path.join(SRC, 'rocky.js'), 'utf8');
+  assert.match(src, /!e\.shiftKey/, 'Shift+Enter would submit the question mid-sentence');
+});
+
 // ---- 2. the explanation cache ------------------------------------------------------------------
 function loadCache() {
   const code = fs.readFileSync(path.join(SRC, 'explain-cache.js'), 'utf8');

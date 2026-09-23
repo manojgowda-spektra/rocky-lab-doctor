@@ -238,11 +238,25 @@
       inp.style.cssText="flex:1;min-width:0;background:#0b0f1e;color:#eef2ff;border:1px solid rgba(140,160,255,.4);border-radius:8px;padding:6px 9px;font:500 12.5px 'Segoe UI',system-ui,sans-serif;outline:none;pointer-events:auto";
       var go=document.createElement("button"); go.type="submit"; go.textContent=extra.ask.busy?"…":"Ask"; go.disabled=!!extra.ask.busy;
       go.style.cssText="flex:none;pointer-events:auto;cursor:pointer;background:#6d7cff;color:#fff;border:0;border-radius:8px;padding:6px 12px;font:600 12px 'Segoe UI',system-ui,sans-serif";
-      row.addEventListener("submit",function(e){ e.preventDefault(); e.stopPropagation(); var q=inp.value.trim(); if(!q) return; ask.value=""; ask.caret=null; try{ extra.ask.onAsk(q); }catch(x){} });
+      // Submitting the question. A <form> submit handler alone is not enough: every key here
+      // is stopPropagation'd so the portal underneath never sees the learner typing, and in
+      // several portals the implicit "Enter submits a form" never reaches this form at all —
+      // the learner types a question, presses Enter, and nothing happens, with the Ask button
+      // still working. Fire the same path explicitly on Enter so both routes behave the same.
+      function submitAsk(){
+        var q=inp.value.trim(); if(!q) return;
+        ask.value=""; ask.caret=null;
+        try{ extra.ask.onAsk(q); }catch(x){}
+      }
+      row.addEventListener("submit",function(e){ e.preventDefault(); e.stopPropagation(); submitAsk(); });
+
       // the portal must not see these keys, and Escape closes the box
       ["keydown","keyup","keypress","input","beforeinput","paste","cut"].forEach(function(t){
         inp.addEventListener(t,function(e){ e.stopPropagation();
           if(t==="keydown" && e.key==="Escape"){ e.preventDefault(); askClose(); return; }
+          if(t==="keydown" && (e.key==="Enter" || e.keyCode===13) && !e.shiftKey){
+            e.preventDefault(); submitAsk(); return;
+          }
           ask.value=inp.value; ask.caret=inp.selectionStart; });
       });
       ["mousedown","pointerdown","click","focus"].forEach(function(t){
