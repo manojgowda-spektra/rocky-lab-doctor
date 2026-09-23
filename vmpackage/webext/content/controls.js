@@ -13,13 +13,25 @@
   "use strict";
   if (window.__lpControls) return;
 
+  // Next / Back. The learner has just clicked a menu item and is waiting for the step to
+  // move, so a failure here must NOT be silent: an empty catch made both buttons do nothing
+  // at all, with no message, which is indistinguishable from Rocky being broken. It also
+  // defeated the menu's own "I BROKE" reporter, which only ever sees what is thrown at it.
   function setIndex(delta) {
     try {
       chrome.storage.local.get(["lpStepIndex"], function (v) {
-        var i = Math.max(0, (v.lpStepIndex || 0) + delta);
-        chrome.storage.local.set({ lpStepIndex: i });
+        var err = chrome.runtime.lastError;
+        if (err) { console.error("[Rocky] could not read the step pointer:", err.message); return; }
+        var i = Math.max(0, ((v && v.lpStepIndex) || 0) + delta);
+        chrome.storage.local.set({ lpStepIndex: i }, function () {
+          var e2 = chrome.runtime.lastError;
+          if (e2) console.error("[Rocky] could not move to step " + i + ":", e2.message);
+        });
       });
-    } catch (e) {}
+    } catch (e) {
+      console.error("[Rocky] step controls failed:", e);
+      throw e;    // let the menu's own error reporter see it, rather than swallowing it here
+    }
   }
   function restart() {
     try { chrome.storage.local.set({ lpStepIndex: 0 }, function () { setTimeout(function () { location.reload(); }, 60); }); }

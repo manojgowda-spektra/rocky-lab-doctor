@@ -26,6 +26,12 @@ Gate 'Source integrity' { node (Join-Path $pkg 'test/source-integrity-test.js') 
 Gate 'Package integrity' { node (Join-Path $pkg 'test/package-integrity-test.js') | Out-Null } `
   'the bytes inside the shipped zip and the loose installers, which source integrity never reads'
 
+Gate 'Manifest vs real labs' { node (Join-Path $pkg 'test/manifest-hosts-test.js') | Out-Null } `
+  'every host the real lab guides send a learner to, by the actual MV3 match-pattern rule'
+
+Gate 'Buttons report failure' { node (Join-Path $pkg 'test/controls-report-test.js') | Out-Null } `
+  'Next and Back reach the menu error reporter instead of dying in an empty catch'
+
 Gate 'ARM template' { node (Join-Path $repo 'deploy/validate-arm.js') | Out-Null } `
   'every reference resolves, outputs match VM Configuration, no secret on the command line'
 

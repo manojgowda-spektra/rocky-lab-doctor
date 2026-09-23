@@ -134,8 +134,15 @@ check('the manifest injects on the hosts the demo lab actually uses', () => {
   // was NOT in the match list; Rocky would simply have been absent for the whole demo.
   const m = JSON.parse(fs.readFileSync(path.join(PKG, 'webext', 'manifest.json'), 'utf8'));
   const matches = m.content_scripts[0].matches.join(' ');
+  // A HAND-MAINTAINED LIST IS ONLY AS CURRENT AS THE LAST INCIDENT. This one was written the
+  // day the Purview gap was found, and ml.azure.com — the SECOND injection outage — was never
+  // added, so this gate was as blind to it as it had been to the first.
+  // test/manifest-hosts-test.js now derives the list from the real lab guides and applies the
+  // actual MV3 match-pattern rule. This list is kept as a cheap regression floor for hosts
+  // that cost us a live lab, and both entries below are exactly those.
   const NEEDED = [
-    'purview.microsoft.com',      // the Purview lab itself
+    'purview.microsoft.com',      // outage 1: Rocky absent for the whole Purview lab
+    'ml.azure.com',               // outage 2: the same again, on Azure ML
     'portal.azure.com',           // Azure portal labs
     'login.microsoftonline.com',  // sign-in, which every lab passes through
     'cloudlabs.ai',               // the lab shell and guide pane
