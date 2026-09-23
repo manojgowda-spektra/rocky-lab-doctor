@@ -163,6 +163,10 @@
 
   function evaluate() {
     evalScheduled = false;
+    // The pilot owns the overlay (see standDown). Nothing below may touch it: with an empty
+    // step list this used to fall through to O.hide() on every DOM mutation, wiping the
+    // pilot's glow the moment the page changed.
+    if (state.pilotOwns) return;
     // CAPTURE MODE takes over the overlay entirely: no guidance resolution runs, so it
     // can never fight the recording card (and guidance mode is untouched when capture off).
     if (state.capture) { renderCaptureCard(); return; }
@@ -452,6 +456,28 @@
   }
 
   /*
+   * The pilot owns the glow from here on. Stand the bundle loop down, or two engines would
+   * fight over the same overlay — the bundle would re-glow step 1 on every mutation while the
+   * pilot glowed the guide's actual step. The mutation observer goes too: evaluate() has
+   * nothing left to do, and with no steps it used to O.hide() on every DOM change.
+   *
+   * Reached two ways: start() saying yes, and the pilot's own "lp-pilot-start" event — which is
+   * how a FOLLOWER announces itself, since on a tab with no guide of its own the pilot starts
+   * whenever the guide tab publishes, possibly long after handOverToPilot's retries.
+   */
+  function standDown() {
+    if (state.pilotOwns) return;
+    state.pilotOwns = true;
+    var hadBundle = state.steps.length > 0;
+    state.steps = [];
+    manageVisionPoll(null);
+    try { mo.disconnect(); } catch (e) {}
+    // Only clear what the bundle loop itself may have put up. The pilot's first turn follows.
+    if (hadBundle) { try { O.hide(); } catch (e) {} }
+  }
+  window.addEventListener("lp-pilot-start", standDown);
+
+  /*
    * Hand the glow to the pilot: guide-driven guidance, for a lab nobody captured.
    *
    * Retries briefly because pilot.js loads after this file and a full-page navigation can
@@ -463,11 +489,9 @@
     var P = window.LabPilotPilot;
     if (P) {
       var r = P.start();
-      if (r && r.ok) {
-        // The pilot now owns the glow. Stand the bundle loop down, or two engines would
-        // fight over the same overlay — the bundle would re-glow step 1 on every mutation
-        // while the pilot glowed the guide's actual step.
-        state.steps = [];
+      // "already-running" here means a follower started between two retries.
+      if (r && (r.ok || r.why === "already-running")) {
+        standDown();
         return;
       }
       /*
@@ -514,7 +538,7 @@
         // is never started.
         var P = window.LabPilotPilot;
         var started = P && P.start();
-        if (started && started.ok) return;
+        if (started && started.ok) { standDown(); return; }
 
         // No guide on screen. Fall back to the packaged fixture so the demo lab still works,
         // and keep trying the pilot for a few seconds in case the guide pane renders late.
