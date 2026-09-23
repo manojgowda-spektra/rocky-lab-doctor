@@ -158,9 +158,15 @@
         if (found) {
           st.history.push({ q: q, a: found.text }); if (st.history.length > 8) st.history.shift();
           var where = found.title + (found.heading ? ' — ' + found.heading : '');
-          R().announce(found.text, {
-            label: found.kind === 'issue' ? 'A KNOWN ISSUE' : 'FROM THE CLOUDLABS DOCS',
-            mood: found.kind === 'issue' ? 'concerned' : 'happy',
+          // A guess said as a fact is the failure we sell against. Same text, honest framing.
+          var label = !found.confident ? 'MY BEST GUESS'
+                    : found.kind === 'issue' ? 'A KNOWN ISSUE'
+                    : 'FROM THE CLOUDLABS DOCS';
+          var body = found.confident ? found.text
+                   : 'Not certain this is what you meant, but the closest I have: ' + found.text;
+          R().announce(body, {
+            label: label,
+            mood: !found.confident ? 'think' : found.kind === 'issue' ? 'concerned' : 'happy',
             ask: askBox('Follow-up…', true),
             hint: where + (found.url ? '  ·  ' + found.url : ''),
           });

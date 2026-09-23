@@ -37,6 +37,13 @@
   if (window.LabPilotCloudLabs) return;
 
   var KB = null, loading = false, waiting = [], fullText = null;
+  var VEC = null;                 // build-time embeddings; null until loaded, absent is fine
+  var queryVec = null;            // optional: a way to embed the learner's question
+
+  // How much each half of the hybrid counts. Keyword is trusted slightly more because an
+  // exact term match ("ODL") is stronger evidence than a similar meaning.
+  var W_KEYWORD = 1.0;
+  var W_SEMANTIC = 0.85;
 
   // Same contract as the anchor engine: a result must be genuinely good, and clearly better
   // than the next one, or there is no answer.
@@ -103,7 +110,16 @@
     try {
       fetch(chrome.runtime.getURL('knowledge/cloudlabs-kb.json'))
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (j) { KB = j; done(!!j); })
+        .then(function (j) {
+          KB = j;
+          // Semantic vectors are optional: without them retrieval is keyword-only, which
+          // still works. A missing file must never break answering.
+          return fetch(chrome.runtime.getURL('knowledge/cloudlabs-vec.json'))
+            .then(function (r2) { return r2.ok ? r2.json() : null; })
+            .then(function (v) { VEC = v; })
+            .catch(function () { VEC = null; });
+        })
+        .then(function () { done(!!KB); })
         .catch(function () { done(false); });
     } catch (e) { done(false); }
   }
@@ -161,13 +177,25 @@
     var coverage = asked.length ? askedMatched / asked.length : 0;
     if (asked.length > 1 && coverage < 0.5) return [];
 
-    // At least one matched term must be reasonably specific. A question whose only hits are
-    // words appearing in thousands of sections is not answered by this corpus, whatever the
-    // coverage arithmetic says.
-    var specific = false;
+    // IS THIS EVEN A CLOUDLABS QUESTION? Measured: off-topic questions match only freak
+    // words present in one or two sections ("capital", "kubernetes", "balance"), while every
+    // real question - however oddly the learner phrased it - touches at least one word the
+    // domain genuinely uses ("machine", "paste", "environment", "quota"). Scores overlap and
+    // cannot separate the two; this can.
+    var DOMAIN_DF = 20;             // a word the corpus really uses, not an accident
+    var domainHits = 0;
     for (var v = 0; v < uniq.length; v++) {
       var pl = KB.idx[uniq[v]];
-      if (pl && pl.length < N * 0.08) { specific = true; break; }
+      if (pl && pl.length >= DOMAIN_DF) domainHits++;
+    }
+    if (!domainHits) return [];     // nothing here belongs to this subject
+
+    // And at least one matched term should still be discriminating, so a question made
+    // entirely of very common words does not drag up an arbitrary page.
+    var specific = false;
+    for (var w2 = 0; w2 < uniq.length; w2++) {
+      var pl2 = KB.idx[uniq[w2]];
+      if (pl2 && pl2.length < N * 0.25) { specific = true; break; }
     }
     if (!specific) return [];
 
@@ -198,9 +226,57 @@
 
       hits.push({ id: id, score: s, title: d.t, heading: d.h, url: d.u, source: d.s, kind: d.k, snippet: d.b });
     }
+    // ---- merge the semantic half ---------------------------------------------------------
+    // A section the keyword side never found can still be the right answer when the learner
+    // paraphrased. Merge by id so each section is scored once, by both measures.
+    var sem = semantic(queryVec, 40);
+    if (sem.length) {
+      var byId = Object.create(null);
+      for (var h2 = 0; h2 < hits.length; h2++) byId[hits[h2].id] = hits[h2];
+      // Scale similarity onto roughly the keyword scale so the weights mean something.
+      var top = sem[0].sim || 1;
+      for (var m = 0; m < sem.length; m++) {
+        var rel = (sem[m].sim / top) * 8;         // best semantic hit ~= a strong keyword hit
+        var ex = byId[sem[m].id];
+        if (ex) {
+          ex.score = ex.score * W_KEYWORD + rel * W_SEMANTIC;
+          ex.both = true;                          // found by both halves: the strongest signal
+        } else {
+          var dd = KB.docs[sem[m].id];
+          if (!dd) continue;
+          hits.push({
+            id: sem[m].id, score: rel * W_SEMANTIC, semanticOnly: true,
+            title: dd.t, heading: dd.h, url: dd.u, source: dd.s, kind: dd.k, snippet: dd.b,
+          });
+        }
+      }
+    }
+
     hits.sort(function (a, b) { return b.score - a.score; });
     return hits.slice(0, n || 5);
   }
+
+  // ---- semantic search -------------------------------------------------------------------
+  // Vectors are int8 and already normalised, so similarity is a plain dot product: no square
+  // roots, no allocation, ~8k x 256 multiply-adds. Measured at a few milliseconds, which is
+  // why this can run on every question without a server.
+  function semantic(qv, limit) {
+    if (!VEC || !qv) return [];
+    var dims = VEC.dims, ids = VEC.ids, v = VEC.v, n = ids.length;
+    var out = [];
+    for (var r = 0; r < n; r++) {
+      var base = r * dims, dot = 0;
+      for (var d = 0; d < dims; d++) dot += v[base + d] * qv[d];
+      out.push({ id: ids[r], sim: dot / (VEC.q * VEC.q) });
+    }
+    out.sort(function (a, b) { return b.sim - a.sim; });
+    return out.slice(0, limit || 40);
+  }
+
+  // The extension cannot embed a question offline - that needs the model. So semantic
+  // search is used when a query vector is supplied (the caller got one from the configured
+  // Foundry deployment) and silently skipped otherwise. Keyword search always runs.
+  function setQueryVector(vec) { queryVec = vec; }
 
   // The honest gate. A weak best hit, or a best hit no better than the next, means the
   // corpus does not actually answer this - and saying so is the correct answer.
@@ -208,13 +284,18 @@
     var hits = search(q, 3);
     if (!hits.length) return null;
     var best = hits[0];
-    if (best.score < MIN_SCORE) return null;
+
+    // Below the floor the corpus probably does not cover this. Rather than refuse outright,
+    // offer it as an explicit GUESS - useful, and honest about what it is. The wording of a
+    // low-confidence answer is the difference between helpful and wrong-and-certain.
+    var confident = best.score >= MIN_SCORE;
+    if (!confident && best.score < MIN_SCORE * 0.45) return null;   // not even worth a guess
     if (hits[1] && best.score < hits[1].score * MARGIN) {
       // Two sections are equally plausible. Offer both rather than picking one at random.
       return {
         text: 'A couple of pages cover that. "' + best.title + (best.heading ? ' — ' + best.heading : '') +
               '" and "' + hits[1].title + '". Which are you after?',
-        ambiguous: true, hits: hits.slice(0, 2),
+        ambiguous: true, confident: confident, hits: hits.slice(0, 2),
         // Still attributable: an answer whose source cannot be named is indistinguishable
         // from an invented one.
         title: best.title, heading: best.heading, url: best.url,
@@ -225,6 +306,9 @@
       text: best.snippet,
       title: best.title, heading: best.heading, url: best.url,
       source: best.source, kind: best.kind, id: best.id, score: best.score,
+      confident: confident,
+      // Found by BOTH halves of the hybrid: the strongest evidence retrieval can offer.
+      corroborated: !!best.both,
       hits: hits,
     };
   }
@@ -248,7 +332,10 @@
     answer: answer,
     full: full,
     stats: function () {
-      return KB ? { sections: KB.n, terms: Object.keys(KB.idx).length, built: KB.built, sources: KB.sources } : null;
+      return KB ? {
+        sections: KB.n, terms: Object.keys(KB.idx).length, built: KB.built, sources: KB.sources,
+        semantic: VEC ? { vectors: VEC.n, dims: VEC.dims, model: VEC.model } : null,
+      } : null;
     },
     _test: { tokenise: tokenise, MIN_SCORE: MIN_SCORE, MARGIN: MARGIN },
   };

@@ -29,10 +29,16 @@ function loadModule() {
   const kb = JSON.parse(fs.readFileSync(KB_PATH, 'utf8'));
   const win = {};
   const chrome = { runtime: { getURL: (p) => p } };
-  const fetchImpl = (p) => Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve(p.includes('-full') ? JSON.parse(fs.readFileSync(KB_PATH.replace('.json', '-full.json'), 'utf8')) : kb),
-  });
+  // Serve each path from the REAL file, and honestly 404 a file that does not exist -
+  // otherwise the module loads the keyword index as its vector file and reports semantic
+  // search as available when it is not.
+  const fetchImpl = (p) => {
+    const file = p.includes('cloudlabs-vec') ? KB_PATH.replace('cloudlabs-kb.json', 'cloudlabs-vec.json')
+               : p.includes('-full') ? KB_PATH.replace('.json', '-full.json')
+               : KB_PATH;
+    if (!fs.existsSync(file)) return Promise.resolve({ ok: false, json: () => Promise.resolve(null) });
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(JSON.parse(fs.readFileSync(file, 'utf8'))) });
+  };
   new Function('window', 'chrome', 'fetch', code)(win, chrome, fetchImpl);
   return win.LabPilotCloudLabs;
 }
@@ -122,6 +128,37 @@ const SHOULD_REFUSE = [
   const a = CL.answer('what is an ODL');
   if (a && a.title) { pass++; console.log(`  [ok]   answers carry a title (${a.source || 'no source'}${a.url ? ', linkable' : ''})`); }
   else { fails.push('answers do not carry a title'); console.log('  [FAIL] an answer arrived with no title'); }
+
+  // PARAPHRASE. The learner's words are not the documentation's words. Keyword search is
+  // weak here by construction; semantic vectors (tools/build-embeddings.js) are the fix.
+  // This is reported, not failed, so the gate stays honest about a known limitation instead
+  // of pretending it does not exist - and so building the vectors shows a measurable gain.
+  console.log('');
+  console.log('--- paraphrased questions (semantic coverage) ---');
+  const PARAPHRASE = [
+    { q: 'the machine wont let me paste anything', want: /copy.?paste|clipboard/i },
+    { q: 'I cant get into my environment',         want: /rdp|connect|access|sign|launch/i },
+    { q: 'it says I am out of room for models',    want: /quota|capacity|limit/i },
+    { q: 'my screen is frozen on the loading spinner', want: /rdp|connect|troubleshoot|stuck|load/i },
+  ];
+  let para = 0; let paraWrong = 0;
+  for (const c of PARAPHRASE) {
+    const r = CL.answer(c.q);
+    const subj = r ? `${r.title || ''} ${r.heading || ''}` : '';
+    if (r && c.want.test(subj)) { para++; console.log(`  [ok]   "${c.q}"`); }
+    else if (!r) console.log(`  [--]   "${c.q}" -> refused (honest, but unhelpful)`);
+    else {
+      paraWrong++;
+      console.log(`  [MISS] "${c.q}" -> ${subj.trim().slice(0, 56)} ${r.confident ? '(marked CONFIDENT)' : '(marked a guess)'}`);
+    }
+  }
+  const semantic = !!CL.stats().semantic;
+  console.log(`         ${para}/${PARAPHRASE.length} correct, ${paraWrong} wrong.  semantic vectors: ${semantic ? 'loaded' : 'NOT BUILT'}`);
+  if (!semantic) console.log('         build them with tools/build-embeddings.js to fix this class of question');
+
+  // A wrong answer marked CONFIDENT is the failure this product sells against. Whatever the
+  // retrieval quality, the labelling must be honest.
+  if (semantic && paraWrong > 1) fails.push(`${paraWrong} paraphrases wrong even with vectors loaded`);
 
   // A NaN score sorts unpredictably and can float above a real answer. It appeared when a
   // section matched only SYNONYMS: the typed-term counter was never set for it, so the
