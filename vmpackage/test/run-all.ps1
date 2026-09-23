@@ -20,6 +20,9 @@ function Gate($name, $cmd, $what) {
   if (-not $ok) { Write-Host "    ^ FAILED" -ForegroundColor Red }
 }
 
+Gate 'Source integrity' { node (Join-Path $pkg 'test/source-integrity-test.js') | Out-Null } `
+  'no mangled escape in a shipped file: the class of bug that reached a learner VM'
+
 Gate 'ARM template' { node (Join-Path $repo 'deploy/validate-arm.js') | Out-Null } `
   'every reference resolves, outputs match VM Configuration, no secret on the command line'
 
@@ -34,6 +37,9 @@ Gate 'Endpoint handling' { node (Join-Path $pkg 'test/endpoint-test.js') | Out-N
 
 Gate 'Guide reading' { node (Join-Path $pkg 'test/guide-test.js') | Out-Null } `
   'works out click targets from a real lab guide, with no captured bundle'
+
+Gate 'Desktop agent parser' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $pkg 'agent/rocky-agent.ps1') -ParseTest | Out-Null } `
+  'the VM agent reads the same guide lines as the browser half, and splits them the same way'
 
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'

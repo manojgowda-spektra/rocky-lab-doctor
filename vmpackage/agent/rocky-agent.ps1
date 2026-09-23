@@ -39,7 +39,8 @@ param(
   [switch]$Probe,
   [string]$Bridge = "$env:ProgramData\Rocky\step.json",
   [int]$PollMs = 700,
-  [switch]$Once
+  [switch]$Once,
+  [switch]$ParseTest   # run the guide parser against real guide lines and exit; no desktop needed
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes, System.Windows.Forms, System.Drawing
@@ -315,7 +316,7 @@ function Get-GuideText {
         }
         # A heading has no full stop, so it would otherwise swallow the instruction that
         # follows it. Close the buffer when the NEXT fragment starts a fresh instruction.
-        elseif ($buf -match '^(?:Module|Step|Task|Exercise|Part)' -and $buf -match '\s(?:Click|Select|Navigate|Open|Choose|Enter|Set)\s') {
+        elseif ($buf -match '^(?:Module|Step|Task|Exercise|Part)\b' -and $buf -match '\s(?:Click|Select|Navigate|Open|Choose|Enter|Set)\s') {
           $cut = [regex]::Match($buf, '\s(?=(?:Click|Select|Navigate|Open|Choose|Enter|Set)\s)')
           if ($cut.Success) {
             [void]$lines.Add($buf.Substring(0, $cut.Index).Trim())
@@ -332,22 +333,38 @@ function Get-GuideText {
 
 # The same idiom the browser-side guide reader parses, kept deliberately in step with it:
 # "Select File (1) and then Open Folder (2)" -> the ordered controls to click.
+# "Select File" is a menu named File. "Open Folder" is a button named Open Folder. Both begin
+# with a word that is also a verb, and the text alone cannot tell them apart - so do not try.
+# Return BOTH readings, verb-stripped first, and let Resolve-Control decide: it scores each
+# against the live desktop and refuses when neither is unique. This mirrors verbReadings() in
+# the browser reader exactly, and for the same reason: guessing here would be a coin flip,
+# and a coin flip is what the 0.70 / 0.20 contract exists to prevent.
+function Verb-Readings([string]$frag) {
+  $verb = '(?:Click on|Click|Select|Navigate to|Open|Choose|Enter|Set|Expand|Press|Type)'
+  $whole = $frag.Trim(' ', ',', '.')
+  $out = New-Object System.Collections.ArrayList
+  $stripped = ($frag -replace "^\s*$verb\s+(?:on\s+|to\s+|the\s+)?", '').Trim(' ', ',', '.')
+  foreach ($cand in @($stripped, $whole)) {
+    if ($cand.Length -ge 2 -and $cand.Length -le 48 -and $out -notcontains $cand) { [void]$out.Add($cand) }
+  }
+  return $out
+}
+
 function Parse-GuideLine([string]$line) {
   $verb = '(?:Click on|Click|Select|Navigate to|Open|Choose|Enter|Set|Expand|Press|Type)'
   $out = New-Object System.Collections.ArrayList
   if ($line -match '\(\d\)') {
     $rx = [regex]"([^()]{2,80}?)\s*\((\d)\)"
     foreach ($m in $rx.Matches($line)) {
-      $frag = ($m.Groups[1].Value -split ',|and then|then|and')[-1]
-      $label = $frag -replace "^\s*(?:and\s+then|and|then)\s+", ''
-      $label = ($label -replace "^\s*$verb\s+(?:on\s+|to\s+|the\s+)?", '').Trim(' ', ',', '.')
-      if ($label.Length -ge 2 -and $label.Length -le 48) {
+      $frag = ($m.Groups[1].Value -split ',|\band then\b|\bthen\b|\band\b')[-1]
+      $frag = $frag -replace "^\s*(?:and\s+then|and|then)\s+", ''
+      foreach ($label in (Verb-Readings $frag)) {
         [void]$out.Add(@{ n = [int]$m.Groups[2].Value; label = $label })
       }
     }
   } elseif ($line -match "^\s*$verb\s+") {
     $label = ($line -replace "^\s*$verb\s+(?:on\s+|to\s+|the\s+)?", '')
-    $label = ($label -replace '\s+to\s+(?:sign|proceed|continue|open|view|see|complete|enable|start).*$', '').Trim(' ', ',', '.')
+    $label = ($label -replace '\s+to\s+(?:sign|proceed|continue|open|view|see|complete|enable|start)\b.*$', '').Trim(' ', ',', '.')
     if ($label.Length -ge 2 -and $label.Length -le 48) { [void]$out.Add(@{ n = 1; label = $label }) }
   }
   return $out
@@ -367,6 +384,43 @@ function Find-NextDesktopTarget($lines) {
     }
   }
   return $null
+}
+
+# ---- gate: does the parser still parse? -------------------------------------------------------
+# This exists because three \b word boundaries in Parse-GuideLine were silently turned into
+# backspace characters by a shell heredoc. Nothing errored. The parser simply stopped splitting
+# "X (1) and then Y (2)" and Rocky sat on "finding the step" forever. A regex that matches
+# nothing throws no exception, so only an assertion on the OUTPUT catches it.
+# Lines below are verbatim from the Microsoft IQ workshop guide, as in the browser gate.
+if ($ParseTest) {
+  $cases = @(
+    @{ line = 'Select File (1) and then Open Folder (2).';                      want = @('File', 'Open Folder') }
+    @{ line = 'Click Auto (1) and then set the model to Claude Sonnet 5 (2).';  want = @('Auto') }
+    @{ line = 'Click on the elipses (1) and then Remove (2).';                  want = @('Remove') }
+    @{ line = 'Click on Publish.';                                              want = @('Publish') }
+    @{ line = 'Click on Continue with GitHub to sign in to GitHub Copilot.';    want = @('Continue with GitHub') }
+  )
+  $bad = 0
+  Write-Host ""
+  Write-Host "=== AGENT GUIDE PARSER ===" -ForegroundColor Cyan
+  foreach ($c in $cases) {
+    $got = @(Parse-GuideLine $c.line | ForEach-Object { $_.label })
+    $miss = @($c.want | Where-Object { $got -notcontains $_ })
+    if ($miss.Count) {
+      $bad++
+      Write-Host ("  [FAIL] {0}" -f $c.line) -ForegroundColor Red
+      Write-Host ("         missing: {0}   got: {1}" -f ($miss -join ', '), ($got -join ' | '))
+    } else {
+      Write-Host ("  [ok]   {0}" -f ($got -join ' | '))
+    }
+  }
+  # "and then" must actually split. If \b is broken this yields one fused label, not two.
+  $split = @(Parse-GuideLine 'Select File (1) and then Open Folder (2).' | ForEach-Object { $_.label })
+  if ($split.Count -lt 2) { $bad++; Write-Host "  [FAIL] 'and then' no longer splits - word boundaries are broken" -ForegroundColor Red }
+  Write-Host ""
+  if ($bad) { Write-Host "$bad FAILED" -ForegroundColor Red; exit 1 }
+  Write-Host "all passed - the desktop agent can read a real guide." -ForegroundColor Green
+  exit 0
 }
 
 # ---- diagnostics ----------------------------------------------------------------------------

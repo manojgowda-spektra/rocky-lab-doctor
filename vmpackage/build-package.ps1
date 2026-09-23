@@ -6,7 +6,7 @@
 #>
 param(
   [string]$Out     = "$PSScriptRoot\dist",
-  [string]$Version = "",              # default: 0.7.1+<git short sha>
+  [string]$Version = "",              # default: 0.8.0+<git short sha>
   [switch]$SkipGit,
   [switch]$SkipLive          # skip the headless-Edge resolver test (CI without a browser)
 )
@@ -67,6 +67,23 @@ Say "no secrets found"
 # glow when it should. A package that cannot pass these has no business reaching a learner.
 $node = (Get-Command node -ErrorAction SilentlyContinue)
 if ($node) {
+  # FIRST, before any behavioural gate: are the shipped files intact? A heredoc turned
+  # 'agent\rocky-agent.ps1' into a carriage return and shipped it; the installer failed in a
+  # learner's VM with "Illegal characters in path". The same accident ate three regex \b in
+  # the agent's guide parser, which threw no error and simply matched nothing. No behaviour
+  # test can see either one, because neither file is executed by Node or Edge.
+  Say "checking source integrity..."
+  & node (Join-Path $src 'test/source-integrity-test.js') | Out-Null
+  if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/source-integrity-test.js'); Die "a shipped file carries a mangled escape sequence" }
+  Say "no mangled escapes - every shipped path is real"
+
+  # The desktop agent's guide parser is pure logic and runs without a desktop, so gate it
+  # here alongside the browser reader rather than only discovering it live in a VM.
+  Say "checking the desktop agent's guide parser..."
+  & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $src 'agent/rocky-agent.ps1') -ParseTest | Out-Null
+  if ($LASTEXITCODE -ne 0) { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $src 'agent/rocky-agent.ps1') -ParseTest; Die "the VM agent can no longer read a lab guide" }
+  Say "the VM agent reads a real guide"
+
   # Does Rocky know when to stay quiet? The interruption budget is what separates a
   # companion from Clippy, so it is gated like anything else.
   Say "checking the interruption budget..."

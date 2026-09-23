@@ -23,7 +23,7 @@
 
   To switch on free-text questions, add your Foundry model to the same command:
 
-    .\i.ps1 -FromLocal .ocky-package.zip `
+    .\i.ps1 -FromLocal .\rocky-package.zip `
             -AiEndpoint 'https://<res>.services.ai.azure.com/openai/v1/responses' `
             -AiModel '<deployment name>' -AiKey '<key>'
 
@@ -179,7 +179,7 @@ Write-Host ""
 # The VM agent covers what the browser extension cannot see: VS Code, Windows dialogs,
 # Teams, Outlook. It reads the lab guide from the browser window through UI Automation, so
 # there is no bridge, no port and no registry key between the two halves.
-$agent = Join-Path $Root 'agentocky-agent.ps1'
+$agent = Join-Path (Join-Path $Root 'agent') 'rocky-agent.ps1'
 if ((Test-Path $agent) -and -not $NoLaunch) {
   try {
     Start-Process powershell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Minimized','-File', $agent) | Out-Null
