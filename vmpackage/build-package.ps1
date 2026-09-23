@@ -56,7 +56,11 @@ $patterns = @(
 )
 # the builder itself holds the pattern list, so it is never its own suspect
 $leaks = Get-ChildItem $src -Recurse -File -Include *.js,*.json,*.ps1,*.txt -ErrorAction SilentlyContinue |
-  Where-Object { $_.FullName -notlike "*\dist\*" -and $_.Name -ne 'build-package.ps1' } |
+  # ai.local.json is the gitignored file a developer drops a REAL key into. The scanner is
+  # right to flag a key — that is its job — but this file is deliberately local and must
+  # never be packaged, so it is excluded from the scan AND from the zip below rather than
+  # failing the build. If it ever reaches dist/, the package-integrity gate fails loudly.
+  Where-Object { $_.FullName -notlike "*\dist\*" -and $_.Name -ne 'build-package.ps1' -and $_.Name -ne 'ai.local.json' } |
   Select-String -Pattern $patterns -ErrorAction SilentlyContinue
 if ($leaks) { $leaks | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber)" -ForegroundColor Yellow }; Die "possible secret or personal endpoint in the package" }
 Say "no secrets found"

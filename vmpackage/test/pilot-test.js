@@ -231,6 +231,22 @@ check('progress disappears again if the belief weakens', () => {
   assert.strictEqual(P.status().progress, null, 'kept claiming a step after the evidence vanished');
 });
 
+check('a question in progress silences the pilot', () => {
+  // Observed live: the learner typed "what step am I on" and got back an unrelated recovery
+  // hint, because dwelling fired at the same moment and displaced the reply. Someone typing
+  // a question is the LEAST stuck they ever are - they know exactly what they want.
+  const s = S(); s.asking = true;
+  const d = P._decide(world({ stuck: 'dwelling' }), { status: 'resolved', label: 'Publish', element: {} }, 100000, s);
+  assert.strictEqual(d.act, 'SILENT', `Rocky spoke over a question: ${d.act}`);
+  assert.strictEqual(d.why, 'learner-is-asking');
+});
+
+check('and it resumes once the question is answered', () => {
+  const s = S(); s.asking = false;
+  const d = P._decide(world(), { status: 'resolved', label: 'Publish', element: {} }, 100000, s);
+  assert.strictEqual(d.act, 'POINT', 'Rocky stayed silent after the box closed');
+});
+
 // ---- cost -----------------------------------------------------------------------------------
 check('observe() stays in the millisecond budget', () => {
   W.reset(); W.ingest(GUIDE);

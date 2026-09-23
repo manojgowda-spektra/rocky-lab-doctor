@@ -86,7 +86,25 @@
         return 'You are in "' + (ctx.labCode || 'this lab') + '"' + (ctx.odlId ? ' (ODL ' + ctx.odlId + ')' : '') + '. ' +
           'I know that because CloudLabs told me when it built this environment.';
       } },
-    { m: /where am i|which step|how far|progress|how many steps|how much left/i, a: function () {
+    // "what step" was missing, so that exact question fell through to the CloudLabs docs
+    // corpus and came back with AWS onboarding pages. Observed live.
+    { m: /where am i|wh(ich|at) step|how far|progress|how many steps|how much left|what.*doing now/i, a: function () {
+        // THE PILOT FIRST. When it is driving, it holds the live belief about which step the
+        // learner is on, read from the guide on screen. The watcher's list only exists on a
+        // captured bundle, so on any other lab it is empty and this answered nothing.
+        try {
+          var P = window.LabPilotPilot && window.LabPilotPilot.status();
+          if (P && P.on && P.world && P.world.step) {
+            var head = P.progress
+              ? 'Step ' + P.progress.n + ' of ' + P.progress.total + '. '
+              : '';                                    // not confident enough to claim a number
+            var txt = String(P.world.step.text || '').slice(0, 180);
+            var surf = P.world.step.surface && P.world.step.surface !== 'browser'
+              ? ' That one happens in ' + P.world.step.surface + ', which I cannot see from here.' : '';
+            return head + (txt ? 'It says: ' + txt : 'I am tracking the guide but cannot name the step.') + surf;
+          }
+        } catch (e) { /* fall through to the bundle answer */ }
+
         var s = steps(); if (!s || !s.totalSteps) return null;
         var left = s.totalSteps - s.stepIndex - 1;
         return 'Step ' + (s.stepIndex + 1) + ' of ' + s.totalSteps + '. ' +

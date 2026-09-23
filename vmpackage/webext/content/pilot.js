@@ -72,6 +72,12 @@
 
     var step = world.step;
 
+    // The learner is typing a question. Nothing the pilot has to say is more important than
+    // the answer they explicitly asked for, and speaking now displaces it — observed live,
+    // where "what step am I on" came back as an unrelated recovery hint. The glow is not
+    // suppressed, only the talking.
+    if (state.asking) return { act: "SILENT", why: "learner-is-asking" };
+
     // A step Rocky cannot see is a step he should not hunt for. Naming the surface is more
     // useful than silently failing to find a control that was never in the browser.
     if (step.surface && step.surface !== "browser") {
@@ -200,6 +206,10 @@
     w.setResolution({ status: verdict.status, score: verdict.score, label: verdict.label });
 
     // 3. decide whether to speak  (~0 ms)
+    // decide() is pure and unit-tested, so the live "is the ask box open" check happens here
+    // and is passed in rather than read inside it.
+    try { st.asking = !!document.querySelector('input[data-labpilot]'); } catch (e) { st.asking = false; }
+
     var d = decide(world, verdict, Date.now(), st);
 
     // 4. act

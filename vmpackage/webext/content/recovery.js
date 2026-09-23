@@ -153,6 +153,23 @@
   function speak(rungObj) {
     var r = R();
     if (!r) return false;
+
+    /*
+     * AN EXPLICIT QUESTION ALWAYS BEATS A PROACTIVE NUDGE.
+     *
+     * Observed live: the learner opened the ask box and typed "what step am I on", and what
+     * came back was a recovery hint — "STUCK? This step wants you to find Solutions…" —
+     * because dwelling on step 1 had fired the ladder at the same moment. The reply they
+     * asked for was displaced by advice they did not.
+     *
+     * Someone typing a question is the least stuck a learner ever is: they know exactly what
+     * they want. Interrupting that is the Clippy failure in its purest form, so recovery
+     * stays quiet while the box is open and simply tries again on the next turn.
+     */
+    try {
+      if (document.querySelector('input[data-labpilot]')) return false;
+    } catch (e) { /* no DOM access is not a reason to interrupt */ }
+
     try {
       // announce() is the non-positional voice: recovery is about the situation, not about a
       // control, so Rocky should not fly anywhere to say it.
