@@ -157,7 +157,8 @@
             });
           },
         },
-        hint: 'Stored in this browser only · never sent anywhere but your own endpoint',
+        hint: 'Stored in this browser only · never sent anywhere but your own endpoint'
+              + (function(){ try { return '  ·  build ' + chrome.runtime.getManifest().version_name; } catch (e) { return ''; } })(),
       });
     });
   }

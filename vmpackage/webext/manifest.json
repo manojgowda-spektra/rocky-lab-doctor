@@ -76,5 +76,6 @@
         "https://*.cloudlabs.ai/*"
       ]
     }
-  ]
+  ],
+  "version_name": "0.7.1+9f3b8f0"
 }

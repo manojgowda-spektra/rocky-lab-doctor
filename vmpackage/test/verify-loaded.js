@@ -359,6 +359,33 @@ async function main() {
       console.log('   [menu] ' + geo);
     }
 
+    // Click the AI SETTINGS button and report what the bubble actually contains. "Nothing
+    // opens" needs reproducing, not guessing at.
+    if (has('--settings')) {
+      const clicked = await ask(`(function(){          // lp-settings-probe
+        document.dispatchEvent(new CustomEvent('labpilot-rocky-click'));
+        return 'menu opened';
+      })()`);
+      await new Promise((r) => setTimeout(r, 700));
+      const found = await ask(`(function(){
+        var btns = document.querySelectorAll('#labpilot-rocky-menu button');
+        for (var i=0;i<btns.length;i++){
+          if (/AI (on|off)/i.test(btns[i].innerText||'')) { btns[i].click(); return 'clicked: '+(btns[i].innerText||'').replace(/\s+/g,' '); }
+        }
+        return 'NO AI BUTTON among ' + btns.length + ' buttons: ' +
+          Array.prototype.map.call(btns, function(b){return (b.innerText||'').replace(/\s+/g,' ');}).join(' | ');
+      })()`);
+      console.log('   [settings] ' + clicked + ' -> ' + found);
+      await new Promise((r) => setTimeout(r, 900));
+      const bubble = await ask(`(function(){
+        var n = document.querySelectorAll('[data-labpilot="1"]');
+        var texts = [];
+        for (var i=0;i<n.length;i++){ var t=(n[i].innerText||'').trim(); if(t) texts.push(t.replace(/\s+/g,' ').slice(0,120)); }
+        return JSON.stringify({ inputs: document.querySelectorAll('[data-labpilot="1"] input').length, texts: texts.slice(0,4) });
+      })()`);
+      console.log('   [settings] after click: ' + bubble);
+    }
+
     // A screenshot is the one artefact a human can check without trusting this script.
     if (has('--shot') || has('--visible')) {
       try {

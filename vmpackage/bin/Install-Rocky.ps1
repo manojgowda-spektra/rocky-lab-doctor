@@ -110,6 +110,18 @@ if (-not $LearnerUpn -and (Test-Path 'C:\LabFiles\AzureCreds.txt')) {
   } catch {}
 }
 
+# Edge keeps an unpacked extension loaded in memory, so replacing the files under a running
+# browser leaves the OLD code running - the reinstall appears to do nothing. Close Rocky's
+# own Edge (never the learner's other windows) before swapping the files.
+$prof = Join-Path $env:LOCALAPPDATA 'Rocky\EdgeProfile'
+$running = @(Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" -ErrorAction SilentlyContinue |
+             Where-Object { $_.CommandLine -and $_.CommandLine -like "*$prof*" })
+if ($running.Count) {
+  Say "closing Rocky's browser so the new build actually loads"
+  $running | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+  Start-Sleep -Milliseconds 900
+}
+
 Say "installing"
 $args = @('-ExecutionPolicy','Bypass','-NoProfile','-File', $boot,
           '-LabCode', $LabCode, '-StartUrl', $StartUrl)
