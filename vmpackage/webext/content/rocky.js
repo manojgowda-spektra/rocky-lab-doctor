@@ -47,25 +47,34 @@
   };
   var EYE = "#f7c23a", EYE_HI = "#fff3c4";
 
+  // SIZE. The character is DRAWN on a 150x172 grid (every coordinate below assumes it), but
+  // displayed at SCALE of that. 150px beside a portal control is overbearing, and worse on
+  // a lab VM at a lower resolution. Change this one number to resize him; the bubble
+  // placement and edge-clamping read W and H, so they follow automatically.
+  var SCALE = 0.62;
+  var ART_W = 150, ART_H = 172;                       // the drawing grid, do not change
+  var W = Math.round(ART_W * SCALE), H = Math.round(ART_H * SCALE);
+
   var host = document.createElement("div");
   host.id = "labpilot-rocky"; host.setAttribute("data-labpilot", "1");
-  host.style.cssText = "position:fixed;z-index:2147483644;width:150px;height:172px;pointer-events:none;" +
+  host.style.cssText = "position:fixed;z-index:2147483644;width:" + W + "px;height:" + H + "px;pointer-events:none;" +
     "opacity:0;transition:opacity .3s;";  // motion is the JS easing in loop(); a CSS left/top transition on top of it made him lag (retargeted every frame)
-  var cv = document.createElement("canvas"); cv.width = 150 * 2; cv.height = 172 * 2;
-  cv.style.cssText = "width:150px;height:172px";
+  var cv = document.createElement("canvas");
+  cv.width = ART_W * 2; cv.height = ART_H * 2;        // 2x backing store keeps him crisp
+  cv.style.cssText = "width:" + W + "px;height:" + H + "px";
   var ctx = cv.getContext("2d"); ctx.scale(2, 2);
   host.appendChild(cv);
   var bub = document.createElement("div");
   bub.setAttribute("data-labpilot", "1");
-  bub.style.cssText = "position:fixed;z-index:2147483645;max-width:360px;background:#0d1426f2;color:#eef2ff;" +
+  bub.style.cssText = "position:fixed;z-index:2147483645;max-width:320px;background:#0d1426f2;color:#eef2ff;" +
     "border:1px solid rgba(140,160,255,.4);border-radius:14px;padding:10px 13px;font:600 13.5px/1.4 'Segoe UI',system-ui,sans-serif;" +
     "box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transition:opacity .3s;pointer-events:none;";
   (document.body || document.documentElement).appendChild(host);
   (document.body || document.documentElement).appendChild(bub);
 
   var state = { mood: "neutral", glow: "#ffcf5a", targetGlow: "#ffcf5a",
-                x: window.innerWidth - 170, y: window.innerHeight - 220,
-                tx: window.innerWidth - 170, ty: window.innerHeight - 220,
+                x: window.innerWidth - (W + 20), y: window.innerHeight - (H + 48),
+                tx: window.innerWidth - (W + 20), ty: window.innerHeight - (H + 48),
                 blink: 1, nextBlink: 2, visible: false, pointDir: 1, t: 0, pending: null, arriveBy: 0, exploring: false };
 
   function hx(c){ c=String(c||""); if(c[0]==="#"){var n=parseInt(c.slice(1),16);return[n>>16,(n>>8)&255,n&255];}
@@ -128,7 +137,7 @@
   }
 
   function reposition(rect){
-    var margin=16, rw=150, rh=172;
+    var margin=16, rw=W, rh=H;
     var right = rect.right + margin + rw < window.innerWidth;
     state.pointDir = right ? -1 : 1;
     state.tx = right ? rect.right + margin : Math.max(8, rect.left - margin - rw);
@@ -138,12 +147,12 @@
   function positionBubble(){
     var bw = bub.offsetWidth||220, bh = bub.offsetHeight||48;
     var bx = Math.max(8, Math.min(window.innerWidth - bw - 8, state.x + 75 - bw/2));
-    var above = state.y - 8, below = window.innerHeight - (state.y + 172) - 8, by;
+    var above = state.y - 8, below = window.innerHeight - (state.y + H) - 8, by;
     if (bh <= above) by = state.y - bh - 6;                 // preferred: above his head
-    else if (bh <= below) by = state.y + 172 + 8;           // else below his feet
+    else if (bh <= below) by = state.y + H + 8;           // else below his feet
     else {                                                  // tall LEARN bubble: beside him, on the side AWAY from the target
-      bx = state.pointDir === -1 ? state.x + 150 + 8 : state.x - bw - 8;
-      if (bx < 8 || bx + bw > window.innerWidth - 8) bx = state.pointDir === -1 ? state.x - bw - 8 : state.x + 150 + 8;
+      bx = state.pointDir === -1 ? state.x + W + 8 : state.x - bw - 8;
+      if (bx < 8 || bx + bw > window.innerWidth - 8) bx = state.pointDir === -1 ? state.x - bw - 8 : state.x + W + 8;
       bx = Math.max(8, Math.min(window.innerWidth - bw - 8, bx));
       by = state.y + 86 - bh/2;
     }

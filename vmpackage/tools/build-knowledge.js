@@ -42,6 +42,11 @@ const has = (f) => args.includes(f);
 const argOf = (f, d) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : d; };
 
 const OUT = argOf('--out', path.join(__dirname, '..', 'webext', 'knowledge', 'cloudlabs-kb.json'));
+// --public: ship ONLY what CloudLabs has already published. Use it for any package that
+// will be downloadable over the internet; the internal issue register and our own notes
+// stay out. Without this flag the index includes them, which is right for an internal
+// build and wrong for a public one.
+const PUBLIC_ONLY = has('--public');
 const MIRROR = argOf('--mirror',
   path.join(process.env.USERPROFILE || '', 'OneDrive - Spektra Systems LLC', 'Desktop', 'Knowledge'));
 
@@ -188,6 +193,13 @@ function ingestMirror(root) {
       if (isIndex) continue;
 
       const isIssue = meta.type === 'issue' || /Known_Issues/.test(rel);
+
+      // In a public build, keep only pages captured from the published documentation sites.
+      // Everything else is ours: the issue register, KT notes, process guidance, audits.
+      if (PUBLIC_ONLY) {
+        const site = meta.source_site || '';
+        if (isIssue || !/^(help|learner-docs)\.cloudlabs\.ai$/.test(site)) continue;
+      }
       const title = meta.title || path.basename(p, '.md');
       for (const sec of sections(body)) {
         addDoc({
