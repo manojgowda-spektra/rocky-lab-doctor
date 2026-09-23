@@ -128,6 +128,29 @@ check('lab.json is written without a BOM', () => {
   assert.match(boot, /UTF8Encoding\(\s*\$false\s*\)/, 'lab.json is no longer written BOM-free');
 });
 
+check('the manifest injects on the hosts the demo lab actually uses', () => {
+  // Rocky not injecting looks like a broken product, not a config gap - and it is invisible
+  // until someone opens the lab. The Purview demo lab runs on purview.microsoft.com, which
+  // was NOT in the match list; Rocky would simply have been absent for the whole demo.
+  const m = JSON.parse(fs.readFileSync(path.join(PKG, 'webext', 'manifest.json'), 'utf8'));
+  const matches = m.content_scripts[0].matches.join(' ');
+  const NEEDED = [
+    'purview.microsoft.com',      // the Purview lab itself
+    'portal.azure.com',           // Azure portal labs
+    'login.microsoftonline.com',  // sign-in, which every lab passes through
+    'cloudlabs.ai',               // the lab shell and guide pane
+  ];
+  const missing = NEEDED.filter((h) => matches.indexOf(h) < 0);
+  assert.deepStrictEqual(missing, [], `the extension would not inject on: ${missing.join(', ')}`);
+
+  // A host in content_scripts but not in web_accessible_resources means lab.json, ai.json and
+  // the knowledge base are unreadable there - Rocky loads but forgets which lab he is in.
+  const war = (m.web_accessible_resources || []).map((w) => (w.matches || []).join(' ')).join(' ');
+  const notShared = m.content_scripts[0].matches.filter((p2) => war.indexOf(p2) < 0);
+  assert.deepStrictEqual(notShared, [],
+    `injected but cannot read its own resources on: ${notShared.join(', ')}`);
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — nothing mangled ships.\n`);

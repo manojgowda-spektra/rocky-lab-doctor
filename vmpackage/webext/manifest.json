@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LabPilot \u00b7 Rocky",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Rocky, your lab copilot, floats beside the exact next control and guides you click-by-click \u2014 and teaches: WHY each step matters, WHAT the technology is. Click Rocky to EXPLORE: rest on or circle any control and he explains it; destructive clicks are intercepted. Glows only on a uniquely resolved control; his mood comes only from deterministic facts.",
   "permissions": [
     "storage",
@@ -17,7 +17,14 @@
     "https://*.cloudlabs.ai/*",
     "https://*.openai.azure.com/*",
     "https://*.services.ai.azure.com/*",
-    "https://*.cognitiveservices.azure.com/*"
+    "https://*.cognitiveservices.azure.com/*",
+    "https://purview.microsoft.com/*",
+    "https://*.purview.microsoft.com/*",
+    "https://compliance.microsoft.com/*",
+    "https://security.microsoft.com/*",
+    "https://admin.microsoft.com/*",
+    "https://*.office.com/*",
+    "https://login.microsoftonline.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -34,7 +41,14 @@
         "https://portal.azure.com/*",
         "https://*.microsoftonline.com/*",
         "https://experience.cloudlabs.ai/*",
-        "https://*.cloudlabs.ai/*"
+        "https://*.cloudlabs.ai/*",
+        "https://purview.microsoft.com/*",
+        "https://*.purview.microsoft.com/*",
+        "https://compliance.microsoft.com/*",
+        "https://security.microsoft.com/*",
+        "https://admin.microsoft.com/*",
+        "https://*.office.com/*",
+        "https://login.microsoftonline.com/*"
       ],
       "js": [
         "content/anchor-engine.js",
@@ -81,7 +95,15 @@
         "https://*.ai.azure.com/*",
         "https://portal.azure.com/*",
         "https://experience.cloudlabs.ai/*",
-        "https://*.cloudlabs.ai/*"
+        "https://*.cloudlabs.ai/*",
+        "https://purview.microsoft.com/*",
+        "https://*.purview.microsoft.com/*",
+        "https://compliance.microsoft.com/*",
+        "https://security.microsoft.com/*",
+        "https://admin.microsoft.com/*",
+        "https://*.office.com/*",
+        "https://login.microsoftonline.com/*",
+        "https://*.microsoftonline.com/*"
       ]
     }
   ],
