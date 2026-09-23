@@ -94,10 +94,13 @@ check('the packaged fixture is scoped to the lab it was captured for', () => {
 
 // The reveal must not depend on an animation frame that may never come.
 check('the glow reveals even if the flight animation never lands', () => {
-  const src = fs.readFileSync(path.join(SRC, 'overlay.js'), 'utf8');
+  // Comments stripped, and a generous window: guide() grew when the ghost cursor landed, and
+  // a fixed byte window silently stopped covering the code it was meant to check.
+  const src = code(fs.readFileSync(path.join(SRC, 'overlay.js'), 'utf8'));
   const i = src.indexOf('function guide(element, text, meta)');
   assert.ok(i > 0, 'overlay.guide has moved');
-  const body = src.slice(i, i + 2600);
+  const end = src.indexOf('\n  function ', i + 10);
+  const body = src.slice(i, end > i ? end : i + 4000);
   assert.match(body, /setTimeout\(\s*reveal/,
     'the glow appears only on Rocky\'s rAF arrival; a throttled or occluded tab withholds it forever');
   assert.match(body, /placeNow\(\)/,

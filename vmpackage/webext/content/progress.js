@@ -153,15 +153,27 @@
     try { var r = L.resolveAny(labels); return !!(r && r.status === "resolved"); } catch (e) { return false; }
   }
 
+  /*
+   * FAIL TOWARDS "STILL THERE", NOT TOWARDS "GONE".
+   *
+   * met() reads shown()===false as control-gone, which completes the step. So returning false
+   * on an EXCEPTION means a thrown getComputedStyle silently marks the step done and advances
+   * the learner past work they have not finished. Unknown is not gone: if we cannot tell, the
+   * honest answer is that the control is still there and the step is not complete yet. The
+   * only false is a definite, observed absence.
+   */
   function shown(el) {
+    if (!el) return false;                       // nothing to look at IS a definite absence
     try {
-      if (!el || !el.isConnected) return false;
+      if (!el.isConnected) return false;         // definitely removed from the document
       if (typeof getComputedStyle === "function") {
         var cs = getComputedStyle(el);
         if (cs && (cs.display === "none" || cs.visibility === "hidden")) return false;
       }
       return true;
-    } catch (e) { return false; }
+    } catch (e) {
+      return true;                               // could not tell — do not call the step done
+    }
   }
 
   function notices() {

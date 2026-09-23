@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  ai-config.html — paste the Foundry key into the test browser, not into the repo.
+
+  The key is the only secret here. Putting it in the source would land it in git history and
+  in every package built from it, and the repo is currently public. This page writes it
+  straight into the extension's own storage in this browser session, so it never reaches the
+  filesystem, the chat transcript, or a tool call.
+
+  Served over https on a host the extension matches, so chrome.storage is reachable from the
+  content script that runs here.
+-->
+<meta charset="utf-8">
+<title>Rocky — AI configuration</title>
+<style>
+  body { font: 15px/1.55 system-ui, sans-serif; max-width: 680px; margin: 40px auto; padding: 0 20px; color: #16203a; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  p.sub { color: #5a6480; margin-top: 0; }
+  label { display: block; margin: 16px 0 4px; font-weight: 600; font-size: 13px; }
+  input { width: 100%; padding: 9px 11px; font: 13px ui-monospace, Consolas, monospace;
+          border: 1px solid #c3cadd; border-radius: 6px; box-sizing: border-box; }
+  button { margin-top: 20px; padding: 10px 22px; font: 600 14px system-ui; cursor: pointer;
+           background: #0078d4; color: #fff; border: 0; border-radius: 6px; }
+  #out { margin-top: 18px; padding: 12px 14px; border-radius: 6px; display: none; white-space: pre-wrap;
+         font: 13px ui-monospace, Consolas, monospace; }
+  .ok { background: #e7f6ec; border: 1px solid #9ad3ab; }
+  .no { background: #fdecea; border: 1px solid #efa9a2; }
+  .note { font-size: 12.5px; color: #5a6480; margin-top: 26px; border-top: 1px solid #e3e7f0; padding-top: 14px; }
+</style>
+
+<h1>Rocky — AI configuration</h1>
+<p class="sub">Stored in this browser only. Never written to the repo or sent anywhere but your own Foundry endpoint.</p>
+
+<label for="ep">Endpoint</label>
+<input id="ep" spellcheck="false"
+  value="https://rockyintelligence.cognitiveservices.azure.com/openai/deployments/gpt-6-luna/chat/completions?api-version=2024-12-01-preview">
+
+<label for="dep">Deployment name</label>
+<input id="dep" spellcheck="false" value="gpt-6-luna">
+
+<label for="key">API key</label>
+<input id="key" type="password" spellcheck="false" placeholder="paste the key from Keys and Endpoint">
+
+<button id="save">Save and test</button>
+<div id="out"></div>
+
+<p class="note">
+  The endpoint is pre-filled for a <strong>chat completions</strong> deployment, which is what
+  <code>gpt-6-luna</code> is. A Responses API URL (<code>/openai/v1/responses</code>) returns
+  HTTP 400 "API version not supported" on this deployment.
+</p>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const out = $('out');
+  function show(cls, text) { out.className = cls; out.style.display = 'block'; out.textContent = text; }
+
+  $('save').addEventListener('click', () => {
+    const cfg = { endpoint: $('ep').value.trim(), deployment: $('dep').value.trim(), apiKey: $('key').value.trim() };
+    if (!cfg.endpoint || !cfg.deployment || !cfg.apiKey) { show('no', 'All three fields are needed.'); return; }
+
+    // The content script shares chrome.storage with the extension, so writing here is the
+    // same as configuring it at install time — without the key ever touching a file.
+    window.postMessage({ __rockySetAI: cfg }, '*');
+    show('ok', 'Sent to the extension. Testing the endpoint…');
+
+    setTimeout(() => {
+      window.postMessage({ __rockyTestAI: true }, '*');
+    }, 600);
+  });
+
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.__rockyAIResult) {
+      show(d.__rockyAIResult.ok ? 'ok' : 'no', d.__rockyAIResult.text);
+    }
+  });
+</script>

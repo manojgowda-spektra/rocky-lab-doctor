@@ -301,9 +301,24 @@
   }
 
   // Not every unparsed line is worth a token: a number, a two-word fragment, a bare heading.
+  /*
+   * A NEGATED INSTRUCTION MUST NEVER REACH THE MODEL.
+   *
+   * "Do not select Quick policy." names a control the learner is being told to AVOID. The
+   * verbatim check cannot save us here — "Quick policy" really is in the line — so a model
+   * asked to extract targets from it will hand back the one control that must not be glowed.
+   * Pointing at the thing the guide warns against is the worst failure this product has.
+   *
+   * The deterministic parser already handles this by keeping only the first sentence; the
+   * assist path bypassed that, so the same defect came back through a different door.
+   * Lines that forbid something are simply not asked about: leaving them unparsed is correct.
+   */
+  var FORBIDS = /\b(?:do not|don't|never|avoid|without|must not|should not|cannot|can't|no need to|instead of|rather than)\b/i;
+
   function worthAsking(line) {
     if (line.length < 12 || line.length > 400) return false;
     if (line.split(/\s+/).length < 3) return false;
+    if (FORBIDS.test(line)) return false;
     return /[a-z]/i.test(line);
   }
 

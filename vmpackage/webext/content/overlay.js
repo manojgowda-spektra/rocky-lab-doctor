@@ -79,6 +79,7 @@ window.LabPilotOverlay = (function () {
   function suspend() {   // EXPLORE mode: no glow, no step bubble; guidedEl reset so resume restarts the flight
     stopTracking(); tracked = null; guidedEl = null; guidedText = null;
     glow.style.display = "none"; card.style.display = "none"; pill.style.display = "none";
+    ghostHide();
   }
   function guide(element, text, meta) {
     ensure();
@@ -123,8 +124,12 @@ window.LabPilotOverlay = (function () {
         // glow would appear at 0,0 with no size. Place it once, synchronously, before showing.
         placeNow();
         glow.style.display = "block";
+        ghostFly(element);          // the pointer follows the glow; it never clicks
       }
       try {
+        // On arrival the glow reveals and the ghost cursor glides to it — the pointer only
+        // points; it never clicks (see the ghost cursor block below). The 1.2 s deadline is
+        // the same reveal, so whichever happens first wins and the second is a no-op.
         window.LabPilotRocky.guide(element, text || "Do this step", meta, reveal);
         setTimeout(reveal, 1200);
       } catch (e) { reveal(); }
@@ -176,6 +181,7 @@ window.LabPilotOverlay = (function () {
     host.classList.add("lp-active");
     glow.style.display = "none";
     card.style.display = "none";
+    ghostHide();
     guidedEl = null; guidedText = null;
     var rk = !!window.LabPilotRocky;
     if (rk) {
@@ -196,12 +202,74 @@ window.LabPilotOverlay = (function () {
     stopTracking();
     if (!host) return;
     host.classList.remove("lp-active");
+    ghostHide();
     glow.style.display = "none";
     card.style.display = "none";
     pill.style.display = "none";
     guidedEl = null; guidedText = null;
     if (window.LabPilotRocky) { try { window.LabPilotRocky.hide(); } catch (e) {} }
   }
+
+  // ---- ghost cursor -------------------------------------------------------------------------
+  /*
+   * When the glow reveals, a pointer glides from where the learner's mouse last was to the
+   * centre of the control, pulses once and fades. It is the form factor of an agent that clicks
+   * for you, minus the agent: this element never dispatches an event, never calls click() and
+   * never focuses anything. It lives inside the overlay root as pointer-events:none, so
+   * perception, recovery and Explore all ignore it. Transform and opacity only (compositor
+   * work, no layout); prefers-reduced-motion drops the glide and keeps the single pulse; a
+   * hidden tab gets nothing, because nobody is looking.
+   */
+  var ghost = null, ghostTimer = 0, mouse = { x: -1, y: -1, at: 0 }, reduceMotion = false;
+  try { reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) {}
+  // last known mouse position, sampled at most every 50 ms: a position, not a stream
+  document.addEventListener("mousemove", function (e) {
+    if (e.timeStamp - mouse.at < 50) return;
+    mouse.x = e.clientX; mouse.y = e.clientY; mouse.at = e.timeStamp;
+  }, { passive: true, capture: true });
+
+  function ghostEnsure() {
+    if (ghost) return ghost;
+    ensure();
+    ghost = document.createElement("div");
+    ghost.className = "lp-ghost";
+    ghost.setAttribute("data-labpilot", "1");
+    var NS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(NS, "svg"), arrow = document.createElementNS(NS, "path");
+    svg.setAttribute("viewBox", "0 0 24 28"); svg.setAttribute("width", "24"); svg.setAttribute("height", "28");
+    arrow.setAttribute("d", "M3 2 L3 22 L8.5 17.5 L12 26 L15.5 24.4 L12 16 L19 16 Z");   // tip at (3,2)
+    svg.appendChild(arrow); ghost.appendChild(svg);
+    ghost.addEventListener("transitionend", function (e) { if (e.propertyName === "transform") ghostPulse(); });
+    ghost.addEventListener("animationend", function (e) { if (e.animationName === "lp-ghost-out") ghostHide(); });
+    host.appendChild(ghost);
+    return ghost;
+  }
+  function ghostHide() {
+    if (ghostTimer) { clearTimeout(ghostTimer); ghostTimer = 0; }
+    if (!ghost) return;
+    ghost.className = "lp-ghost"; ghost.style.transition = "none"; ghost.style.opacity = "0";
+  }
+  function ghostPulse() {           // arrival: one ring, then the CSS fade; animationend hides it
+    if (ghostTimer) { clearTimeout(ghostTimer); ghostTimer = 0; }
+    if (ghost && !ghost.classList.contains("lp-ghost-pulse")) ghost.classList.add("lp-ghost-pulse");
+  }
+  function ghostFly(el) {
+    if (document.hidden) return;
+    var r; try { r = el.getBoundingClientRect(); } catch (e) { return; }
+    if (!r || r.width < 1 || r.height < 1) return;
+    var g = ghostEnsure();
+    ghostHide();
+    var to = "translate(" + Math.round(r.left + r.width / 2 - 3) + "px, " + Math.round(r.top + r.height / 2 - 2) + "px)";
+    var glide = !reduceMotion && mouse.x >= 0;
+    g.style.transform = glide ? "translate(" + mouse.x + "px, " + mouse.y + "px)" : to;
+    g.style.opacity = "1";
+    if (!glide) { ghostPulse(); return; }
+    void g.offsetWidth;                                          // commit the start position
+    g.style.transition = "transform .7s cubic-bezier(.22,.8,.2,1)";
+    g.style.transform = to;
+    ghostTimer = setTimeout(ghostPulse, 900);   // one-shot fallback: no transitionend when start == end
+  }
+  // ---- end ghost cursor -----------------------------------------------------------------------
 
   window.addEventListener("scroll", function () { if (tracked && !rafId) rafId = requestAnimationFrame(position); }, true);
   window.addEventListener("resize", function () { if (tracked && !rafId) rafId = requestAnimationFrame(position); }, true);
@@ -236,5 +304,6 @@ window.LabPilotOverlay = (function () {
   }
 
   function refresh() { guidedEl = null; guidedText = null; }   // next guide() call re-flies Rocky and re-says the step
-  return { guide: guide, checking: checking, hide: hide, celebrate: celebrate, refresh: refresh, get tracked() { return tracked; } };
+  return { guide: guide, checking: checking, hide: hide, celebrate: celebrate, refresh: refresh, get tracked() { return tracked; },
+    _ghost: { fly: ghostFly, hide: ghostHide, el: function () { return ghost; }, mouse: mouse } };   // unit-tested
 })();

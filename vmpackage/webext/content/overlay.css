@@ -102,3 +102,16 @@
 .lp-card-progbar { height: 5px; border-radius: 4px; background: rgba(140,160,255,0.18); overflow: hidden; }
 .lp-card-progfill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#4c8dff,#7B5CFF); transition: width .35s ease; }
 .lp-card-hint { margin-top: 6px; font-size: 12.5px; line-height: 1.45; opacity: .82; }
+
+/* Ghost cursor: a pointer that glides to the revealed control, pulses once and fades.
+   Presentation only — pointer-events: none, transform/opacity only. See overlay.js. */
+.lp-ghost { position: fixed; left: 0; top: 0; width: 24px; height: 28px; z-index: 2; opacity: 0;
+  pointer-events: none; will-change: transform, opacity; }
+.lp-ghost svg { display: block; overflow: visible; }
+.lp-ghost svg path { fill: #ffffff; stroke: #1b2140; stroke-width: 1.6; stroke-linejoin: round; }
+.lp-ghost::after { content: ""; position: absolute; left: 3px; top: 2px; width: 30px; height: 30px; margin: -15px 0 0 -15px;
+  border-radius: 50%; border: 2px solid #4c8dff; opacity: 0; transform: scale(.3); pointer-events: none; }
+.lp-ghost.lp-ghost-pulse { animation: lp-ghost-out 1s ease-out forwards; }
+.lp-ghost.lp-ghost-pulse::after { animation: lp-ghost-ring .7s ease-out forwards; }
+@keyframes lp-ghost-ring { from { opacity: .9; transform: scale(.3); } to { opacity: 0; transform: scale(1.7); } }
+@keyframes lp-ghost-out { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
