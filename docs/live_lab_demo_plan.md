@@ -1,6 +1,8 @@
 # Rocky on a live CloudLabs lab — engineering plan
 
-**Date:** 22 September 2026 (build status added 23 September)
+**Date:** 22 September 2026 (build status added 23 September) · **Owner:** Manoj Gowda
+**Build:** the shared `Rocky-Extension.zip` (LabPilot · Rocky 0.7.1, Kiran's build)
+**Status:** package built and gated; the CloudLabs side awaits portal work
 
 > **BUILD STATUS — 23 September 2026.** Phase P1 is complete and committed. The VM package,
 > the bootstrap, the ARM template, the generated lab guide, the bundle registry publisher and
@@ -19,7 +21,7 @@
 > was BOM-less UTF-8, which PowerShell 5.1 reads as ANSI; and the browser tests leaked Edge
 > processes until a loaded machine made them fail for no product reason. One honest gap stands:
 > the vision template PNG is declared but absent, so that one step can only show its card. The
-> demo bundle has no vision steps. · **Owner:** Manoj Gowda · **Build:** the shared `Rocky-Extension.zip` (LabPilot · Rocky 0.7.1, Kiran's build) · **Status:** plan for approval, nothing built yet
+> demo bundle has no vision steps.
 
 Labels used throughout: **VERIFIED** (read in code or docs, or tested today) · **INFERRED** (reasonable, untested) · **UNKNOWN** (must test or ask) · **ASK** (a human at Spektra decides).
 
