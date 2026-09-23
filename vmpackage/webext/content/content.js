@@ -345,7 +345,25 @@
   var mo = new MutationObserver(function (muts) {
     for (var i = 0; i < muts.length; i++) {
       var t = muts[i].target;
-      if (t && t.closest && t.closest("#labpilot-overlay-root")) continue;
+      /*
+       * IGNORE EVERY PART OF ROCKY, not just the overlay root.
+       *
+       * This excluded #labpilot-overlay-root only, so a mutation inside ROCKY — his bubble,
+       * his mood, the pill — still woke evaluate(). And evaluate() ends by calling
+       * O.checking(), which writes into Rocky's bubble. That closes a feedback loop:
+       *
+       *   checking() -> Rocky's DOM changes -> observer fires -> evaluate() -> checking() ...
+       *
+       * Measured on the live Purview portal: content.js:298 called checking() every ~16 ms,
+       * sixty times a second, forever. It burns CPU on every lab page and — because checking()
+       * hides the glow — it makes pointing at anything IMPOSSIBLE the moment the current step
+       * is unresolvable, which is always true on a lab the fixture bundle was not captured for.
+       * This is why Rocky could resolve "Solutions" correctly and still never glow it.
+       *
+       * Everything Rocky renders carries data-labpilot="1", which is exactly the marker
+       * perception.js already uses to ignore itself.
+       */
+      if (t && t.closest && t.closest('[data-labpilot], #labpilot-overlay-root, #labpilot-rocky')) continue;
       scheduleEval();
       return;
     }
@@ -518,13 +536,28 @@
 
         // No guide on screen. Fall back to the packaged fixture so the demo lab still works,
         // and keep trying the pilot for a few seconds in case the guide pane renders late.
-        fetch(chrome.runtime.getURL("bundle/test-bundle.json"))
-          .then(function (r) { return r.json(); })
-          .then(function (bundle) {
-            applyBundle(bundle);
-            handOverToPilot(1);          // a late-rendering guide still takes over
-          })
-          .catch(function () { handOverToPilot(1); });
+        /*
+         * THE PACKAGED FIXTURE IS FOR ONE LAB, so only use it on that lab's host.
+         *
+         * It was captured against the Foundry demo (ai.azure.com). Applied anywhere else,
+         * none of its steps resolve, evaluate() falls to the MISNAVIGATION branch, and Rocky
+         * tells the learner they have "navigated away" from a step belonging to a lab they
+         * are not doing — forever. Observed on the live Purview portal.
+         *
+         * On any other host there is nothing useful for the bundle loop to do, so it stays
+         * down and the pilot owns the page. The pilot needs no capture: it reads the guide.
+         */
+        if (/(^|\.)ai\.azure\.com$/i.test(location.hostname)) {
+          fetch(chrome.runtime.getURL("bundle/test-bundle.json"))
+            .then(function (r) { return r.json(); })
+            .then(function (bundle) {
+              applyBundle(bundle);
+              handOverToPilot(1);        // a late-rendering guide still takes over
+            })
+            .catch(function () { handOverToPilot(1); });
+        } else {
+          handOverToPilot(0);
+        }
       }
     });
   }

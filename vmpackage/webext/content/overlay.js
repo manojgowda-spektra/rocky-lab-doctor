@@ -44,15 +44,25 @@ window.LabPilotOverlay = (function () {
     tracked = null;
   }
 
-  function position() {
-    if (!tracked || !tracked.isConnected) { rafId = 0; return; }
+  // One synchronous placement pass. Split out of position() so the glow can be placed without
+  // waiting for a frame — see the reveal deadline in guide().
+  function placeNow() {
+    if (!tracked || !tracked.isConnected) return false;
     var r = tracked.getBoundingClientRect();
-    if (r.width < 1 || r.height < 1) { rafId = requestAnimationFrame(position); return; }
+    if (r.width < 1 || r.height < 1) return false;
     var pad = 4;
     glow.style.left = (r.left - pad) + "px";
     glow.style.top = (r.top - pad) + "px";
     glow.style.width = (r.width + pad * 2) + "px";
     glow.style.height = (r.height + pad * 2) + "px";
+    return true;
+  }
+
+  function position() {
+    if (!tracked || !tracked.isConnected) { rafId = 0; return; }
+    var r = tracked.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) { rafId = requestAnimationFrame(position); return; }
+    placeNow();
 
     if (card.style.display !== "none") {
       var vh = window.innerHeight, cardH = card.offsetHeight || 96;
@@ -93,9 +103,31 @@ window.LabPilotOverlay = (function () {
       guidedEl = element; guidedText = text;
       card.style.display = "none";
       glow.style.display = "none"; // hidden while Rocky flies over; revealed on his arrival
+      /*
+       * A DEADLINE ON THE REVEAL.
+       *
+       * The glow used to appear ONLY when Rocky's flight completed, and that flight is driven
+       * by requestAnimationFrame. rAF is throttled in a background tab and stops entirely in
+       * an occluded one, so the arrival callback can be delayed indefinitely — and the glow,
+       * which is the whole product, never appears. Measured on the live Purview portal: the
+       * control resolved correctly and the glow stayed display:none because rAF had run once.
+       *
+       * The animation is a flourish; the glow is the point. If the flight has not landed in
+       * 1.2 s, show the glow anyway. Rocky catches up when rAF resumes.
+       */
+      var revealed = false;
+      function reveal() {
+        if (revealed) return;
+        revealed = true;
+        // position() is rAF-driven too, so on the fallback path it may never have run and the
+        // glow would appear at 0,0 with no size. Place it once, synchronously, before showing.
+        placeNow();
+        glow.style.display = "block";
+      }
       try {
-        window.LabPilotRocky.guide(element, text || "Do this step", meta, function () { glow.style.display = "block"; });
-      } catch (e) { glow.style.display = "block"; }
+        window.LabPilotRocky.guide(element, text || "Do this step", meta, reveal);
+        setTimeout(reveal, 1200);
+      } catch (e) { reveal(); }
       rafId = requestAnimationFrame(position);
       return;
     }
