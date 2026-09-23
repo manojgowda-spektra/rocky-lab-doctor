@@ -29,6 +29,9 @@ Gate 'Interruption budget' { node (Join-Path $pkg 'test/watcher-test.js') | Out-
 Gate 'CloudLabs knowledge' { node (Join-Path $pkg 'test/knowledge-test.js') | Out-Null } `
   'answers real platform questions from the docs; refuses what the corpus does not cover'
 
+Gate 'Endpoint handling' { node (Join-Path $pkg 'test/endpoint-test.js') | Out-Null } `
+  'the AI endpoint a user pastes is the one Rocky calls, query string and all'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 

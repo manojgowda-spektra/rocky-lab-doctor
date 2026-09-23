@@ -85,6 +85,13 @@ if ($node) {
     Say "no knowledge index (build it with: node tools/build-knowledge.js)"
   }
 
+  # Azure hands out several endpoint shapes; rewriting one into another silently sends the
+  # request somewhere the user never asked for and fails with no useful error.
+  Say "checking endpoint handling..."
+  & node (Join-Path $src 'test/endpoint-test.js') | Out-Null
+  if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/endpoint-test.js'); Die "endpoint handling failed" }
+  Say "the endpoint a user pastes is the endpoint Rocky calls"
+
   Say "auditing bundles..."
   & node (Join-Path $src 'test/resolve-bundle.js') | Out-Null
   if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/resolve-bundle.js'); Die "bundle audit failed" }

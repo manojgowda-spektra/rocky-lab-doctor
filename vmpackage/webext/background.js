@@ -107,10 +107,18 @@ function normaliseEndpoint(raw) {
   if (!/^https:\/\//i.test(e)) return e;
   let u; try { u = new URL(e); } catch (err) { return e; }
   const isV1Host = /\.services\.ai\.azure\.com$/i.test(u.hostname) || /\.cognitiveservices\.azure\.com$/i.test(u.hostname);
-  // a Foundry project/agents endpoint is not an inference endpoint: go back to the resource root
+
+  // A Foundry PROJECT endpoint is not an inference endpoint, so fall back to the resource
+  // root. This is the one case where rewriting is right: the URL cannot serve a request.
   if (/^\/api\//i.test(u.pathname)) return u.origin + (isV1Host ? "/openai/v1/responses" : "");
-  if (isV1Host && (u.pathname === "" || u.pathname === "/")) return u.origin + "/openai/v1/responses";
-  return u.origin + u.pathname.replace(/\/+$/, "");
+
+  // Bare resource: point at the v1 Responses surface.
+  if (u.pathname === "" || u.pathname === "/") return u.origin + (isV1Host ? "/openai/v1/responses" : "");
+
+  // Anything else was pasted deliberately - keep the path AND the query. Dropping the
+  // query silently discarded the api-version the portal tells people to include, which
+  // then failed with no clue why.
+  return u.origin + u.pathname.replace(/\/+$/, "") + (u.search || "");
 }
 
 function buildAIRequest(cfg, p) {
@@ -134,12 +142,18 @@ function buildAIRequest(cfg, p) {
   (p.history || []).slice(-4).forEach((h) => { if (h && h.q && h.a) { turns.push({ role: "user", content: String(h.q).slice(0, 400) }); turns.push({ role: "assistant", content: String(h.a).slice(0, 600) }); } });
   turns.push({ role: "user", content: (ctx.length ? "Context:\n" + ctx.join("\n") + "\n\n" : "") + "Question: " + question });
   const headers = { "Content-Type": "application/json", "api-key": key, "Authorization": "Bearer " + key };
-  if (/\/openai\/v1(\/|$)/i.test(endpoint)) {                       // Foundry v1 Responses API
-    let url = /\/responses$/i.test(endpoint) ? endpoint : endpoint.replace(/(\/openai\/v1).*$/i, "$1") + "/responses";
+  // The Responses API is served at /openai/v1/responses AND at /openai/responses (the
+  // latter with an explicit api-version). Only matching the first sent a perfectly good
+  // endpoint down the legacy chat-completions path, which is a different API entirely.
+  if (/\/openai\/(v1\/)?responses/i.test(endpoint) || /\/openai\/v1(\/|$)/i.test(endpoint)) {
+    let url = /\/responses(\?|$)/i.test(endpoint) ? endpoint
+            : endpoint.replace(/(\/openai\/v1).*$/i, "$1") + "/responses";
     // Some resources require an api-version even on the v1 surface ("API version not supported").
     // Only sent when the popup's api-version field is filled in; "preview" is the usual value.
     const ver = String(cfg.apiVersion || "").trim();
-    if (ver) url += (url.indexOf("?") >= 0 ? "&" : "?") + "api-version=" + encodeURIComponent(ver);
+    if (ver && !/[?&]api-version=/i.test(url)) {
+      url += (url.indexOf("?") >= 0 ? "&" : "?") + "api-version=" + encodeURIComponent(ver);
+    }
     return { kind: "responses", url, headers, body: { model, instructions: ROCKY_SYSTEM, input: turns, max_output_tokens: 320, temperature: 0.3 } };
   }
   const base = endpoint.replace(/\/openai.*$/i, "");                    // legacy chat completions
