@@ -1,0 +1,936 @@
+{
+  "schemaVersion": "1.1",
+  "labId": "mslearn-ai-studio-demo",
+  "title": "LabPilot live demo — mslearn Tasks 1-4 (current portal)",
+  "labs": [
+    {
+      "id": "lab",
+      "order": 1,
+      "title": "Develop AI with Foundry",
+      "tasks": [
+        {
+          "id": "t1",
+          "title": "Task 1: Provision Foundry Hub and Project",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t1-name",
+              "text": "Type your project name",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t1-name-g01",
+                  "label": "Project name",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "my-project",
+                        "role": "textbox",
+                        "urlPattern": "ai.azure.com"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "labpilot-demo",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "labpilot-demo"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "Every Foundry resource you create in this lab hangs off this project, so its name is the label you'll see in the portal, the SDK and the bill.",
+                "what": "A Foundry PROJECT is your working space: it holds model deployments, data connections, agents and evaluations, and gives your team one place to collaborate. Projects live under a HUB, which owns the shared security, networking, quota and connections.",
+                "tip": "Names must be unique in the hub and are hard to change later. Pick something short and lowercase."
+              }
+            },
+            {
+              "id": "t1-create",
+              "text": "Click Create to provision the project",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t1-create-g01",
+                  "label": "Create",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Create",
+                        "role": "button",
+                        "scope": "dialog",
+                        "urlPattern": "ai.azure.com"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Create tells Azure to provision the project and everything it depends on, so you can start deploying models.",
+                "what": "Behind this button Azure Resource Manager (ARM) creates several resources at once: the AI hub/project, an Azure AI Services account, a Storage account and a Key Vault for secrets. That is why it takes a minute, and why the project appears in the Azure portal as a group of resources, not one.",
+                "tip": "Provisioning is asynchronous. If the portal seems idle, it is waiting on ARM, not on you."
+              }
+            },
+            {
+              "id": "t1-letsgo",
+              "text": "Click Let's go to enter your project",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t1-letsgo-g01",
+                  "label": "Let's go",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Let's go",
+                        "role": "button",
+                        "urlPattern": "ai.azure.com"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "This opens the project workspace where all your model and agent work happens.",
+                "what": "Foundry separates MANAGEMENT (the Azure portal, ARM, billing, RBAC) from BUILDING (this workspace). From here the left navigation gives you Deployments, Playgrounds, Agents, Evaluation, Tracing and Knowledge, all scoped to the project you just created."
+              }
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "title": "Task 2: Deploy a model",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t2-build",
+              "text": "Click Build to open the build workspace",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-build-g01",
+                  "label": "Build",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Build",
+                        "hrefSuffix": "/build",
+                        "role": "link"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "hrefSuffix": "/build",
+                        "role": "link"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Build is the area of the workspace where you assemble models, prompts and agents into something usable.",
+                "what": "Foundry groups the experience into Define, Build and Operate. Build is where you deploy models, prototype prompts in playgrounds and create agents; Operate is monitoring, tracing and evaluation once something is live."
+              }
+            },
+            {
+              "id": "t2-models",
+              "text": "Click Deployments to manage model deployments",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-models-g01",
+                  "label": "Models",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deployments",
+                        "role": "link",
+                        "hrefSuffix": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "hrefSuffix": "/models",
+                        "role": "link"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "A model must be DEPLOYED before anything can call it. This page lists what your project has deployed so far.",
+                "what": "A DEPLOYMENT is a named, callable instance of a model with its own capacity (tokens per minute), content-filter policy and version pinning. Your code calls the deployment NAME, never the raw model, which lets you upgrade the model later without touching the code."
+              }
+            },
+            {
+              "id": "t2-deploy",
+              "text": "Click Deploy, then 'Deploy a base model'",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-deploy-g01",
+                  "label": "Deploy",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "You are about to pick a model from the catalog and stand it up behind an endpoint.",
+                "what": "Deploy offers two paths: a BASE model straight from the catalog, or a FINE-TUNED model you trained on your own examples. Labs almost always start with a base model because it is instant and free to create; you pay only for tokens you send.",
+                "tip": "Base model deployments are cheap to create and delete. Treat them like disposable test endpoints."
+              }
+            },
+            {
+              "id": "t2-basemodel",
+              "text": "Click 'Deploy a base model'",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-basemodel-g01",
+                  "label": "Deploy a base model",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy a base model",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy a base model",
+                        "role": "menuitem"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Base model means the model as published by its provider, with no customisation, which is exactly what you want for a first deployment.",
+                "what": "A base (foundation) model was pre-trained by its vendor on huge general corpora. You shape its behaviour with PROMPTS at run time rather than by retraining. Fine-tuning comes later, and only when prompting genuinely cannot get you there."
+              }
+            },
+            {
+              "id": "t2-search",
+              "text": "Search the catalog for gpt-5",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-search-g01",
+                  "label": "Search",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Search",
+                        "scope": "main",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Search",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "gpt-5",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "gpt-5"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "The catalog is large, so searching by name is the fastest way to the model this lab uses.",
+                "what": "The Foundry MODEL CATALOG lists well over a thousand models from Microsoft, OpenAI, Meta, Mistral, Cohere, Hugging Face and others. Each card shows the provider, capabilities (chat, reasoning, embeddings, vision), context window and licensing. Models sold as Microsoft first-party are billed through your Azure subscription."
+              }
+            },
+            {
+              "id": "t2-selectgpt5",
+              "text": "Click the gpt-5 model card",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-selectgpt5-g01",
+                  "label": "gpt-5 card",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "childText": "gpt-5",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "imgAlt": "gpt-5",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "gpt-5",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Opening the model card shows you the exact model, versions and regions before you commit to a deployment.",
+                "what": "GPT-5 is OpenAI's frontier model family, served in Azure inside your subscription boundary: your prompts and data are not used to train OpenAI models. The card lists supported deployment types, available versions and per-token pricing.",
+                "tip": "Note the model VERSION on the card. Deployments pin a version; behaviour can shift between versions."
+              }
+            },
+            {
+              "id": "t2-modeldeploy",
+              "text": "Click Deploy on the gpt-5 model page",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-modeldeploy-g01",
+                  "label": "Deploy",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "This starts the deployment wizard for the model you chose.",
+                "what": "You are not downloading anything. Deploying assigns the model to a managed endpoint that Azure hosts and scales. What you get is a URL, a key (or Entra ID auth) and a deployment name to call from any language."
+              }
+            },
+            {
+              "id": "t2-customsettings",
+              "text": "Choose Custom settings",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-customsettings-g01",
+                  "label": "Custom settings",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "childText": "Custom settings",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Custom settings",
+                        "role": "menuitem",
+                        "scope": "menu",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Custom settings lets you control the deployment name and capacity instead of accepting defaults, which the lab needs for the name step.",
+                "what": "The settings you can change: DEPLOYMENT NAME (what code calls), DEPLOYMENT TYPE (Standard = regional, Global Standard = routed worldwide for capacity, Provisioned = reserved throughput), MODEL VERSION, TOKENS-PER-MINUTE rate limit and the CONTENT FILTER policy.",
+                "tip": "In real projects the TPM limit is what your quota request is about. Labs use small numbers on purpose."
+              }
+            },
+            {
+              "id": "t2-deployname",
+              "text": "Set the deployment name to mygpt",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-deployname-g01",
+                  "label": "Deployment name",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Enter deployment name",
+                        "role": "textbox",
+                        "scope": "dialog",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "mygpt",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "mygpt"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "Code and playgrounds address the model by this name, so a short, memorable one makes every later step easier.",
+                "what": "The deployment name is a stable alias. Your app sends requests to '.../deployments/mygpt/chat/completions'; if you later redeploy a newer version under the same name, the app keeps working unchanged. Many teams name deployments by purpose (chat-prod, summarizer) rather than by model."
+              }
+            },
+            {
+              "id": "t2-deploybtn",
+              "text": "Click Deploy to create the deployment",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-deploybtn-g01",
+                  "label": "Deploy",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button",
+                        "scope": "dialog",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Deploy creates the endpoint. From here the model is live and billable per token.",
+                "what": "Azure allocates capacity from your subscription's quota for that model and region, applies the content filter and exposes the endpoint. It usually takes seconds for Standard deployments. The Deployments list will now show the name, model, version and state.",
+                "tip": "If you ever see SkuNotAvailable or a quota error, it is a region/quota problem, not something a smaller name or model size fixes."
+              }
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "title": "Task 3: Prompt engineering in the Playground",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t3-instructions",
+              "text": "Type the system message (Instructions)",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t3-instructions-g01",
+                  "label": "Instructions",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Write your prompt here to give your agent instructions.",
+                        "role": "textbox",
+                        "urlPattern": "/playground"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "You are a travel assistant that provides information on travel services available from Margie's Travel.",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "You are a travel assistant that provides information on travel services available from Margie's Travel."
+                  }
+                ]
+              },
+              "learn": {
+                "why": "The system message defines who the model is and what it may do, before any user says a word.",
+                "what": "Chat models take a conversation of ROLES: system (instructions), user and assistant. The SYSTEM message sets persona, scope, tone and rules; it is the single most powerful lever in prompt engineering and is sent with every request. Here it turns a general model into Margie's Travel's assistant.",
+                "tip": "Be specific about what the model must NOT do. Refusals and scope come from the system message."
+              }
+            },
+            {
+              "id": "t3-chat",
+              "text": "Type your question to the model",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t3-chat-g01",
+                  "label": "Chat",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "ariaLabel": "Chat with the model...",
+                        "role": "textbox",
+                        "urlPattern": "/playground"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "Where can I stay in New York?",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "Where can I stay in New York?"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "This is a user turn: a real question the assistant must answer within the rules you just set.",
+                "what": "The playground is a no-code client for the chat completions API. Everything you type becomes a 'user' message; the reply is an 'assistant' message. Below the box you can see parameters like temperature (creativity vs. determinism) and max tokens (reply length cap)."
+              }
+            },
+            {
+              "id": "t3-send",
+              "text": "Click Send, then read the model's answer in the chat.",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t3-send-g01",
+                  "label": "Send",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "ariaLabel": "Send",
+                        "role": "button",
+                        "urlPattern": "/playground"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Send makes the actual API call. What comes back is your deployment answering live.",
+                "what": "Your messages are tokenised, sent to the endpoint you named, and the model generates the reply token by token (that is the streaming effect). Watch the answer: it is fluent but GENERIC, because the model only knows its training data and your prompt, not Margie's Travel's real brochures. That gap is what grounding (RAG) fixes next.",
+                "tip": "Ask yourself: where did this answer come from? If you cannot point to a source, neither can the model."
+              }
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "title": "Task 4: Add grounding data (Knowledge / Foundry IQ)",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t4-knowledge",
+              "text": "Notice the answer above is generic, with no sources (no grounding data yet). Now click Knowledge in the left nav to add grounding.",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-knowledge-g01",
+                  "label": "Knowledge",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Knowledge",
+                        "hrefSuffix": "/build/knowledge",
+                        "role": "link",
+                        "urlPattern": "/build"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "The generic answer proves the model has no company data. Knowledge is where you give it some.",
+                "what": "GROUNDING means supplying the model with your own documents at question time so it answers from them and cites them. The pattern is called RAG, retrieval-augmented generation: retrieve the relevant passages, then generate the answer from those passages. Foundry IQ packages this as a managed knowledge base."
+              }
+            },
+            {
+              "id": "t4-createresource",
+              "text": "Click Create new resource to make the AI Search resource",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-createresource-g01",
+                  "label": "Create new resource",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Create new resource",
+                        "role": "button",
+                        "scope": "main",
+                        "urlPattern": "/build/knowledge"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Grounding needs a search index to retrieve from, so you create an Azure AI Search resource first.",
+                "what": "Azure AI Search is the retrieval engine: it stores your content as searchable chunks plus vectors and returns the best matches for a question in milliseconds. Foundry IQ builds and manages the index for you on top of this resource."
+              }
+            },
+            {
+              "id": "t4-region",
+              "text": "Pick a region with capacity (e.g. West US 3)",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-region-g01",
+                  "label": "Region",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "fieldLabel": "Region",
+                        "role": "combobox",
+                        "scope": "dialog",
+                        "urlPattern": "/build/knowledge"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "West US 3",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "West US 3"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "AI Search and embedding models are regional; picking a region with capacity avoids a failed deployment.",
+                "what": "Every Azure resource lives in a REGION (a set of datacentres). Capacity, features and prices vary by region, and some SKUs are simply unavailable in some places. Keeping the search resource in the same region as your models cuts latency and keeps data residency simple.",
+                "tip": "The lab suggests West US 3 because it has had capacity. The rule to remember: co-locate what talks to each other."
+              }
+            },
+            {
+              "id": "t4-createfoundryiq",
+              "text": "Click Create to provision the Foundry IQ resource",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-createfoundryiq-g01",
+                  "label": "Create",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Create",
+                        "role": "button",
+                        "scope": "dialog",
+                        "urlPattern": "/build/knowledge"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Create provisions the knowledge resource so you can start adding sources.",
+                "what": "Foundry IQ is the managed knowledge layer in Foundry: it ingests documents, chunks and embeds them, keeps the index fresh and exposes a single knowledge base your agents and playgrounds can point at, without you writing indexing pipelines."
+              }
+            },
+            {
+              "id": "t4-createkb",
+              "text": "Click Create a knowledge base",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-createkb-g01",
+                  "label": "Create a knowledge base",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Create a knowledge base",
+                        "role": "button",
+                        "urlPattern": "/knowledge/search"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "A knowledge base is the container your sources go into and the thing you will connect to the model.",
+                "what": "Think of a KNOWLEDGE BASE as a named collection of sources plus the retrieval settings that go with it. One project can have several, for example one per product line, so the model only sees what is relevant to a task."
+              }
+            },
+            {
+              "id": "t4-kbname",
+              "text": "Name the knowledge base",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-kbname-g01",
+                  "label": "Name",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "fieldLabel": "Name*",
+                        "role": "textbox",
+                        "urlPattern": "/create-base"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "fieldLabel": "Name",
+                        "role": "textbox",
+                        "urlPattern": "/create-base"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "brochures-kb",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "brochures-kb"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "The name is how you will pick this knowledge base when you attach it to the playground or an agent.",
+                "what": "Naming by content ('brochures-kb') rather than by technology is a good habit: when you have ten knowledge bases, the name should tell you what questions it can answer."
+              }
+            },
+            {
+              "id": "t4-addsources",
+              "text": "Click Add sources to add knowledge",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-addsources-g01",
+                  "label": "Add sources",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Add sources",
+                        "role": "button",
+                        "urlPattern": "/create-base"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "A knowledge base is empty until you add sources; this opens the ingestion wizard.",
+                "what": "A SOURCE is where documents come from: uploaded files, a blob container, a SharePoint site or a website. Each source is ingested, chunked into passages and converted to vectors so questions can be matched by meaning, not just keywords."
+              }
+            },
+            {
+              "id": "t4-upload",
+              "text": "Choose Upload files (File)",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-upload-g01",
+                  "label": "Upload files",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Upload files",
+                        "role": "button",
+                        "urlPattern": "/create-base"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "For a lab, uploading files directly is the quickest way to get real content indexed.",
+                "what": "Uploaded files land in the project's storage account and are processed by the ingestion pipeline: text extraction (PDF, DOCX, HTML), chunking into overlapping passages, embedding and indexing. In production you would usually point at a blob container that your systems keep updated."
+              }
+            },
+            {
+              "id": "t4-pickfiles",
+              "text": "Select the 6 Margie's Travel brochures in the file picker, then click Open",
+              "surface": "vision",
+              "targets": [
+                {
+                  "id": "t4-pickfiles-g01",
+                  "label": "Open (file picker)",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "vision",
+                      "attrs": {
+                        "templateId": "win-filepicker-open",
+                        "threshold": 0.9,
+                        "cardText": "This is a Windows dialog, not the web page. Multi-select the 6 brochure PDFs (Ctrl+click), then click Open. I'll glow the Open button once it's on screen.",
+                        "landmark": "native file-open dialog"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "These six brochures are Margie's Travel's actual knowledge; after this the model can answer from them.",
+                "what": "What you select here becomes the model's ground truth. Quality in, quality out: clean, current documents give precise, citable answers; stale or duplicated ones give confident wrong ones. Curating sources is most of the real work in RAG."
+              }
+            },
+            {
+              "id": "t4-embedding",
+              "text": "Select the embedding model mytextembedding",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-embedding-g01",
+                  "label": "Embedding model",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "fieldLabel": "Embedding model",
+                        "role": "combobox",
+                        "scope": "dialog",
+                        "urlPattern": "/build/knowledge"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "mytextembedding",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "mytextembedding"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "The knowledge base needs an embedding model to turn text into vectors for semantic search.",
+                "what": "An EMBEDDING model converts a passage or a question into a long list of numbers (a vector) that captures meaning. Similar meanings land close together, so 'hotels in New York' finds a passage about 'Manhattan accommodation'. The same embedding model must be used for indexing and for querying.",
+                "tip": "Changing the embedding model later means re-indexing everything. Choose once."
+              }
+            },
+            {
+              "id": "t4-createsource",
+              "text": "Click Create to create the knowledge source",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-createsource-g01",
+                  "label": "Create",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Create",
+                        "role": "button",
+                        "scope": "dialog",
+                        "urlPattern": "/build/knowledge"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Create kicks off ingestion: extraction, chunking, embedding and indexing of the brochures.",
+                "what": "Ingestion runs as a background job. Small sets finish in a minute; large ones take longer and can be scheduled to refresh. When it completes, the index contains chunks with their vectors and metadata such as file name and page, which is what makes citations possible."
+              }
+            },
+            {
+              "id": "t4-save",
+              "text": "Click Save knowledge base",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t4-save-g01",
+                  "label": "Save knowledge base",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Save knowledge base",
+                        "role": "button",
+                        "urlPattern": "/create-base"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Saving publishes the knowledge base so the playground and agents can use it. Ask the New York question again and compare.",
+                "what": "Now each question is answered in two stages: RETRIEVE the top passages from the index, then GENERATE an answer constrained to them, with citations back to the brochures. Same model, same prompt, grounded answer. That is the difference between a demo and something a business can trust.",
+                "tip": "A grounded answer should cite a source. If it cannot, treat it as a guess."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

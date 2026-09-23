@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "name": "LabPilot · Rocky",
+  "version": "0.7.1",
+  "description": "Rocky, your lab copilot, floats beside the exact next control and guides you click-by-click — and teaches: WHY each step matters, WHAT the technology is. Click Rocky to EXPLORE: rest on or circle any control and he explains it; destructive clicks are intercepted. Glows only on a uniquely resolved control; his mood comes only from deterministic facts.",
+  "permissions": [
+    "storage",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://ai.azure.com/*",
+    "https://*.ai.azure.com/*",
+    "https://portal.azure.com/*",
+    "https://*.microsoftonline.com/*",
+    "https://experience.cloudlabs.ai/*",
+    "https://*.cloudlabs.ai/*",
+    "https://*.openai.azure.com/*",
+    "https://*.services.ai.azure.com/*",
+    "https://*.cognitiveservices.azure.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "LabPilot"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://ai.azure.com/*",
+        "https://*.ai.azure.com/*",
+        "https://portal.azure.com/*",
+        "https://*.microsoftonline.com/*",
+        "https://experience.cloudlabs.ai/*",
+        "https://*.cloudlabs.ai/*"
+      ],
+      "js": [
+        "content/anchor-engine.js",
+        "content/vision-matcher.js",
+        "content/vision-templates.js",
+        "content/rocky.js",
+        "content/overlay.js",
+        "content/capture.js",
+        "content/content.js",
+        "content/skip.js",
+        "content/controls.js",
+        "content/foundry-kb.js",
+        "content/explore.js"
+      ],
+      "css": [
+        "content/overlay.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "bundle/test-bundle.json",
+        "vision-templates/*"
+      ],
+      "matches": [
+        "https://ai.azure.com/*",
+        "https://*.ai.azure.com/*",
+        "https://portal.azure.com/*",
+        "https://experience.cloudlabs.ai/*",
+        "https://*.cloudlabs.ai/*"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font: 13px/1.4 "Segoe UI", system-ui, sans-serif; width: 280px; margin: 0; padding: 12px; background: #12172b; color: #eef2ff; }
+    h1 { font-size: 14px; margin: 0 0 10px; }
+    .row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+    button { flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #3a4a7a; background: #1c2748; color: #eef2ff; cursor: pointer; }
+    button:hover { background: #26345f; }
+    button.primary { border-color: #4c66c0; background: #2a3a78; }
+    .mono { font-family: ui-monospace, Consolas, monospace; }
+    .muted { opacity: 0.7; font-size: 12px; }
+    .on { color: #7CFC9A; } .off { color: #ffb4b4; }
+    hr { border: none; border-top: 1px solid #2a3560; margin: 10px 0; }
+    textarea { width: 100%; height: 92px; box-sizing: border-box; margin-top: 6px; display: none;
+      background: #0c1024; color: #cfe0ff; border: 1px solid #2a3560; border-radius: 6px; font: 11px/1.35 ui-monospace, Consolas, monospace; }
+    #status { min-height: 14px; }
+    input { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 6px 8px; border-radius: 6px; border: 1px solid #2a3560; background: #0c1024; color: #cfe0ff; font: 12px "Segoe UI", system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <h1>LabPilot · Rocky <span class="muted mono" id="ver">0.7.1</span></h1>
+  <div class="row">Step <span id="step" class="mono">0</span></div>
+  <div class="row">
+    <button id="prev">◀ Prev</button>
+    <button id="next">Next ▶</button>
+  </div>
+  <hr />
+  <div class="row">Capture: <span id="capstate" class="off">off</span> · <span id="capcount" class="mono">0</span> recorded</div>
+  <div class="row"><button id="toggle">Toggle capture</button></div>
+  <div class="row">
+    <button id="export-captures" class="primary">Export captures</button>
+    <button id="clear">Clear</button>
+  </div>
+  <div class="muted" id="status"></div>
+  <textarea id="capjson" readonly spellcheck="false"></textarea>
+  <div class="muted">Capture mode records each control you click as a selector bundle.
+    "Export captures" downloads <span class="mono">labpilot-captures.json</span> — save it into your
+    connected HACKATHON folder (or Downloads) so Cowork can ingest it.</div>
+  <hr />
+  <div class="row"><b>Ask Rocky (AI)</b> <span class="muted">· free questions + "Ask AI" in Explore</span></div>
+  <div class="muted">Your own Foundry deployment. Stored only in this browser. Rocky sends the question plus lab context (step, page, a control's label) — never page content or keys.</div>
+  <input id="ai-endpoint" placeholder="https://<resource>.services.ai.azure.com/openai/v1/responses" />
+  <input id="ai-deployment" placeholder="model / deployment name, e.g. gpt-4.1-mini" />
+  <input id="ai-key" type="password" placeholder="API key (paste here; never shared)" autocomplete="off" />
+  <input id="ai-version" placeholder="api-version (only if you get &quot;API version not supported&quot;: try preview)" />
+  <div class="row"><button id="ai-save" class="primary">Save</button><button id="ai-test">Test</button><button id="ai-clear">Clear</button></div>
+  <div class="muted" id="ai-status"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

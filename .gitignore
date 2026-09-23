@@ -11,3 +11,5 @@ node_modules/
 # local editor/agent settings
 .claude/
 TeamAlpha-Submission/
+vmpackage/dist/
+vmpackage/test/rocky-proof.png

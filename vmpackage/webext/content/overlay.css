@@ -1,0 +1,104 @@
+/* LabPilot in-page overlay. High z-index, click-through glow, non-intrusive card.
+   All elements carry data-labpilot="1" so the capture recorder ignores its own UI. */
+
+#labpilot-overlay-root,
+#labpilot-overlay-root * {
+  box-sizing: border-box;
+}
+
+#labpilot-overlay-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000; /* just below max, above app chrome */
+  pointer-events: none; /* never intercept the learner's clicks */
+}
+
+.lp-glow {
+  position: fixed;
+  display: none;
+  border-radius: 8px;
+  pointer-events: none;
+  border: 2px solid #4c8dff;
+  box-shadow: 0 0 0 3px rgba(76, 141, 255, 0.45), 0 0 14px 4px rgba(76, 141, 255, 0.55);
+  animation: lp-pulse 1.6s ease-in-out infinite;
+  transition: left .08s linear, top .08s linear, width .08s linear, height .08s linear;
+}
+
+@keyframes lp-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(76, 141, 255, 0.35), 0 0 12px 3px rgba(76, 141, 255, 0.45); }
+  50%      { box-shadow: 0 0 0 4px rgba(76, 141, 255, 0.60), 0 0 20px 6px rgba(76, 141, 255, 0.75); }
+}
+
+.lp-card {
+  position: fixed;
+  display: none;
+  max-width: 340px;
+  min-width: 200px;
+  padding: 12px 14px;
+  background: #12172b;
+  color: #eef2ff;
+  border: 1px solid rgba(120, 150, 255, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  font: 14px/1.4 "Segoe UI", system-ui, sans-serif;
+  pointer-events: auto; /* the card is readable/interactive; the glow is not */
+}
+
+.lp-card-title { font-weight: 600; }
+.lp-card-sub { margin-top: 6px; font-size: 12px; opacity: 0.8; }
+
+/* Notice variant: a NON-actionable control (disabled / deprecated). Amber, no pulse —
+   points at the control but never reads as "click this now". */
+.lp-glow.lp-notice {
+  border-color: #e0a44a;
+  box-shadow: 0 0 0 3px rgba(224, 164, 74, 0.4), 0 0 12px 3px rgba(224, 164, 74, 0.5);
+  animation: none;
+}
+.lp-card.lp-notice { border-color: rgba(224, 164, 74, 0.6); }
+
+.lp-pill {
+  position: fixed;
+  display: none;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  max-width: 460px;
+  padding: 10px 18px;
+  background: #12172b;
+  color: #cdd6ff;
+  border: 1px solid rgba(120, 150, 255, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+  pointer-events: none;
+  text-align: center;
+}
+.lp-pill-title { font-weight: 600; }
+.lp-pill-body { margin-top: 4px; font-size: 12px; opacity: 0.85; }
+
+@media (prefers-color-scheme: light) {
+  .lp-card, .lp-pill { background: #ffffff; color: #16203a; border-color: rgba(60, 100, 220, 0.35); }
+}
+
+.lp-card-copy { margin-top: 8px; display: flex; align-items: flex-start; gap: 8px; }
+.lp-card-value { flex: 1; min-width: 0; max-height: 72px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+  background: #0b0f1e; color: #9ff0e0; padding: 5px 8px; border-radius: 6px; font: 12px/1.4 "Consolas", ui-monospace, monospace; }
+.lp-card-copybtn { flex: none; pointer-events: auto; cursor: pointer; background: #4c8dff; color: #fff; border: 0;
+  border-radius: 6px; padding: 5px 12px; font: 600 12px "Segoe UI", system-ui, sans-serif; }
+.lp-card-copybtn:hover { background: #3f7ae6; }
+
+.lp-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483200; }
+.lp-celebrate { position: fixed; left: 50%; top: 34%; transform: translate(-50%,-50%); text-align: center;
+  pointer-events: none; z-index: 2147483300; color: #fff; font: 600 16px "Segoe UI", system-ui, sans-serif;
+  background: rgba(18,23,43,0.92); border: 1px solid rgba(120,150,255,0.5); border-radius: 16px;
+  padding: 22px 30px; box-shadow: 0 14px 44px rgba(0,0,0,0.5); animation: lp-pop .4s ease-out; }
+.lp-celebrate-emoji { font-size: 42px; line-height: 1; }
+.lp-celebrate-title { margin-top: 8px; font-size: 22px; font-weight: 700; }
+.lp-celebrate-sub { margin-top: 6px; font-size: 13px; opacity: .85; font-weight: 400; }
+@keyframes lp-pop { from { transform: translate(-50%,-50%) scale(.7); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+
+.lp-card-prog { margin: -2px 0 8px; }
+.lp-card-proglbl { font-size: 11px; font-weight: 600; letter-spacing: .02em; opacity: .7; margin-bottom: 5px; text-transform: uppercase; }
+.lp-card-progbar { height: 5px; border-radius: 4px; background: rgba(140,160,255,0.18); overflow: hidden; }
+.lp-card-progfill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#4c8dff,#7B5CFF); transition: width .35s ease; }
+.lp-card-hint { margin-top: 6px; font-size: 12.5px; line-height: 1.45; opacity: .82; }

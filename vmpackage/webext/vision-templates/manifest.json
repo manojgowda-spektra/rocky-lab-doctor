@@ -1,0 +1,5 @@
+{
+  "templates": [
+    { "id": "win-filepicker-open", "file": "win-filepicker-open.png", "threshold": 0.9 }
+  ]
+}

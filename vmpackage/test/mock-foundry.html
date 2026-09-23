@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Azure AI Foundry — Deployments (mock)</title>
+<!--
+  A deliberately HOSTILE stand-in for the Foundry deployments screen. It is not here to
+  flatter the resolver: every trap below is one that produced a real bug in a real portal.
+
+    * TWO "Deploy" buttons (page header + a model row) — the classic wrong-glow.
+    * A disabled "Deploy" in a deprecated model row — must never be offered as click-me.
+    * Fluent-style volatile ids (field-_r_2p___control, :r7:) — must be ignored, not scored.
+    * A left nav "Deployments" AND a breadcrumb "Deployments" — text alone is ambiguous.
+    * A search box with a placeholder, which is how the real catalogue search resolves.
+    * A model card whose title lives in a DESCENDANT of the clickable (childText).
+-->
+<style>
+  body { font: 14px "Segoe UI", system-ui, sans-serif; margin: 0; color: #201f1e; }
+  nav { position: fixed; left: 0; top: 0; bottom: 0; width: 180px; background: #f3f2f1; padding: 12px; }
+  nav a { display: block; padding: 8px 10px; color: #201f1e; text-decoration: none; border-radius: 4px; }
+  main { margin-left: 200px; padding: 16px 24px; }
+  header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edebe9; padding-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #edebe9; border-radius: 6px; margin: 10px 0; }
+  button { padding: 6px 14px; border: 1px solid #8a8886; background: #fff; border-radius: 4px; cursor: pointer; }
+  button.primary { background: #0078d4; color: #fff; border-color: #0078d4; }
+  button[disabled] { opacity: .5; cursor: not-allowed; }
+  input { padding: 6px 10px; border: 1px solid #8a8886; border-radius: 4px; width: 280px; }
+  .crumb { color: #605e5c; font-size: 12px; margin-bottom: 8px; }
+  .muted { color: #605e5c; font-size: 12px; }
+</style>
+
+<nav aria-label="Primary">
+  <a href="/build/overview" role="link">Overview</a>
+  <a href="/build/deployments" role="link">Deployments</a>   <!-- the one the step wants -->
+  <a href="/build/playground" role="link">Playground</a>
+  <a href="/build/models" role="link">Model catalog</a>
+</nav>
+
+<main>
+  <div class="crumb">Build / <span>Deployments</span></div>   <!-- TRAP: same text, not a link -->
+
+  <header>
+    <h1>Deployments</h1>
+    <button class="primary" id="hdr-deploy">Deploy model</button>  <!-- TRAP: "Deploy" also appears below -->
+  </header>
+
+  <!--
+    Step 1 of the shipped bundle (t1-name) looks for placeholder="my-project" + role=textbox.
+    It is here so the end-to-end test can prove Rocky GLOWS a real bundle step, not just that
+    his code loaded. Everything else on the page is a trap for the resolver.
+  -->
+  <label for="proj-name">Project name</label>
+  <input id="proj-name" placeholder="my-project" role="textbox" />
+
+  <label for="field-_r_2p___control">Search models</label>
+  <input id="field-_r_2p___control" placeholder="Search models" role="searchbox" />  <!-- volatile id -->
+
+  <div class="row" data-testid="model-row-gpt5">
+    <button id=":r7:" aria-label="gpt-5 model card">
+      <span>gpt-5</span><span class="muted"> — most capable, 128k context</span>
+    </button>
+    <button class="primary">Deploy</button>          <!-- TRAP: bare "Deploy", no id -->
+  </div>
+
+  <div class="row">
+    <button><span>gpt-4o-legacy</span><span class="muted"> — retired 2026-03</span></button>
+    <button disabled>Deploy</button>                  <!-- TRAP: disabled; never a click-me glow -->
+  </div>
+
+  <div class="row">
+    <span>mygpt</span>
+    <span class="muted" role="status">Provisioning</span>
+  </div>
+</main>

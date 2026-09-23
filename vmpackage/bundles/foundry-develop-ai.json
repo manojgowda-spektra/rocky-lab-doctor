@@ -1,0 +1,571 @@
+{
+  "schemaVersion": "1.1",
+  "labId": "mslearn-ai-studio-demo",
+  "title": "LabPilot Demo — Deploy & Chat (Foundry)",
+  "labs": [
+    {
+      "id": "lab",
+      "order": 1,
+      "title": "Develop AI with Foundry",
+      "tasks": [
+        {
+          "id": "t1",
+          "title": "Task 1: Provision Foundry Hub and Project",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t1-name",
+              "text": "Type your project name",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t1-name-g01",
+                  "label": "Project name",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "my-project",
+                        "role": "textbox",
+                        "urlPattern": "ai.azure.com"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "labpilot-demo",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "labpilot-demo"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "Every Foundry resource you create in this lab hangs off this project, so its name is the label you'll see in the portal, the SDK and the bill.",
+                "what": "A Foundry PROJECT is your working space: it holds model deployments, data connections, agents and evaluations, and gives your team one place to collaborate. Projects live under a HUB, which owns the shared security, networking, quota and connections.",
+                "tip": "Names must be unique in the hub and are hard to change later. Pick something short and lowercase."
+              }
+            },
+            {
+              "id": "t1-create",
+              "text": "Click Create to provision the project",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t1-create-g01",
+                  "label": "Create",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Create",
+                        "role": "button",
+                        "scope": "dialog",
+                        "urlPattern": "ai.azure.com"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Create tells Azure to provision the project and everything it depends on, so you can start deploying models.",
+                "what": "Behind this button Azure Resource Manager (ARM) creates several resources at once: the AI hub/project, an Azure AI Services account, a Storage account and a Key Vault for secrets. That is why it takes a minute, and why the project appears in the Azure portal as a group of resources, not one.",
+                "tip": "Provisioning is asynchronous. If the portal seems idle, it is waiting on ARM, not on you."
+              }
+            },
+            {
+              "id": "t1-letsgo",
+              "text": "Click Let's go to enter your project",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t1-letsgo-g01",
+                  "label": "Let's go",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Let's go",
+                        "role": "button",
+                        "urlPattern": "ai.azure.com"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "This opens the project workspace where all your model and agent work happens.",
+                "what": "Foundry separates MANAGEMENT (the Azure portal, ARM, billing, RBAC) from BUILDING (this workspace). From here the left navigation gives you Deployments, Playgrounds, Agents, Evaluation, Tracing and Knowledge, all scoped to the project you just created."
+              }
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "title": "Task 2: Deploy a model",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t2-build",
+              "text": "Click Build to open the build workspace",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-build-g01",
+                  "label": "Build",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Build",
+                        "hrefSuffix": "/build",
+                        "role": "link"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "hrefSuffix": "/build",
+                        "role": "link"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Build is the area of the workspace where you assemble models, prompts and agents into something usable.",
+                "what": "Foundry groups the experience into Define, Build and Operate. Build is where you deploy models, prototype prompts in playgrounds and create agents; Operate is monitoring, tracing and evaluation once something is live."
+              }
+            },
+            {
+              "id": "t2-models",
+              "text": "Click Deployments to manage model deployments",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-models-g01",
+                  "label": "Models",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deployments",
+                        "role": "link",
+                        "hrefSuffix": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "hrefSuffix": "/models",
+                        "role": "link"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "A model must be DEPLOYED before anything can call it. This page lists what your project has deployed so far.",
+                "what": "A DEPLOYMENT is a named, callable instance of a model with its own capacity (tokens per minute), content-filter policy and version pinning. Your code calls the deployment NAME, never the raw model, which lets you upgrade the model later without touching the code."
+              }
+            },
+            {
+              "id": "t2-deploy",
+              "text": "Click Deploy, then 'Deploy a base model'",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-deploy-g01",
+                  "label": "Deploy",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "You are about to pick a model from the catalog and stand it up behind an endpoint.",
+                "what": "Deploy offers two paths: a BASE model straight from the catalog, or a FINE-TUNED model you trained on your own examples. Labs almost always start with a base model because it is instant and free to create; you pay only for tokens you send.",
+                "tip": "Base model deployments are cheap to create and delete. Treat them like disposable test endpoints."
+              }
+            },
+            {
+              "id": "t2-basemodel",
+              "text": "Click 'Deploy a base model'",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-basemodel-g01",
+                  "label": "Deploy a base model",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy a base model",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy a base model",
+                        "role": "menuitem"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Base model means the model as published by its provider, with no customisation, which is exactly what you want for a first deployment.",
+                "what": "A base (foundation) model was pre-trained by its vendor on huge general corpora. You shape its behaviour with PROMPTS at run time rather than by retraining. Fine-tuning comes later, and only when prompting genuinely cannot get you there."
+              }
+            },
+            {
+              "id": "t2-search",
+              "text": "Search the catalog for gpt-5",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-search-g01",
+                  "label": "Search",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Search",
+                        "scope": "main",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Search",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "gpt-5",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "gpt-5"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "The catalog is large, so searching by name is the fastest way to the model this lab uses.",
+                "what": "The Foundry MODEL CATALOG lists well over a thousand models from Microsoft, OpenAI, Meta, Mistral, Cohere, Hugging Face and others. Each card shows the provider, capabilities (chat, reasoning, embeddings, vision), context window and licensing. Models sold as Microsoft first-party are billed through your Azure subscription."
+              }
+            },
+            {
+              "id": "t2-selectgpt5",
+              "text": "Click the gpt-5 model card",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-selectgpt5-g01",
+                  "label": "gpt-5 card",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "childText": "gpt-5",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "imgAlt": "gpt-5",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "gpt-5",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Opening the model card shows you the exact model, versions and regions before you commit to a deployment.",
+                "what": "GPT-5 is OpenAI's frontier model family, served in Azure inside your subscription boundary: your prompts and data are not used to train OpenAI models. The card lists supported deployment types, available versions and per-token pricing.",
+                "tip": "Note the model VERSION on the card. Deployments pin a version; behaviour can shift between versions."
+              }
+            },
+            {
+              "id": "t2-modeldeploy",
+              "text": "Click Deploy on the gpt-5 model page",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-modeldeploy-g01",
+                  "label": "Deploy",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "This starts the deployment wizard for the model you chose.",
+                "what": "You are not downloading anything. Deploying assigns the model to a managed endpoint that Azure hosts and scales. What you get is a URL, a key (or Entra ID auth) and a deployment name to call from any language."
+              }
+            },
+            {
+              "id": "t2-customsettings",
+              "text": "Choose Custom settings",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-customsettings-g01",
+                  "label": "Custom settings",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "childText": "Custom settings",
+                        "urlPattern": "/models"
+                      }
+                    },
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Custom settings",
+                        "role": "menuitem",
+                        "scope": "menu",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Custom settings lets you control the deployment name and capacity instead of accepting defaults, which the lab needs for the name step.",
+                "what": "The settings you can change: DEPLOYMENT NAME (what code calls), DEPLOYMENT TYPE (Standard = regional, Global Standard = routed worldwide for capacity, Provisioned = reserved throughput), MODEL VERSION, TOKENS-PER-MINUTE rate limit and the CONTENT FILTER policy.",
+                "tip": "In real projects the TPM limit is what your quota request is about. Labs use small numbers on purpose."
+              }
+            },
+            {
+              "id": "t2-deployname",
+              "text": "Set the deployment name to mygpt",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-deployname-g01",
+                  "label": "Deployment name",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Enter deployment name",
+                        "role": "textbox",
+                        "scope": "dialog",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "mygpt",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "mygpt"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "Code and playgrounds address the model by this name, so a short, memorable one makes every later step easier.",
+                "what": "The deployment name is a stable alias. Your app sends requests to '.../deployments/mygpt/chat/completions'; if you later redeploy a newer version under the same name, the app keeps working unchanged. Many teams name deployments by purpose (chat-prod, summarizer) rather than by model."
+              }
+            },
+            {
+              "id": "t2-deploybtn",
+              "text": "Click Deploy to create the deployment",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t2-deploybtn-g01",
+                  "label": "Deploy",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "text": "Deploy",
+                        "role": "button",
+                        "scope": "dialog",
+                        "urlPattern": "/models"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Deploy creates the endpoint. From here the model is live and billable per token.",
+                "what": "Azure allocates capacity from your subscription's quota for that model and region, applies the content filter and exposes the endpoint. It usually takes seconds for Standard deployments. The Deployments list will now show the name, model, version and state.",
+                "tip": "If you ever see SkuNotAvailable or a quota error, it is a region/quota problem, not something a smaller name or model size fixes."
+              }
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "title": "Task 3: Prompt engineering in the Playground",
+          "kind": "section",
+          "steps": [
+            {
+              "id": "t3-instructions",
+              "text": "Type the system message (Instructions)",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t3-instructions-g01",
+                  "label": "Instructions",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "placeholder": "Write your prompt here to give your agent instructions.",
+                        "role": "textbox",
+                        "urlPattern": "/playground"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "You are a travel assistant that provides information on travel services available from Margie's Travel.",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "You are a travel assistant that provides information on travel services available from Margie's Travel."
+                  }
+                ]
+              },
+              "learn": {
+                "why": "The system message defines who the model is and what it may do, before any user says a word.",
+                "what": "Chat models take a conversation of ROLES: system (instructions), user and assistant. The SYSTEM message sets persona, scope, tone and rules; it is the single most powerful lever in prompt engineering and is sent with every request. Here it turns a general model into Margie's Travel's assistant.",
+                "tip": "Be specific about what the model must NOT do. Refusals and scope come from the system message."
+              }
+            },
+            {
+              "id": "t3-chat",
+              "text": "Type your question to the model",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t3-chat-g01",
+                  "label": "Chat",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "ariaLabel": "Chat with the model...",
+                        "role": "textbox",
+                        "urlPattern": "/playground"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "value": {
+                "display": "Where can I stay in New York?",
+                "isDynamic": false,
+                "parts": [
+                  {
+                    "kind": "literal",
+                    "text": "Where can I stay in New York?"
+                  }
+                ]
+              },
+              "learn": {
+                "why": "This is a user turn: a real question the assistant must answer within the rules you just set.",
+                "what": "The playground is a no-code client for the chat completions API. Everything you type becomes a 'user' message; the reply is an 'assistant' message. Below the box you can see parameters like temperature (creativity vs. determinism) and max tokens (reply length cap)."
+              }
+            },
+            {
+              "id": "t3-send",
+              "text": "Click Send and read the answer — that's your model live. You're done!",
+              "surface": "browser",
+              "targets": [
+                {
+                  "id": "t3-send-g01",
+                  "label": "Send",
+                  "targetClass": "ui-control",
+                  "selectors": [
+                    {
+                      "strategy": "dom",
+                      "attrs": {
+                        "ariaLabel": "Send",
+                        "role": "button",
+                        "urlPattern": "/playground"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "learn": {
+                "why": "Send makes the actual API call. What comes back is your deployment answering live.",
+                "what": "Your messages are tokenised, sent to the endpoint you named, and the model generates the reply token by token (that is the streaming effect). Watch the answer: it is fluent but GENERIC, because the model only knows its training data and your prompt, not Margie's Travel's real brochures. That gap is what grounding (RAG) fixes next.",
+                "tip": "Ask yourself: where did this answer come from? If you cannot point to a source, neither can the model."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "celebrateOnComplete": true,
+  "celebrateMsg": "Demo complete — you deployed gpt-5 and chatted with it!"
+}

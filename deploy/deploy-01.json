@@ -1,0 +1,170 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "comments": "Rocky guided lab - JumpVM only. The learner works in the Foundry portal; the VM exists to carry the browser and Rocky. Resources the lab itself creates (Foundry project, model deployment) are made BY the learner during the lab, which is the point of the exercise. Mirrors the CloudLabs house pattern: Windows JumpVM, Custom Script Extension bootstrap, outputs consumed by VM Configuration."
+  },
+  "parameters": {
+    "azureUserName":        { "type": "string",       "metadata": { "description": "CloudLabs token GET-AZUSER-UPN" } },
+    "azurePassword":        { "type": "securestring", "metadata": { "description": "CloudLabs token GET-AZUSER-PASSWORD. DELIBERATELY UNUSED in this template: CloudLabs supplies it for every lab, and Rocky must never receive it because commandToExecute is recorded in the deployment history. Declared so the platform's parameter mapping stays identical to our other labs. A validation warning about it being unused is expected and correct." } },
+    "ODLID":                { "type": "string",       "metadata": { "description": "CloudLabs On Demand Lab id" } },
+    "DeploymentID":         { "type": "string",       "metadata": { "description": "CloudLabs deployment id; makes every name unique" } },
+    "adminUsername":        { "type": "string",  "defaultValue": "azureuser" },
+    "adminPassword":        { "type": "securestring", "metadata": { "description": "CloudLabs token GEN-PASSWORD" } },
+    "trainerUserName":      { "type": "string",  "defaultValue": "instructor" },
+    "trainerUserPassword":  { "type": "securestring", "metadata": { "description": "CloudLabs token GEN-PASSWORD" } },
+    "location":             { "type": "string",  "defaultValue": "[resourceGroup().location]" },
+    "vmSize":               { "type": "string",  "defaultValue": "Standard_D2s_v5" },
+    "rockyPackageUrl":      { "type": "string",  "metadata": { "description": "Blob URL (+SAS) of rocky-package.zip" } },
+    "rockyBootstrapUrl":    { "type": "string",  "metadata": { "description": "Blob URL (+SAS) of rocky-bootstrap.ps1" } },
+    "rockyBundleBaseUrl":   { "type": "string",  "defaultValue": "", "metadata": { "description": "Optional bundle registry base (+SAS). Empty = use the bundle inside the package." } },
+    "rockyLabCode":         { "type": "string",  "defaultValue": "foundry-develop-ai" },
+    "rockyStartUrl":        { "type": "string",  "defaultValue": "https://ai.azure.com" },
+    "rockyPortalBuild":     { "type": "string",  "defaultValue": "2026-09", "metadata": { "description": "Which captured portal build this lab's bundle targets" } }
+  },
+  "variables": {
+    "prefix":     "[concat('rocky-', parameters('DeploymentID'))]",
+    "vmName":     "[concat('labvm-', parameters('DeploymentID'))]",
+    "dnsLabel":   "[toLower(concat('rockylab-', parameters('DeploymentID')))]",
+    "vnetName":   "[concat(variables('prefix'), '-vnet')]",
+    "subnetName": "default",
+    "nsgName":    "[concat(variables('prefix'), '-nsg')]",
+    "nicName":    "[concat(variables('prefix'), '-nic')]",
+    "pipName":    "[concat(variables('prefix'), '-pip')]",
+    "subnetRef":  "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]"
+  },
+  "resources": [
+    {
+      "comments": "RDP is reachable because CloudLabs fronts it with VM Access over HTTP; the rule is still scoped to RDP only.",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-04-01",
+      "name": "[variables('nsgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowRDP",
+            "properties": {
+              "priority": 1000, "protocol": "Tcp", "access": "Allow", "direction": "Inbound",
+              "sourceAddressPrefix": "*", "sourcePortRange": "*",
+              "destinationAddressPrefix": "*", "destinationPortRange": "3389"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-04-01",
+      "name": "[variables('pipName')]",
+      "location": "[parameters('location')]",
+      "sku": { "name": "Standard" },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": { "domainNameLabel": "[variables('dnsLabel')]" }
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-04-01",
+      "name": "[variables('vnetName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]" ],
+      "properties": {
+        "addressSpace": { "addressPrefixes": [ "10.30.0.0/16" ] },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "10.30.1.0/24",
+              "networkSecurityGroup": { "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-04-01",
+      "name": "[variables('nicName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": { "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]" },
+              "subnet": { "id": "[variables('subnetRef')]" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments": "Windows 11 so Edge is current: Rocky's --load-extension launch is verified on Edge 153.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('vmName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]" ],
+      "properties": {
+        "hardwareProfile": { "vmSize": "[parameters('vmSize')]" },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "windowsConfiguration": { "provisionVMAgent": true, "enableAutomaticUpdates": false }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsDesktop",
+            "offer": "windows-11",
+            "sku": "win11-23h2-pro",
+            "version": "latest"
+          },
+          "osDisk": { "createOption": "FromImage", "managedDisk": { "storageAccountType": "StandardSSD_LRS" } }
+        },
+        "networkProfile": {
+          "networkInterfaces": [ { "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]" } ]
+        }
+      }
+    },
+    {
+      "comments": "One CSE per VM is the Azure limit, so this single extension fetches BOTH scripts and runs them in order: the house bootstrap first (credentials file, shadow account), then Rocky. Rocky receives identifiers only - never a password - because CloudLabs records commandToExecute in the deployment history.",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2023-09-01",
+      "name": "[concat(variables('vmName'), '/rockySetup')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]" ],
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.10",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[parameters('rockyBootstrapUrl')]",
+            "[parameters('rockyPackageUrl')]"
+          ]
+        },
+        "protectedSettings": {
+          "commandToExecute": "[concat('powershell -ExecutionPolicy Bypass -File rocky-bootstrap.ps1 -ODLID \"', parameters('ODLID'), '\" -DeploymentID \"', parameters('DeploymentID'), '\" -LabCode \"', parameters('rockyLabCode'), '\" -AzureUserName \"', parameters('azureUserName'), '\" -AzureTenantID \"', subscription().tenantId, '\" -AzureSubscriptionID \"', subscription().subscriptionId, '\" -BundleBaseUrl \"', parameters('rockyBundleBaseUrl'), '\" -StartUrl \"', parameters('rockyStartUrl'), '\" -PortalBuild \"', parameters('rockyPortalBuild'), '\"')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "vmServerDnsName":     { "type": "string", "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).dnsSettings.fqdn]" },
+    "vmServerUsername":    { "type": "string", "value": "[parameters('adminUsername')]" },
+    "vmServerPassword":    { "type": "string", "value": "[parameters('adminPassword')]" },
+    "trainerUserName":     { "type": "string", "value": "[parameters('trainerUserName')]" },
+    "trainerUserPassword": { "type": "string", "value": "[parameters('trainerUserPassword')]" },
+    "labVmName":           { "type": "string", "value": "[variables('vmName')]" },
+    "labVmSize":           { "type": "string", "value": "[parameters('vmSize')]" }
+  }
+}

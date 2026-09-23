@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "azureUserName":       { "value": "GET-AZUSER-UPN" },
+    "azurePassword":       { "value": "GET-AZUSER-PASSWORD" },
+    "ODLID":               { "value": "GET-ODL-ID" },
+    "DeploymentID":        { "value": "GET-DEPLOYMENT-ID" },
+    "adminUsername":       { "value": "azureuser" },
+    "adminPassword":       { "value": "GEN-PASSWORD" },
+    "trainerUserName":     { "value": "instructor" },
+    "trainerUserPassword": { "value": "GEN-PASSWORD" },
+    "location":            { "value": "eastus" },
+    "vmSize":              { "value": "Standard_D2s_v5" },
+
+    "rockyPackageUrl":     { "value": "REPLACE-WITH-BLOB-URL/rocky-package.zip?REPLACE-WITH-SAS" },
+    "rockyBootstrapUrl":   { "value": "REPLACE-WITH-BLOB-URL/rocky-bootstrap.ps1?REPLACE-WITH-SAS" },
+    "rockyBundleBaseUrl":  { "value": "" },
+    "rockyLabCode":        { "value": "foundry-develop-ai" },
+    "rockyStartUrl":       { "value": "https://ai.azure.com" },
+    "rockyPortalBuild":    { "value": "2026-09" }
+  },
+  "_notes": {
+    "tokens": "Values in CAPITALS are CloudLabs injection tokens, substituted at deploy time. GET-AZUSER-UPN, GET-AZUSER-PASSWORD, GET-DEPLOYMENT-ID and GEN-PASSWORD are confirmed in our onboarding reference. The ODL token name is NOT confirmed - check it against an existing template before the first deploy, and if there is no such token, hardcode the ODL id here or drop it (Rocky only uses it for logging).",
+    "sas": "The SAS must outlast the ODL: ARM re-fetches fileUris on every learner deployment, so an expired SAS breaks future launches, not just the first.",
+    "bundleRegistry": "Leave rockyBundleBaseUrl empty to use the bundle packaged inside the zip. Set it to a blob container to update a lab's steps without rebuilding the package - the failure mode is a fallback to the packaged bundle, never a broken lab.",
+    "region": "location must be a region where the lab subscription has GPT-5 quota, or the learner cannot complete the deployment step."
+  }
+}

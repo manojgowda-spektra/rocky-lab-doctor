@@ -1,0 +1,5 @@
+# PowerShell 5.1 (the CloudLabs JumpVM default) reads a BOM-less file as ANSI, which turns
+# any UTF-8 character in these scripts into mojibake and breaks the parser. Keep them CRLF
+# and never let git normalise them.
+*.ps1 text eol=crlf working-tree-encoding=UTF-8
+*.cmd text eol=crlf
