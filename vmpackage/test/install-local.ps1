@@ -61,12 +61,29 @@ $leak = Get-ChildItem $Root -Recurse -File -Include *.json,*.txt,*.ps1 -ErrorAct
 if ($leak) { $leak | Select-Object -First 3 | ForEach-Object { Write-Host "    $($_.Path):$($_.LineNumber)" -ForegroundColor Yellow }; Bad "something password-shaped was installed" }
 else { Ok "no credential written to disk" }
 
-Head "5. preflight"
+Head "5. lab.json must be readable BY THE BROWSER"
+# PowerShell's Set-Content -Encoding UTF8 writes a byte-order mark, and JSON.parse rejects
+# it outright. That made Rocky silently unable to read his own lab identity - a failure with
+# no error message anywhere. Assert the bytes, not the intent.
+$labWeb = Join-Path $Root 'webext\lab.json'
+if (Test-Path $labWeb) {
+  $bytes = [IO.File]::ReadAllBytes($labWeb)
+  if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+    Bad "webext\lab.json starts with a BOM - the browser cannot JSON.parse it"
+  } else { Ok "webext\lab.json has no BOM" }
+  try {
+    $txt = [IO.File]::ReadAllText($labWeb, [Text.Encoding]::UTF8)
+    $j = $txt | ConvertFrom-Json
+    if ($j.labCode) { Ok "lab.json parses and names the lab: $($j.labCode)" } else { Bad "lab.json parses but has no labCode" }
+  } catch { Bad "lab.json does not parse: $($_.Exception.Message)" }
+} else { Bad "no webext\lab.json - Rocky cannot know which lab he is in" }
+
+Head "6. preflight"
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root 'bin\Rocky-Preflight.ps1') -Root $Root | ForEach-Object { Write-Host "  $_" }
 if ($LASTEXITCODE -ne 0) { Bad "preflight reported failures" } else { Ok "preflight clean" }
 
 if ($OpenBrowser) {
-  Head "6. open Edge with Rocky on the mock portal"
+  Head "7. open Edge with Rocky on the mock portal"
   $mock = 'file:///' + (Join-Path $PSScriptRoot 'mock-foundry.html').Replace('\','/')
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root 'bin\Rocky-Launch.ps1') -Root $Root -Url $mock -Fresh -AllowLocalFile
   Write-Host "  Edge is opening. Rocky should appear bottom-right." -ForegroundColor Yellow
@@ -75,7 +92,7 @@ if ($OpenBrowser) {
 }
 
 if (-not $KeepInstalled) {
-  Head "7. uninstall"
+  Head "8. uninstall"
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root 'bin\Rocky-Uninstall.ps1') | ForEach-Object { Write-Host "  $_" }
   if (Test-Path $Root) { Bad "uninstall left $Root behind" } else { Ok "removed cleanly" }
 }

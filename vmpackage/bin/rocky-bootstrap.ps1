@@ -100,7 +100,11 @@ try {
   # A content script cannot read the filesystem, so Rocky gets his own copy inside the
   # extension folder, declared web-accessible in the manifest. This is how he can answer
   # "which lab am I in" from record rather than from guesswork.
-  $labJson | Set-Content -Path (Join-Path $Root 'webext\lab.json') -Encoding UTF8
+  # NO BOM. Set-Content -Encoding UTF8 writes a byte-order mark in PowerShell 5.1, and
+  # JSON.parse in the browser rejects it outright: Rocky would silently fail to know his
+  # own lab. WriteAllText with a BOM-less encoding is the only safe way to hand JSON to a
+  # web page.
+  [IO.File]::WriteAllText((Join-Path $Root 'webext\lab.json'), $labJson, (New-Object Text.UTF8Encoding($false)))
   Step "lab.json written: rg=$($lab.resourceGroup) region=$($lab.region) vm=$($lab.vmName)"
 
   # ---- 3. this lab's bundle -------------------------------------------------------

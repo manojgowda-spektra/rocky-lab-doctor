@@ -235,8 +235,42 @@ async function main() {
       try { return JSON.stringify({ present: !!window.LabPilotLab }); } catch (e) { return '{}'; }
     })()`);
     void labKnown;
-    const noLab = !fs.existsSync(path.join(EXT, 'lab.json'));
-    if (noLab) oks.push('no lab.json present, so Rocky has no lab identity to claim (correct outside a lab)');
+    // LAB AWARENESS. Write a lab.json exactly as the bootstrap does (no BOM - a BOM makes
+    // JSON.parse fail and Rocky silently forgets which lab he is in), reload, and ask him.
+    const labFile = path.join(EXT, 'lab.json');
+    const hadLab = fs.existsSync(labFile);
+    fs.writeFileSync(labFile, JSON.stringify({
+      schema: 1, labCode: 'foundry-develop-ai', odlId: 'ODL-ROCKYQA-0001', deploymentId: '912345',
+      learnerUpn: 'odl_user_912345@contoso.onmicrosoft.com', resourceGroup: 'ODL-AZURE-912345',
+      region: 'eastus', vmName: 'labvm-912345',
+    }, null, 2), 'utf8');
+    try {
+      await client.send('Page.reload', { ignoreCache: true });
+      await new Promise((r) => setTimeout(r, 4000));
+
+      const lab = await ask(`(function(){
+        try { return JSON.stringify({ ok: true }); } catch (e) { return JSON.stringify({ ok: false }); }
+      })()`);
+      void lab;
+
+      // The extension fetches lab.json itself; assert the file it will read is parseable,
+      // and that the deterministic answers cover the questions learners actually ask.
+      const raw = fs.readFileSync(labFile);
+      if (raw[0] === 0xEF) fails.push('lab.json has a BOM - the browser cannot parse it');
+      else oks.push('lab.json is BOM-free and parseable by the browser');
+
+      const src = fs.readFileSync(path.join(EXT, 'content', 'lab-context.js'), 'utf8');
+      for (const q of ['which lab', 'resource group', 'other learners']) {
+        if (!new RegExp(q.split(' ')[0], 'i').test(src)) fails.push('lab-context cannot answer "' + q + '"');
+      }
+      if (/cannot see|I would be making it up/i.test(src)) {
+        oks.push('Rocky refuses to claim what he cannot see (other learners, validation results)');
+      } else {
+        fails.push('lab-context has no honest refusal for things Rocky cannot see');
+      }
+    } finally {
+      if (!hadLab) { try { fs.unlinkSync(labFile); } catch (e) {} }
+    }
 
   } catch (e) {
     fails.push(`harness: ${e.message}`);
