@@ -55,6 +55,10 @@ $args = @(
   "--no-first-run"
   "--no-default-browser-check"
   "--disable-features=DisableLoadExtensionCommandLineSwitch"
+  # Expose page content to UI Automation so the VM agent can read the lab guide from the
+  # browser window. Without this a browser shows only its tabs and toolbar to UIA, and the
+  # agent would need an IPC channel to learn the current step.
+  "--force-renderer-accessibility"
   "--start-maximized"
   $Url
 )

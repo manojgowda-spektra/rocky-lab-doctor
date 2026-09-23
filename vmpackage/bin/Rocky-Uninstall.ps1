@@ -18,6 +18,11 @@ Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" -ErrorAction SilentlyC
   ForEach-Object { Say "closing Rocky's Edge (pid $($_.ProcessId))"; Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Milliseconds 600
 
+# The desktop agent is a PowerShell process; stop it before removing its script.
+Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+  Where-Object { $_.CommandLine -and $_.CommandLine -like '*rocky-agent.ps1*' } |
+  ForEach-Object { Say "stopping the desktop agent (pid $($_.ProcessId))"; Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+
 if (Get-ScheduledTask -TaskName 'RockyLabPortal' -ErrorAction SilentlyContinue) {
   Unregister-ScheduledTask -TaskName 'RockyLabPortal' -Confirm:$false -ErrorAction SilentlyContinue
   Say "logon task removed"

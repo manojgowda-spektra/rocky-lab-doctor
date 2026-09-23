@@ -283,6 +283,92 @@ function Hide-Ring {
   if ($script:Overlay) { $script:Overlay.Hide(); $script:Overlay = $null }
 }
 
+
+# ---- reading the lab guide, straight from the browser window --------------------------------
+# No IPC. Rocky-Launch starts the browser with --force-renderer-accessibility, so the guide
+# text is in the window's UIA tree and the agent reads it exactly as it reads VS Code.
+
+function Get-GuideText {
+  foreach ($w in (Get-Windows)) {
+    try {
+      $n = $w.Current.Name
+      if ($n -notmatch 'Edge|Chrome') { continue }
+      $cond = New-Object System.Windows.Automation.PropertyCondition(
+                [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+                [System.Windows.Automation.ControlType]::Text)
+      $texts = $w.FindAll([System.Windows.Automation.TreeScope]::Descendants, $cond)
+      if ($texts.Count -lt 5) { continue }         # tabs and toolbar only: not a guide
+      # Rejoin inline runs into sentences. UIA returns one node per run, so a single
+      # instruction arrives in pieces; a fragment ending mid-sentence is joined to the next.
+      $raw = New-Object System.Collections.ArrayList
+      foreach ($t in $texts) {
+        $v = $t.Current.Name
+        if ($v -and $v.Trim()) { [void]$raw.Add($v.Trim()) }
+      }
+      $lines = New-Object System.Collections.ArrayList
+      $buf = ""
+      foreach ($frag in $raw) {
+        $buf = if ($buf) { "$buf $frag" } else { $frag }
+        # a sentence ends on terminal punctuation; anything else is still being assembled
+        if ($buf -match '[.!?]\s*$' -or $buf.Length -gt 300) {
+          [void]$lines.Add($buf.Trim()); $buf = ""
+        }
+        # A heading has no full stop, so it would otherwise swallow the instruction that
+        # follows it. Close the buffer when the NEXT fragment starts a fresh instruction.
+        elseif ($buf -match '^(?:Module|Step|Task|Exercise|Part)' -and $buf -match '\s(?:Click|Select|Navigate|Open|Choose|Enter|Set)\s') {
+          $cut = [regex]::Match($buf, '\s(?=(?:Click|Select|Navigate|Open|Choose|Enter|Set)\s)')
+          if ($cut.Success) {
+            [void]$lines.Add($buf.Substring(0, $cut.Index).Trim())
+            $buf = $buf.Substring($cut.Index).Trim()
+          }
+        }
+      }
+      if ($buf.Trim()) { [void]$lines.Add($buf.Trim()) }
+      if ($lines.Count -ge 3) { return $lines }
+    } catch {}
+  }
+  return $null
+}
+
+# The same idiom the browser-side guide reader parses, kept deliberately in step with it:
+# "Select File (1) and then Open Folder (2)" -> the ordered controls to click.
+function Parse-GuideLine([string]$line) {
+  $verb = '(?:Click on|Click|Select|Navigate to|Open|Choose|Enter|Set|Expand|Press|Type)'
+  $out = New-Object System.Collections.ArrayList
+  if ($line -match '\(\d\)') {
+    $rx = [regex]"([^()]{2,80}?)\s*\((\d)\)"
+    foreach ($m in $rx.Matches($line)) {
+      $frag = ($m.Groups[1].Value -split ',|and then|then|and')[-1]
+      $label = $frag -replace "^\s*(?:and\s+then|and|then)\s+", ''
+      $label = ($label -replace "^\s*$verb\s+(?:on\s+|to\s+|the\s+)?", '').Trim(' ', ',', '.')
+      if ($label.Length -ge 2 -and $label.Length -le 48) {
+        [void]$out.Add(@{ n = [int]$m.Groups[2].Value; label = $label })
+      }
+    }
+  } elseif ($line -match "^\s*$verb\s+") {
+    $label = ($line -replace "^\s*$verb\s+(?:on\s+|to\s+|the\s+)?", '')
+    $label = ($label -replace '\s+to\s+(?:sign|proceed|continue|open|view|see|complete|enable|start).*$', '').Trim(' ', ',', '.')
+    if ($label.Length -ge 2 -and $label.Length -le 48) { [void]$out.Add(@{ n = 1; label = $label }) }
+  }
+  return $out
+}
+
+# Which guide step is the learner actually on? The agent cannot know for certain, so it does
+# the honest thing: try each candidate target against the desktop and glow the FIRST one that
+# resolves uniquely. A step whose control is not on screen is simply skipped rather than
+# guessed at - which also means the agent naturally follows the learner forward.
+function Find-NextDesktopTarget($lines) {
+  foreach ($line in $lines) {
+    foreach ($t in (Parse-GuideLine $line)) {
+      $r = Resolve-Control $t.label
+      if ($r.status -eq 'resolved') {
+        return @{ label = $t.label; line = $line; result = $r }
+      }
+    }
+  }
+  return $null
+}
+
 # ---- diagnostics ----------------------------------------------------------------------------
 if ($Probe) {
   Write-Host ""
@@ -327,32 +413,50 @@ if ($Find) {
   return
 }
 
-# ---- watch the bridge --------------------------------------------------------------------------
-# The extension writes the current step here; the agent glows it when the surface is the
-# desktop. A plain file, because a socket or a native-messaging host would need registering
-# and reviewing for no benefit.
-Write-Host "Rocky agent watching $Bridge (Ctrl+C to stop)" -ForegroundColor Cyan
-$lastSeen = ""
+# ---- the main loop -----------------------------------------------------------------------
+# Read the guide from the browser window, find the first target that resolves on the desktop,
+# ring it. No bridge, no IPC, no port: the agent watches the same screen the learner does.
+Write-Host ""
+Write-Host "Rocky agent watching the desktop. Ctrl+C to stop." -ForegroundColor Cyan
+Write-Host "  browser steps are handled by the extension; this covers VS Code, dialogs and apps." -ForegroundColor DarkGray
+Write-Host ""
+
+$lastLabel = ""
+$quietFor = 0
 while ($true) {
   try {
-    if (Test-Path $Bridge) {
-      $raw = [IO.File]::ReadAllText($Bridge, [Text.Encoding]::UTF8)
-      if ($raw -ne $lastSeen) {
-        $lastSeen = $raw
-        $step = $raw | ConvertFrom-Json
-        if ($step.surface -and $step.surface -ne 'browser' -and $step.label) {
-          $r = Resolve-Control $step.label $step.app
-          if ($r.status -eq 'resolved') {
-            Show-Ring $r.rect.x $r.rect.y $r.rect.w $r.rect.h $step.label
-            Write-Host "  glowing '$($r.name)' for step: $($step.label)"
-          } else {
-            Hide-Ring
-            Write-Host "  cannot find '$($step.label)' on the desktop ($($r.status)) - saying so rather than guessing"
-          }
-        } else { Hide-Ring }
-      }
+    $lines = Get-GuideText
+    if (-not $lines) {
+      # No readable guide. Either no browser is open, or it was not started with renderer
+      # accessibility. Say so once rather than looping in silence.
+      if ($quietFor -eq 0) { Write-Host "  no lab guide visible (is the browser open, started by Rocky-Launch?)" -ForegroundColor DarkGray }
+      $quietFor++
+      Hide-Ring
+      Start-Sleep -Milliseconds ($PollMs * 3)
+      if ($Once) { break }
+      continue
     }
-  } catch { }
+    $quietFor = 0
+
+    $hit = Find-NextDesktopTarget $lines
+    if ($hit) {
+      if ($hit.label -ne $lastLabel) {
+        $lastLabel = $hit.label
+        $r = $hit.result
+        Show-Ring $r.rect.x $r.rect.y $r.rect.w $r.rect.h $hit.label
+        Write-Host "  pointing at '$($r.name)' [$($r.type)] for: $($hit.label)" -ForegroundColor Green
+      }
+    } else {
+      if ($lastLabel) {
+        Write-Host "  nothing from this guide page is on screen right now - staying quiet" -ForegroundColor DarkGray
+        $lastLabel = ""
+      }
+      Hide-Ring
+    }
+  } catch {
+    # Never die in front of a learner: log and keep watching.
+    Write-Host "  (recovered: $($_.Exception.Message))" -ForegroundColor DarkGray
+  }
   if ($Once) { break }
   Start-Sleep -Milliseconds $PollMs
 }

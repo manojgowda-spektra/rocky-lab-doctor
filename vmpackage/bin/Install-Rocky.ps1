@@ -176,6 +176,17 @@ try {
 } catch { Warn "lab.json unreadable" }
 
 Write-Host ""
+# The VM agent covers what the browser extension cannot see: VS Code, Windows dialogs,
+# Teams, Outlook. It reads the lab guide from the browser window through UI Automation, so
+# there is no bridge, no port and no registry key between the two halves.
+$agent = Join-Path $Root 'agentocky-agent.ps1'
+if ((Test-Path $agent) -and -not $NoLaunch) {
+  try {
+    Start-Process powershell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Minimized','-File', $agent) | Out-Null
+    Good "desktop agent started - Rocky can now point inside VS Code and Windows dialogs"
+  } catch { Warn "could not start the desktop agent: $($_.Exception.Message)" }
+}
+
 if (-not $NoLaunch) {
   Say "opening the portal with Rocky"
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root 'bin\Rocky-Launch.ps1') -Fresh
