@@ -246,7 +246,20 @@
       function submitAsk(){
         var q=inp.value.trim(); if(!q) return;
         ask.value=""; ask.caret=null;
-        try{ extra.ask.onAsk(q); }catch(x){}
+        // NEVER swallow this. An empty catch here is the difference between "Rocky told me
+        // what went wrong" and "I clicked Ask and nothing happened" - the second is what
+        // reached a live lab, repeatedly, because the error had nowhere to go. If the ask
+        // handler throws, say so ON SCREEN: a learner who can read the error can tell us
+        // what it says, and a silent failure teaches nobody anything.
+        try{ extra.ask.onAsk(q); }
+        catch(x){
+          try{
+            console.error("[Rocky] ask failed:", x);
+            document.documentElement.setAttribute("data-lp-askerror", String(x && x.message || x));
+            say("Something broke while I was handling that question: " + (x && x.message || x) +
+                ". That is my bug, not yours.", null, null, { label: "I BROKE", mood: "sad" });
+          }catch(y){}
+        }
       }
       row.addEventListener("submit",function(e){ e.preventDefault(); e.stopPropagation(); submitAsk(); });
 

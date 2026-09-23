@@ -136,8 +136,14 @@
 
   // ---- ASK ROCKY: free-text questions (both modes) --------------------------------------------
   function context() {
-    var step = st.steps[st.stepIndex] || null, L = step && step.learn || null;
-    var c = { lab: st.lab, title: document.title, route: location.pathname, history: st.history.slice(-4) };
+    // UNGUARDED, and it was the first line of the submit path: st.steps is populated by a
+    // fetch of the packaged bundle, so if that fetch failed or has not landed yet, this
+    // throws a TypeError before any try block — and the empty catch in submitAsk() swallowed
+    // it. The learner types a question, submits, and nothing happens at all.
+    var steps = (st && st.steps) || [];
+    var step = steps[st.stepIndex] || null, L = step && step.learn || null;
+    var c = { lab: st.lab, title: document.title, route: location.pathname,
+              history: (st.history || []).slice(-4) };
     if (step) { c.step = step.text; c.stepNo = st.stepIndex + 1; if (L) c.learn = [L.why, L.what].filter(Boolean).join(" "); }
 
     // On a lab nobody captured there IS no bundle, so st.steps is empty and everything above
@@ -187,7 +193,7 @@
         ahead = window.LabPilotWorld.steps().slice(W.index + 1, W.index + 4)
           .map(function (x, i) { return (W.index + 2 + i) + '. ' + x.text; });
       } else {
-        ahead = st.steps.slice(st.stepIndex + 1, st.stepIndex + 4)
+        ahead = steps.slice(st.stepIndex + 1, st.stepIndex + 4)
           .map(function (x, i) { return (st.stepIndex + 2 + i) + '. ' + x.text; });
       }
       if (ahead && ahead.length) c.upcoming = ahead.join(' | ');
@@ -216,15 +222,20 @@
     // Deterministic first. "Which lab am I in", "how far am I", "what is my resource group"
     // are matters of record, not opinion: answering them from lab.json is instant, free and
     // cannot be wrong. Only genuinely open questions reach the model.
-    try {
-      var known = window.LabPilotLab && window.LabPilotLab.answer(q);
-      if (known) {
-        st.history.push({ q: q, a: known }); if (st.history.length > 8) st.history.shift();
-        R().announce('“' + q + '”', { label: 'ASK ROCKY', mood: 'happy', ai: known,
-          ask: askBox('Follow-up…', true), hint: 'From the lab itself — not generated' });
-        return;
-      }
-    } catch (e) {}
+    // The try covers ONLY the lookup. It used to wrap the announce() call too, which meant a
+    // rendering failure was swallowed and execution fell through with nothing on screen —
+    // indistinguishable from "I clicked Ask and nothing happened". If drawing the answer
+    // fails, that must surface, not disappear.
+    var known = null;
+    try { known = window.LabPilotLab && window.LabPilotLab.answer(q); }
+    catch (e) { console.error('[Rocky] lab lookup failed:', e); }
+
+    if (known) {
+      st.history.push({ q: q, a: known }); if (st.history.length > 8) st.history.shift();
+      R().announce('“' + q + '”', { label: 'ASK ROCKY', mood: 'happy', ai: known,
+        ask: askBox('Follow-up…', true), hint: 'From the lab itself — not generated' });
+      return;
+    }
 
     // Rung 2: the CloudLabs corpus. Compiled from the platform's own docs and the team's
     // resolved-issue register, searched offline, and QUOTED with its source. Only if it has

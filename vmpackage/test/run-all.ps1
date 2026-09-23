@@ -47,6 +47,9 @@ Gate 'World model and monitor' { node (Join-Path $pkg 'test/pilot-test.js') | Ou
 Gate 'Guides an uncaptured lab' { node (Join-Path $pkg 'test/pilot-live.js') | Out-Null } `
   'real Edge, a lab with no bundle: reads the guide, pierces shadow DOM, refuses the ambiguous'
 
+Gate 'Ask path' { node (Join-Path $pkg 'test/ask-path-test.js') | Out-Null } `
+  'the question survives a failed bundle fetch instead of vanishing into an empty catch'
+
 Gate 'Explore mode' { node (Join-Path $pkg 'test/explore-test.js') | Out-Null } `
   'explanations actually run, cost one model call per control, and never fight the glow'
 
