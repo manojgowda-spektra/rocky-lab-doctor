@@ -32,6 +32,9 @@ Gate 'CloudLabs knowledge' { node (Join-Path $pkg 'test/knowledge-test.js') | Ou
 Gate 'Endpoint handling' { node (Join-Path $pkg 'test/endpoint-test.js') | Out-Null } `
   'the AI endpoint a user pastes is the one Rocky calls, query string and all'
 
+Gate 'Guide reading' { node (Join-Path $pkg 'test/guide-test.js') | Out-Null } `
+  'works out click targets from a real lab guide, with no captured bundle'
+
 Gate 'Bundle audit' { node (Join-Path $pkg 'test/resolve-bundle.js') | Out-Null } `
   'every step carries selectors that could clear the 0.70 floor'
 

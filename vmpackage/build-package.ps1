@@ -92,6 +92,13 @@ if ($node) {
   if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/endpoint-test.js'); Die "endpoint handling failed" }
   Say "the endpoint a user pastes is the endpoint Rocky calls"
 
+  # Can Rocky work out the steps of a lab nobody captured? This is the claim that makes him
+  # worth having next to CloudLabs Copilot, tested against real workshop guide text.
+  Say "reading a real lab guide..."
+  & node (Join-Path $src 'test/guide-test.js') | Out-Null
+  if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/guide-test.js'); Die "guide reading failed" }
+  Say "guide reader clean"
+
   Say "auditing bundles..."
   & node (Join-Path $src 'test/resolve-bundle.js') | Out-Null
   if ($LASTEXITCODE -ne 0) { & node (Join-Path $src 'test/resolve-bundle.js'); Die "bundle audit failed" }
