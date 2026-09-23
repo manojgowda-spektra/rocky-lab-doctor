@@ -105,6 +105,10 @@
       return str
         .replace(/\s+to\s+(?:sign|proceed|continue|move|open|view|see|complete|enable|start|begin|go)\b.*$/i, "")
         .replace(/\s+(?:from|on|in)\s+the\s+(?:lower right corner|top menu|left navigation|VM desktop)\b.*$/i, "")
+        // "Select Save and wait for the success notification" -> "Save". Measured on a live
+        // lab: the trailing clause is what the learner does AFTER the click, never part of
+        // the control's name, and leaving it in made the target unresolvable.
+        .replace(/\s+and\s+(?:wait|remain|confirm|ensure|verify|record|review|repeat|note)\b.*$/i, "")
         .replace(/\s+page\s*$/i, "");
     }
 
@@ -168,6 +172,46 @@
         if (!plausibleLabel(lab2)) continue;
         if (/\s(and|then|the|a|to)\s/i.test(lab2) && lab2.split(/\s+/).length > 6) continue;
         targets.push({ n: b + 1, label: lab2 });
+      }
+    }
+
+    /*
+     * BREADCRUMB PATHS, measured on a LIVE CloudLabs lab (Insider Risk, template 15549).
+     * Of 16 instruction lines in the real guide pane, the parser managed ONE. The rest use
+     * idioms it had never seen, and none of them carry (1)(2) markers or bold:
+     *
+     *   "Open Settings > Policy indicators and remain on the Built-in indicators tab."
+     *   "In Microsoft Edge, open https://purview.microsoft.com, then open Solutions > ..."
+     *   "Select Create policy > Custom policy. Do not select Quick policy."
+     *   "In Insider Risk Management, open Policies."
+     *
+     * Three separate gaps: a `>` path with no bold, a LEADING CLAUSE before the verb, and a
+     * trailing sentence after the instruction. All three are trivially parseable and all
+     * three were silently producing nothing.
+     */
+    if (!targets.length) {
+      // Drop a leading scene-setting clause: "In Microsoft Edge, open X" -> "open X".
+      // Only when a real verb follows, so prose ("In this task, you will...") stays rejected.
+      var lead = /^In\s+[^,]{2,40},\s*(.+)$/i.exec(text);
+      var body = lead ? lead[1] : text;
+
+      // Keep only the first sentence: "Select Create policy > Custom policy. Do not select
+      // Quick policy." — the second sentence is a warning, and treating it as a target would
+      // glow the thing the learner was told NOT to click.
+      body = body.split(/\.\s+(?=[A-Z])/)[0];
+
+      var pathM = new RegExp("^\\s*" + VERB + "\\s+(?:on\\s+|to\\s+|the\\s+)?(.+)$", "i").exec(body);
+      if (pathM && pathM[1].indexOf(">") > 0) {
+        var hops = pathM[1].split(">");
+        for (var h = 0; h < hops.length && h < 5; h++) {
+          // a hop may trail into prose: "Policy indicators and remain on the ... tab"
+          var hop = tidy(hops[h].split(/\s+and\s+(?:remain|confirm|ensure|verify)\b/i)[0]);
+          if (plausibleLabel(hop)) targets.push({ n: targets.length + 1, label: hop });
+        }
+      } else if (lead && pathM) {
+        // a leading clause but no path: "In Insider Risk Management, open Policies."
+        var one2 = tidy(dropPurpose(pathM[1]).replace(/[.]\s*$/, ""));
+        if (plausibleLabel(one2)) targets.push({ n: 1, label: one2 });
       }
     }
 

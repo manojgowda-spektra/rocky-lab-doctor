@@ -18,3 +18,7 @@ vmpackage/test/rocky-error.png
 # compiled by tools/build-knowledge.js - not source
 vmpackage/webext/knowledge/cloudlabs-kb*.json
 vmpackage/webext/knowledge/cloudlabs-vec.json
+
+# The AI key. Endpoint and deployment are committed (they are not secret); the key is not.
+# This repo is PUBLIC - a live Azure key pushed here is scraped within minutes and revoked.
+vmpackage/webext/ai.local.json
