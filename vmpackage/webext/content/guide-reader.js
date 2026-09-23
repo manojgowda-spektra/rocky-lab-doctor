@@ -28,11 +28,17 @@
  * the VM desktop" is a desktop action Rocky cannot see, and saying so is the honest answer.
  * Each step is classified, and non-browser steps are announced rather than hunted for.
  *
+ * WHAT THE RULES MISS. The idioms above are the ones seen so far; each new lab brings another,
+ * and the rules were patched three times in one day for three of them. So the lines the rules
+ * read as NOTHING are offered to the model, once per guide page, under the constraints set out
+ * at "the model fills what the rules missed" below: its labels are targets for the same
+ * contract, never glows, and are kept only if they appear verbatim in their own line.
+ *
  * window.LabPilotGuide:
- *   read()            parse the guide pane now -> { page, title, steps[] }
+ *   read()            parse the guide pane now -> { page, title, steps[], assisted }
  *   steps()           the last parse
- *   onChange(cb)      called when the learner turns the page
- *   _test             pure parsing, testable without a DOM
+ *   onChange(cb)      called when the learner turns the page, or the model's reading lands
+ *   _test             pure parsing and the merge, testable without a DOM
  */
 (function () {
   "use strict";
@@ -260,6 +266,124 @@
     return out;
   }
 
+  // ---- the model fills what the rules missed ------------------------------------------------
+  /*
+   * WHY THIS EXISTS. parseLine above was patched three times in one day, for three idioms from
+   * three labs: (1)(2) markers, **bold**, and "A > B > C" paths behind a leading clause. Every
+   * lab writes its instructions differently and that will not stop, so a rule-only reader is a
+   * permanent game of whack-a-mole. The rules stay first - free, instant, private, and they
+   * still read most lines. The lines they read as NOTHING go to the model, once per guide page,
+   * and its reading fills only those gaps.
+   *
+   * WHAT THE MODEL MAY NOT DO. It never chooses a glow: every label it returns is a TARGET that
+   * the anchor engine's 0.70 / 0.20 / no-contradiction contract still adjudicates, exactly as
+   * for a rule-parsed label. And it cannot invent a target: a label is kept only if it appears
+   * verbatim in its own source line (case- and whitespace-insensitive). That is checked in the
+   * service worker, where the reply arrives, and again here, where it is used. The rules win on
+   * any overlap: a line they parsed is never asked about and never rewritten.
+   *
+   * COST AND TIMING. One call per guide page - each line is asked about at most once in this
+   * tab, and the worker caches the answer by a hash of the text in chrome.storage.local, so a
+   * reload, a second tab or a second learner on the same lab pays nothing. Nothing waits: the
+   * rules' steps go to the world model immediately and the model's reading is merged when it
+   * lands, announced through onChange like a page turn. No AI configured: nothing happens.
+   */
+  var assist = { byLine: {}, asked: {}, calls: 0 };
+  var ASSIST_MAX_CALLS = 8;        // per page load: a pane that keeps changing must not keep paying
+  var ASSIST_MAX_LINES = 60;       // per call
+
+  function lineKey(s) { return String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim(); }
+
+  // A label the model returned is believed only if the line actually contains it.
+  function verbatim(line, label) {
+    var l = lineKey(label);
+    return l.length >= 2 && l.length <= 48 && lineKey(line).indexOf(l) >= 0;
+  }
+
+  // Not every unparsed line is worth a token: a number, a two-word fragment, a bare heading.
+  function worthAsking(line) {
+    if (line.length < 12 || line.length > 400) return false;
+    if (line.split(/\s+/).length < 3) return false;
+    return /[a-z]/i.test(line);
+  }
+
+  // The model's reading of one line, shaped exactly like parseLine's result - or null.
+  function assisted(line) {
+    var a = assist.byLine[lineKey(line)];
+    if (!a) return null;
+    var targets = [];
+    for (var i = 0; i < a.targets.length; i++) {
+      // a path the model failed to split is still a path: each hop is its own control
+      var hops = String(a.targets[i]).split(">");
+      for (var h = 0; h < hops.length && targets.length < 5; h++) {
+        var lab = tidy(hops[h]);
+        if (verbatim(line, lab) && plausibleLabel(lab)) targets.push({ n: targets.length + 1, label: lab });
+      }
+    }
+    if (!targets.length) return null;
+    var surface = surfaceOf(line);            // the rules' surface classification wins where it has one
+    return {
+      text: line.replace(/\*\*/g, ""),
+      targets: targets,
+      surface: surface ? surface.surface : (a.surface || "browser"),
+      surfaceWhy: surface ? surface.why : null,
+      assisted: true,
+    };
+  }
+
+  /*
+   * Every guide line the rules can read becomes a step. Every line they cannot is given the
+   * model's reading if it has landed, and otherwise queued for the one question. Pure, so the
+   * merge is unit tested without a DOM; read() is the only caller that then asks.
+   */
+  function parseLines(lines) {
+    var steps = [], unparsed = [];
+    for (var i = 0; i < lines.length; i++) {
+      var p = parseLine(lines[i]) || assisted(lines[i]);       // the rules first; they always win
+      if (p) steps.push(p);
+      else if (worthAsking(lines[i])) unparsed.push(lines[i]);
+    }
+    return { steps: steps, unparsed: unparsed };
+  }
+
+  // Send the lines nobody has asked about yet, once. Fire-and-forget: silence is the default
+  // and nothing on screen waits for this. When the reading lands, re-read the pane and tell the
+  // watchers, exactly as if the learner had turned the page.
+  function requestAssist(lines) {
+    var ask = [];
+    for (var i = 0; i < lines.length && ask.length < ASSIST_MAX_LINES; i++) {
+      if (!assist.asked[lineKey(lines[i])]) ask.push(lines[i]);
+    }
+    if (!ask.length || assist.calls >= ASSIST_MAX_CALLS) return;
+    if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) return;
+    for (var k = 0; k < ask.length; k++) assist.asked[lineKey(ask[k])] = true;
+    assist.calls++;
+    try {
+      chrome.runtime.sendMessage({ type: "lp-parse-guide", payload: { lines: ask } }, function (res) {
+        var err = (chrome.runtime && chrome.runtime.lastError) ? chrome.runtime.lastError.message : null;
+        if (res && res.skipped) return;                                   // no AI configured: silence
+        if (!res || res.error || err) {
+          // Traceable, not announced: the rules' steps stand and the learner sees nothing.
+          console.warn("[Rocky] guide assist unavailable:", (res && res.error) || err || "no response");
+          return;
+        }
+        var landed = 0;
+        var steps = res.steps || [];
+        for (var j = 0; j < steps.length; j++) {
+          var s = steps[j];
+          if (!s || typeof s.line !== "string" || !Array.isArray(s.targets)) continue;
+          var key = lineKey(s.line);
+          if (!assist.asked[key] || assist.byLine[key]) continue;       // only lines this tab asked about, once
+          assist.byLine[key] = { targets: s.targets.map(String), surface: typeof s.surface === "string" ? s.surface : "browser" };
+          landed++;
+        }
+        if (!landed) return;
+        var r = read();
+        for (var w = 0; w < watchers.length; w++) { try { watchers[w](r); } catch (e) {} }
+      });
+    } catch (e) { /* no worker to ask: the rules' steps stand */ }
+  }
+
   // ---- reading the page ---------------------------------------------------------------------
 
   // The guide pane is the largest block of instructional prose that is NOT the portal itself.
@@ -308,13 +432,19 @@
     var pane = findGuidePane();
     if (!pane) { last = { page: currentPage(), title: "", steps: [], found: false }; return last; }
     var lines = (pane.innerText || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    var parsed = parseLines(lines);
+    var helped = 0;
+    for (var i = 0; i < parsed.steps.length; i++) if (parsed.steps[i].assisted) helped++;
     last = {
       page: currentPage(),
       title: guideTitle(pane),
-      steps: parseGuide(lines),
+      steps: parsed.steps,
       found: true,
       lines: lines.length,
+      assisted: helped,
     };
+    // The rules' steps are already in `last`; this asks about the rest and returns at once.
+    if (parsed.unparsed.length) requestAssist(parsed.unparsed);
     return last;
   }
 
@@ -337,7 +467,10 @@
     read: read,
     steps: function () { return last; },
     onChange: function (cb) { watchers.push(cb); },
-    _test: { parseLine: parseLine, parseGuide: parseGuide, tidy: tidy, surfaceOf: surfaceOf, plausibleLabel: plausibleLabel },
+    _test: {
+      parseLine: parseLine, parseGuide: parseGuide, tidy: tidy, surfaceOf: surfaceOf, plausibleLabel: plausibleLabel,
+      parseLines: parseLines, assisted: assisted, verbatim: verbatim, worthAsking: worthAsking, requestAssist: requestAssist, assist: assist,
+    },
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch);
