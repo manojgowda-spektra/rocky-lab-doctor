@@ -60,6 +60,7 @@
       index: -1,            // best-supported step, or -1 when unknown
       confidence: 0,
       done: {},             // stepId -> when it was satisfied
+      hop: {},              // stepId -> how many of its ordered targets the page has satisfied
       resolution: null,     // last verdict for the current target
       learner: {
         enteredStep: now(),
@@ -204,8 +205,32 @@
     if (ev.type === "misclick") { L.misclicks++; L.attempts++; }
     if (ev.type === "error") { L.errors++; }
     if (ev.type === "dismiss" && ev.label) { L.dismissed[norm(ev.label)] = true; }
+    if (ev.type === "hop" && M.index >= 0 && M.steps[M.index]) {
+      // One target of a multi-target instruction has been seen to take effect (the menu
+      // opened). The step is not done; the pointer inside it moves to the next target.
+      var hs = M.steps[M.index];
+      var h = (M.hop[hs.id] || 0) + 1;
+      M.hop[hs.id] = Math.min(h, Math.max(0, (hs.targets || []).length - 1));
+    }
     if (ev.type === "complete" && M.index >= 0 && M.steps[M.index]) {
-      M.done[M.steps[M.index].id] = now();
+      var cur = M.steps[M.index];
+      M.done[cur.id] = now();
+      // An OBSERVED completion (progress.js: the toast appeared, the control went away) is the
+      // strongest evidence position ever gets - stronger than a label being on screen. Move
+      // the belief to the next unfinished step now, so the pilot hunts for ITS target on the
+      // very next turn instead of re-glowing the one just finished until enough frames of
+      // decay catch up. CONF_ADVANCE, not 1: a progress NUMBER still waits for the page to
+      // agree (pilot.js CONF_SHOW), so Rocky moves on without claiming more than he knows.
+      M.belief[M.index] = 0;
+      var nx = -1;
+      for (var k = M.index + 1; k < M.steps.length; k++) if (!M.done[M.steps[k].id]) { nx = k; break; }
+      if (nx >= 0) {
+        M.index = nx;
+        if (M.belief[nx] < CONF_ADVANCE) M.belief[nx] = CONF_ADVANCE;
+        M.confidence = M.belief[nx];
+        M.learner.enteredStep = now();
+        M.learner.attempts = 0;
+      }
     }
     M.updatedAt = now();
     return M;
@@ -243,10 +268,12 @@
 
   function current() {
     if (!M) M = blank();
+    var step = currentStep();
     return {
       lab: M.lab,
-      step: currentStep(),
+      step: step,
       index: M.index,
+      hop: (step && M.hop[step.id]) || 0,     // which of the step's ordered targets is next
       total: M.steps.length,
       confidence: Math.round(M.confidence * 100) / 100,
       resolution: M.resolution,
