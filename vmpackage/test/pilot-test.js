@@ -214,8 +214,15 @@ check('no progress number while the belief is still forming', () => {
 });
 
 check('a converged belief DOES show progress', () => {
+  // Three distinct pages first. Rocky caps his stated confidence below the display threshold
+  // until he has seen enough of a lab to tell navigation furniture from a real target -
+  // measured live on purview.microsoft.com/home, where a permanent nav item ("Solutions")
+  // gave step 1 confidence 1.0 and would have had Rocky announce "Step 1 of 5" all lab long.
+  // Asserting a step number on the first page ever seen is asking for that defect back.
   W.reset(); W.ingest(GUIDE);
-  for (let i = 0; i < 12; i++) W.observe(screen(['Data source']));
+  for (let i = 0; i < 4; i++) W.observe(screen(['Data source'], 'https://portal.azure.com/#p1'));
+  for (let i = 0; i < 4; i++) W.observe(screen(['Data source'], 'https://portal.azure.com/#p2'));
+  for (let i = 0; i < 12; i++) W.observe(screen(['Data source'], 'https://portal.azure.com/#p3'));
   const st = P.status();
   assert.ok(st.progress, `no progress at confidence ${st.world.confidence}`);
   assert.strictEqual(st.progress.n, 2, `showed step ${st.progress.n}`);
@@ -225,7 +232,9 @@ check('a converged belief DOES show progress', () => {
 check('progress disappears again if the belief weakens', () => {
   // A learner who wanders off-script must not keep seeing a confident number.
   W.reset(); W.ingest(GUIDE);
-  for (let i = 0; i < 12; i++) W.observe(screen(['Data source']));
+  for (let i = 0; i < 4; i++) W.observe(screen(['Data source'], 'https://portal.azure.com/#p1'));
+  for (let i = 0; i < 4; i++) W.observe(screen(['Data source'], 'https://portal.azure.com/#p2'));
+  for (let i = 0; i < 12; i++) W.observe(screen(['Data source'], 'https://portal.azure.com/#p3'));
   assert.ok(P.status().progress, 'setup failed: no progress after convergence');
   for (let i = 0; i < 12; i++) W.observe(screen(['Something', 'Unrelated', 'Entirely']));
   assert.strictEqual(P.status().progress, null, 'kept claiming a step after the evidence vanished');

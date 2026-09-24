@@ -157,6 +157,40 @@
     return { act: "SILENT", why: (verdict && verdict.reason) || "absent" };
   }
 
+
+  /*
+   * THE COACH LADDER, as the rest of the extension sees it.
+   *
+   * coach.js degrades in SPECIFICITY rather than availability: POINT -> LOCATE -> ORIENT ->
+   * SITUATE -> ASK, each level true, each reachable from strictly less evidence than the one
+   * above, and none of them silence. This is the only place that assembles its context, so
+   * every caller gets the same answer to "what would Rocky say right now".
+   *
+   * It never returns null. A caller that gets nothing from the lab record, the CloudLabs
+   * corpus and the model can hand the learner this instead of an apology.
+   */
+  function coach(opts) {
+    opts = opts || {};
+    var C = window.LabPilotCoach;
+    var w = W();
+    var world = opts.world || (w && w.current()) || {};
+    if (!C) {
+      // The ladder is not loaded. Say the one thing that is true without it rather than
+      // returning null and letting the caller fall through to silence.
+      return { level: "ASK", canGlow: false, why: "coach-missing",
+               text: "I can see this page but I have not matched it to a lab guide. What are you trying to do?" };
+    }
+    return C.say({
+      lab: world.lab, steps: world.steps, doneMap: world.doneMap,
+      step: world.step, index: world.index, total: world.total,
+      confidence: world.confidence, hop: world.hop, done: world.done,
+      surface: world.step && world.step.surface,
+      verdict: opts.verdict || world.resolution,
+      url: world.url || (typeof location !== "undefined" ? location.href : ""),
+      title: typeof document !== "undefined" ? document.title : "",
+    });
+  }
+
   // ---- speaking -----------------------------------------------------------------------------
 
   // Rocky has no generic say(): the character exposes checking() for "thinking out loud" and
@@ -350,9 +384,18 @@
       st.said++;
     } else if (d.act === "ESCALATE") {
       clearGlow();
-      var what = labelsFor(world.step, world.hop)[0] || "the next control";
-      say("I cannot find “" + what + "” on this page. " +
-          (world.step.text ? "The guide says: " + world.step.text.slice(0, 120) : ""), "sad");
+      /*
+       * THE LADDER, NOT A HAND-ROLLED LINE.
+       *
+       * This used to say "I cannot find X on this page" and stop, which is only the right
+       * answer when Rocky knows the step and simply cannot see its control. When the belief
+       * is too weak to name a step it said the same thing about a control it was never
+       * looking for, and when there was no step at all it said nothing whatsoever. The coach
+       * picks the highest level the evidence actually supports, and is never silent.
+       */
+      var c = coach({ world: world, verdict: verdict });
+      say(c.text, c.level === "ORIENT" || c.level === "SITUATE" ? "think" : "sad");
+      st.lastCoach = c.level;
       st.lastSpoke = Date.now();
       st.said++;
     }
@@ -619,6 +662,7 @@
     start: start,
     stop: stop,
     status: status,
+    coach: coach,          // what Rocky would say now, at the best level the evidence allows
     mode: mode,
     _decide: decide,           // pure, unit-tested
     _labelsFor: labelsFor,     // pure, unit-tested: the hop walk
