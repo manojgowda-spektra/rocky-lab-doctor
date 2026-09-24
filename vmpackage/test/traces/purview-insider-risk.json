@@ -1,0 +1,1250 @@
+{
+ "name": "purview-insider-risk — hand-written baseline",
+ "provenance": "synthetic",
+ "portal": "purview.microsoft.com",
+ "note": "SYNTHETIC. The guide is the real Challenge 04 from template 15549. The control lists are reconstructed from Purview nav observed during this project, NOT recorded. It proves the model behaves as its author expects; it is not evidence about the live portal. Replace it with a capture from test/trace-capture.js.",
+ "guide": {
+  "title": "Challenge 04: Insider Risk Detection for Departing Users",
+  "steps": [
+   {
+    "text": "In Microsoft Edge, open https://purview.microsoft.com, then open Solutions > Insider Risk Management.",
+    "surface": "browser",
+    "targets": [
+     {
+      "n": 1,
+      "label": "Solutions"
+     },
+     {
+      "n": 2,
+      "label": "Insider Risk Management"
+     }
+    ]
+   },
+   {
+    "text": "Open Settings > Policy indicators and remain on the Built-in indicators tab.",
+    "surface": "browser",
+    "targets": [
+     {
+      "n": 1,
+      "label": "Settings"
+     },
+     {
+      "n": 2,
+      "label": "Policy indicators"
+     }
+    ]
+   },
+   {
+    "text": "Select Save and wait for the success notification.",
+    "surface": "browser",
+    "targets": [
+     {
+      "n": 1,
+      "label": "Save"
+     }
+    ]
+   },
+   {
+    "text": "In Insider Risk Management, open Policies.",
+    "surface": "browser",
+    "targets": [
+     {
+      "n": 1,
+      "label": "Policies"
+     }
+    ]
+   },
+   {
+    "text": "Select Create policy > Custom policy. Do not select Quick policy.",
+    "surface": "browser",
+    "targets": [
+     {
+      "n": 1,
+      "label": "Create policy"
+     },
+     {
+      "n": 2,
+      "label": "Custom policy"
+     }
+    ]
+   }
+  ]
+ },
+ "frames": [
+  {
+   "url": "https://purview.microsoft.com/home",
+   "title": "Microsoft Purview",
+   "controls": [
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Solutions",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Insider Risk Management, Watch video, opens in new tab",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Data Loss Prevention, Watch video, opens in new tab",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 0,
+   "repeats": 8
+  },
+  {
+   "url": "https://purview.microsoft.com/home",
+   "title": "Microsoft Purview",
+   "controls": [
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Solutions",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Global",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Insider Risk Management",
+     "role": "button",
+     "id": "",
+     "scope": "menu",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Data Loss Prevention",
+     "role": "button",
+     "id": "",
+     "scope": "menu",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Information Protection",
+     "role": "button",
+     "id": "",
+     "scope": "menu",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Communication Compliance",
+     "role": "button",
+     "id": "",
+     "scope": "menu",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 0,
+   "repeats": 3
+  },
+  {
+   "url": "https://purview.microsoft.com/insiderriskmgmt/overview",
+   "title": "Overview - Insider Risk Management - Microsoft Purview",
+   "controls": [
+    {
+     "name": "Overview",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Alerts",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cases",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policies",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Users",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Forensic evidence",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Notice templates",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Recommended actions",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Refresh",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 1,
+   "repeats": 6
+  },
+  {
+   "url": "https://purview.microsoft.com/insiderriskmgmt/settings",
+   "title": "Settings - Insider Risk Management - Microsoft Purview",
+   "controls": [
+    {
+     "name": "Overview",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Alerts",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cases",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policies",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Users",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Forensic evidence",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Notice templates",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policy indicators",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policy timeframes",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Intelligent detections",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Priority user groups",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Analytics",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 1,
+   "repeats": 5
+  },
+  {
+   "url": "https://purview.microsoft.com/insiderriskmgmt/settings",
+   "title": "Settings - Insider Risk Management - Microsoft Purview",
+   "controls": [
+    {
+     "name": "Overview",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Alerts",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cases",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policies",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Users",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Forensic evidence",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Notice templates",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policy indicators",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Office indicators",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Device indicators",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Save",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cancel",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 2,
+   "repeats": 4
+  },
+  {
+   "url": "https://purview.microsoft.com/datalossprevention/policies",
+   "title": "Policies - Data Loss Prevention - Microsoft Purview",
+   "controls": [
+    {
+     "name": "Overview",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Alerts",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policies",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Activity explorer",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Data Loss Prevention",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Create policy",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Refresh",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": "off",
+   "repeats": 6
+  },
+  {
+   "url": "https://purview.microsoft.com/insiderriskmgmt/policies",
+   "title": "Policies - Insider Risk Management - Microsoft Purview",
+   "controls": [
+    {
+     "name": "Overview",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Alerts",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cases",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policies",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Users",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Forensic evidence",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Notice templates",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Create policy",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Copy",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Delete",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Refresh",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 4,
+   "repeats": 5
+  },
+  {
+   "url": "https://purview.microsoft.com/insiderriskmgmt/policies/create",
+   "title": "Create policy - Insider Risk Management - Microsoft Purview",
+   "controls": [
+    {
+     "name": "Overview",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Alerts",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cases",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Policies",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Users",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Forensic evidence",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Notice templates",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Settings",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Home",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Search",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Help",
+     "role": "link",
+     "id": "",
+     "scope": "nav",
+     "landmark": "Insider Risk Management",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Custom policy",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Quick policy",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Next",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    },
+    {
+     "name": "Cancel",
+     "role": "button",
+     "id": "",
+     "scope": "main",
+     "landmark": "",
+     "current": "",
+     "selected": "",
+     "expanded": "",
+     "href": ""
+    }
+   ],
+   "truth": 4,
+   "repeats": 4
+  }
+ ]
+}
