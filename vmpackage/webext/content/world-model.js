@@ -47,6 +47,12 @@
   var STUCK_MS = 45000;      // dwell on one step before considering the learner stuck
   var STUCK_ATTEMPTS = 3;    // failed/repeated attempts at the same target
   var OSCILLATE = 4;         // back-and-forth page changes that signal hunting
+  // How far ahead of the runner-up the leading step must be before the belief commits to it.
+  // Mirrors the anchor engine's MARGIN for controls: being clearly ahead is what "sure" means.
+  var BELIEF_MARGIN = 0.15;
+  // Pulls the distribution towards uniform when nothing supports any step, so that silence
+  // becomes uncertainty rather than a frozen opinion. Small enough that real evidence wins.
+  var BELIEF_LEAK = 0.02;
 
   /*
    * FURNITURE. A label that keeps appearing however far the learner moves is navigation chrome,
@@ -74,7 +80,11 @@
   var FURNITURE_FLOOR = 0.5;
   // Below the pilot's CONF_SHOW (0.80), so no step NUMBER is claimed before furniture is known,
   // while the belief itself is untouched and the glow still follows it.
-  var UNPROVEN_CAP = 0.75;
+  var UNPROVEN_CAP = 0.75;   // while furniture is still being learned, below the pilot's 0.80
+  // A belief the page itself has not corroborated. Deliberately below CONF_ADVANCE: "sure
+  // enough to move the pointer" and "sure enough to say a step number out loud" are different
+  // bars, and an inference drawn from the URL alone clears only the first.
+  var ROUTE_ONLY_CAP = CONF_ADVANCE * 0.9;
 
   // Route evidence. The belief update multiplies evidence by (1 - DECAY) * 3 and so settles at
   // three times the steady evidence; ROUTE_EVIDENCE is derived so that the URL alone tops out
@@ -364,6 +374,10 @@
         M.furniture.seenOn[dw] = (M.furniture.seenOn[dw] || 0) + 1;   // distinct pages, not repeats
       }
     }
+    // Which steps had any evidence from CONTROLS ON SCREEN this observation, as opposed to
+    // from the URL. The guarantee "a URL can never flip the belief unless the controls agree"
+    // is exactly this: the leading step must appear in here before the pointer may move to it.
+    var controlBacked = [];
     var disc = {};
     for (var dk in M.furniture.seenOn) {
       // Not enough pages yet to tell furniture from a real control: trust everything.
@@ -390,6 +404,7 @@
         if (seen) hit += seen * (disc[want] == null ? 1 : disc[want]);
       }
       var evidence = step.labels.length ? hit / step.labels.length : 0;
+      controlBacked[i] = hit > 0;
 
       // Route evidence. The URL alone adds ROUTE_EVIDENCE, which tops out below CONF_ADVANCE, so
       // a stray "policies" in an unrelated URL cannot flip the belief by itself. When the
@@ -399,7 +414,19 @@
       // screen, but the URL says that is not where the learner is.
       if (R) {
         if (i === R.pos) evidence = evidence * ROUTE_AGREE + ROUTE_EVIDENCE;
-        else if (i === R.passed || (step.hinted && !R.present[i])) evidence *= ROUTE_CONTRADICT;
+        // EVERY step up to the one the URL names is behind the learner, not just that one.
+        // The route reading asserts "you have completed the hop this URL names"; completing it
+        // means the steps before it are done too, which is the same inference the commit below
+        // already makes when the index moves forward. Penalising only the matched step left the
+        // steps before it decaying on their own, and an earlier step that was strongly believed
+        // one page ago stayed ahead of the correct one for ten observations.
+        // A control you have ALREADY CLICKED is still on screen — that is what breadcrumbs and
+        // navigation do — and it is not evidence that you still need to click it. So a step the
+        // URL proves is behind the learner gets no control evidence at all, rather than halved
+        // evidence: "Policies" visible on the /policies page kept step 4 neck and neck with
+        // step 5 for as long as the learner stayed there, and the pointer never moved on.
+        else if (R.passed >= 0 && i <= R.passed) evidence = 0;
+        else if (step.hinted && !R.present[i]) evidence *= ROUTE_CONTRADICT;
       } else if (T && i === T.pos) {
         evidence += TITLE_EVIDENCE;
       }
@@ -424,7 +451,37 @@
        * becomes the share of belief on the leading step — with five steps, 0.2 is "no idea"
        * and 0.8 is "almost certainly this one" — instead of an unbounded score that saturates.
        */
-      M.belief[i] = (M.belief[i] * DECAY) + (evidence * (1 - DECAY) * 3);
+      /*
+       * THE LEAK. Without it, absence of evidence does not create uncertainty.
+       *
+       * Decay alone shrinks every step's belief by the same factor, so the SHARES — which are
+       * what confidence is computed from after normalising — never move. A learner who walks
+       * off into a page that matches nothing would keep seeing the last step stated at the
+       * same confidence indefinitely, because the distribution simply freezes.
+       *
+       * A small constant added to every step each observation pulls the distribution towards
+       * uniform whenever nothing is feeding it. Evidence easily outweighs it; silence does not.
+       * Not knowing has to be something Rocky can drift INTO, or he can never admit it.
+       */
+      /*
+       * A PASSED STEP IS CONTRADICTED, NOT MERELY UNFED.
+       *
+       * "The URL names a hop you have already clicked" is a statement about POSITION, not a
+       * weak vote, so it has to reach the accumulator and not only this observation's evidence.
+       * Starving a step and waiting for DECAY takes about ten observations to undo a strongly
+       * held belief — measured on the live walk, the belief sat on Settings for the whole of
+       * the Policies page because 5.59 of accumulated mass outdecayed the correct step's fresh
+       * evidence. Scaling the accumulator makes letting go as fast as taking hold.
+       *
+       * Only when there IS a next step to move to. If the URL says the FINAL step is done there
+       * is nowhere forward to go, and flattening every belief would leave Rocky with no
+       * position at the exact moment the learner finishes; completion is handled on its own
+       * path below.
+       */
+      if (R && R.passed >= 0 && i <= R.passed && R.pos >= 0 && R.pos < M.steps.length) {
+        M.belief[i] *= ROUTE_CONTRADICT;
+      }
+      M.belief[i] = (M.belief[i] * DECAY) + (evidence * (1 - DECAY) * 3) + BELIEF_LEAK;
       if (M.belief[i] < 0) M.belief[i] = 0;
       /*
        * A TIE GOES TO THE LATER STEP, not the lower index.
@@ -461,10 +518,24 @@
      * position. Confidence is then the SHARE of belief on the leading step, which is a number
      * that means something: with five steps 0.2 is "no idea" and 0.8 is "almost certainly".
      */
+    /*
+     * SHARES ARE DERIVED, THE RAW ACCUMULATOR IS KEPT.
+     *
+     * Normalising M.belief IN PLACE destroyed a safety property that had been carefully sized:
+     * ROUTE_EVIDENCE is chosen so a URL on its own tops out below CONF_ADVANCE, which is what
+     * guarantees "a URL can never flip the belief unless the controls agree with it". Once the
+     * numbers were shares, a lone URL signal took most of the mass simply because nothing else
+     * had any, and the pointer moved on a URL alone — exactly the lie that sizing prevented.
+     *
+     * So the raw accumulator stays raw, and shares are computed from it for reporting and for
+     * the margin test. Raw answers "is there enough evidence at all"; share answers "is one
+     * step clearly ahead of the others". Both questions have to be yes.
+     */
     var total = 0;
     for (var n = 0; n < M.belief.length; n++) total += M.belief[n];
-    if (total > 0) {
-      for (var n2 = 0; n2 < M.belief.length; n2++) M.belief[n2] = M.belief[n2] / total;
+    var share = [];
+    for (var n2 = 0; n2 < M.belief.length; n2++) {
+      share[n2] = total > 0 ? M.belief[n2] / total : 0;
     }
 
     /*
@@ -479,23 +550,93 @@
      * "all the mass": 0 when every step is equally likely, 1 when one step has it all,
      * whatever N is. The tuning constants keep their meaning across every lab.
      */
-    function asConfidence(share) {
+    /*
+     * CONCENTRATION IS NOT CERTAINTY.
+     *
+     * A share says how concentrated the belief is. It does not say what concentrated it. A
+     * distribution built from almost nothing can be extremely concentrated — a lone URL naming
+     * one step while no control on screen feeds any of the others takes most of the mass simply
+     * because nothing else has any — and reporting that as high confidence is the original lie
+     * restated in new coordinates. Measured: a Data Loss Prevention URL that merely happens to
+     * end in /policies reached 0.75 with not one control from the guide on screen.
+     *
+     * Scaling confidence by TOTAL evidence was tried first and was wrong. It punishes every
+     * partially evidenced page equally, including the honest case where a lab's target control
+     * is legitimately on screen the whole time — that lab could then never state a step number,
+     * for a defect it does not have.
+     *
+     * The distinction that actually matters is narrower: is the LEADING step supported by
+     * something on the page, or only by the URL? An inference from the URL alone can be
+     * perfectly sound — "the route proves you clicked Policies, so Create policy is next" — and
+     * Rocky is right to move the pointer on it. He is not right to sound certain about it,
+     * because he has not seen a single thing belonging to that step. So the pointer may move;
+     * the confidence is capped below the bar that lets a step NUMBER be stated.
+     */
+    function asConfidence(sh) {
       var n = M.belief.length;
-      if (n <= 1) return share > 0 ? 1 : 0;
+      // A one-step lab has no runner-up to be clearer than, so concentration cannot mean
+      // anything; all that is left is whether a control is actually there. Note that this line
+      // read `share > 0` — the ARRAY, not the argument — which coerced to true whenever the one
+      // step held any mass, so every single-step lab reported confidence 1.0 out of nothing.
+      if (n <= 1) return controlBacked[0] ? 1 : 0;
       var uniform = 1 / n;
-      return Math.max(0, (share - uniform) / (1 - uniform));
+      var c = Math.max(0, (sh - uniform) / (1 - uniform));
+      if (best >= 0 && !controlBacked[best]) c = Math.min(c, ROUTE_ONLY_CAP);
+      return c;
     }
 
     for (var i = 0; i < M.steps.length; i++) {
-      if (M.belief[i] > bestScore + 1e-9) { bestScore = M.belief[i]; best = i; continue; }
-      if (best < 0 || Math.abs(M.belief[i] - bestScore) > 1e-9) continue;
+      if (share[i] > bestScore + 1e-9) { bestScore = share[i]; best = i; continue; }
+      if (best < 0 || Math.abs(share[i] - bestScore) > 1e-9) continue;
       var mineHop = (M.hop[M.steps[i].id] || 0) > 0;
       var bestHop = (M.hop[M.steps[best].id] || 0) > 0;
       if (mineHop && !bestHop) { bestScore = M.belief[i]; best = i; }
     }
 
     // --- commit the belief ------------------------------------------------------------------
-    if (best >= 0 && bestScore >= CONF_ADVANCE) {
+    /*
+     * COMMIT ON A MARGIN, NOT ON AN ABSOLUTE SHARE.
+     *
+     * Once belief is a distribution, "is the leader above 0.65?" is the wrong question: in a
+     * twenty-step lab a step holding 40% of the mass is overwhelmingly the answer and would
+     * never clear an absolute bar, while in a two-step lab 0.65 means almost nothing.
+     *
+     * Traced on the realistic walk: at /insiderriskmgmt/policies the distribution was
+     * 0.13 0.15 0.00 [0.52] 0.20 — step 4 leading by a mile — and the index stayed on step 2
+     * because 0.52 < 0.65. The belief was right and the commit threshold threw it away.
+     *
+     * A leader is a leader when it is clearly ahead of the runner-up. That is the same rule
+     * the anchor engine already applies to controls (beat the second candidate by 0.20 or
+     * refuse), so position and resolution now judge "clear enough to act on" the same way.
+     */
+    var secondScore = 0;
+    for (var s2 = 0; s2 < M.belief.length; s2++) {
+      if (s2 !== best && share[s2] > secondScore) secondScore = share[s2];
+    }
+    var clearLeader = best >= 0 && (bestScore - secondScore) >= BELIEF_MARGIN;
+
+    /*
+     * THE URL MAY NOT MOVE THE POINTER ON ITS OWN.
+     *
+     * ROUTE_EVIDENCE was originally sized so that a URL alone could not reach CONF_ADVANCE on
+     * the raw scale. Normalising made that sizing meaningless — a lone URL signal takes most
+     * of the mass when nothing else has any — and the pointer began moving on a URL alone,
+     * which is the specific lie the sizing existed to prevent.
+     *
+     * Rather than re-derive a magic number against a changed scale, state the guarantee
+     * directly: the step being moved TO must have been supported by a control actually on
+     * screen this observation. The URL can then reinforce, order and disambiguate as much as
+     * it likes, and can still never invent a position by itself.
+     */
+    var controlsAgree = best >= 0 && (
+      controlBacked[best] === true ||
+      // ...or the URL's reading is itself corroborated: the hop it says was just completed is
+      // on screen, which is why the learner is past it. That is the /policies case — "Policies"
+      // is visible and the URL proves it was clicked, so the next step is the honest answer
+      // even though nothing belonging to it has appeared yet.
+      (R && R.passed >= 0 && controlBacked[R.passed] === true && best === R.pos)
+    );
+    if (best >= 0 && controlsAgree && clearLeader) {
       if (best !== M.index) {
         // moving forward means everything before it is satisfied — this is what makes
         // out-of-order work non-alarming: we infer completion from evidence, not a counter.
@@ -674,6 +815,9 @@
     stuck: stuck,
     dismissed: dismissed,
     reset: reset,
+    // The whole distribution, for diagnosing why the belief sits where it does. Reading it is
+    // how the "stuck on step 1" defect was finally pinned down, after three wrong hypotheses.
+    _beliefs: function () { return (M && M.belief ? M.belief.slice() : []); },
     _tuning: { CONF_ADVANCE: CONF_ADVANCE, DECAY: DECAY, STUCK_MS: STUCK_MS, STUCK_ATTEMPTS: STUCK_ATTEMPTS, OSCILLATE: OSCILLATE,
                ROUTE_EVIDENCE: ROUTE_EVIDENCE, ROUTE_AGREE: ROUTE_AGREE, ROUTE_CONTRADICT: ROUTE_CONTRADICT, TITLE_EVIDENCE: TITLE_EVIDENCE },
   };

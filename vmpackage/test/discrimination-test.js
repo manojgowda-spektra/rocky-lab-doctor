@@ -96,10 +96,19 @@ check('permanent nav chrome alone never reaches the "show a number" threshold', 
 });
 
 check('a control unique to one step does move the belief', () => {
-  // "Policy indicators" belongs to step 2 and to nothing else, so it discriminates perfectly.
+  // "Policy indicators" belongs to step 2 and to nothing else, so it discriminates — but only
+  // once Rocky has seen a page WITHOUT it. On the very first screen "Solutions" (step 1) and
+  // "Policy indicators" (step 2) are both simply present, and nothing yet distinguishes the
+  // permanent nav item from the one that just appeared. Landing on the home page first is
+  // also what actually happens: nobody starts a lab deep inside a settings blade.
   W.reset(); W.ingest(GUIDE);
+  for (let i = 0; i < 6; i++) W.observe(screen([], 'https://purview.microsoft.com/home'));
   let c;
-  for (let i = 0; i < 12; i++) { W.observe(screen(['Policy indicators', 'Built-in indicators'])); c = W.current(); }
+  for (let i = 0; i < 12; i++) {
+    W.observe(screen(['Policy indicators', 'Built-in indicators'],
+      'https://purview.microsoft.com/insiderriskmgmt/settings'));
+    c = W.current();
+  }
   console.log(`         unique control -> index ${c.index}, confidence ${c.confidence}`);
   assert.strictEqual(c.index, 1, `settled on step ${c.index + 1}, expected step 2`);
   assert.ok(c.confidence >= 0.65, `confidence only ${c.confidence} on a perfectly discriminating control`);

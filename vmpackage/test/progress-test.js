@@ -105,6 +105,13 @@ const notice = (text) => ({ isConnected: true, innerText: text, closest: () => n
 // A clean world sitting on step i, with nothing armed, nothing said, no timers.
 function fresh(i) {
   W.reset(); W.ingest(GUIDE);
+  // The URL FIRST. snap() defaults to loc.href, and this helper used to set loc.href only
+  // AFTER driving the world — so the world was settled against whatever URL the previous check
+  // happened to leave behind. That was harmless while the URL was weak evidence; now that the
+  // route can prove a step is already behind the learner, a leftover /policies made fresh(2)
+  // settle on step 5 and fresh(3) refuse to commit at all. The helper's whole promise is "a
+  // clean world sitting on step i", so it has to control the URL like everything else.
+  loc.href = 'https://purview.microsoft.com/home';
   const labels = GUIDE.steps[i].targets.map((t) => t.label);
   for (let k = 0; k < 10; k++) W.observe(snap(labels));
   assert.strictEqual(W.current().index, i, `setup: world settled on step ${W.current().index}, wanted ${i}`);
