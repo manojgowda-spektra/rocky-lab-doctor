@@ -490,7 +490,16 @@
       st.on ? { icon: "\u25B6", label: "Resume", title: "Back to guiding \u00B7 Alt+E", on: function () { stop(); } }
             : { icon: "\u25CE", label: "Explore", title: "Pause and explore anything on screen \u00B7 Alt+E", on: function () { start(); } },
       { icon: "\u2139", label: learnOn ? "Learn on" : "Learn off", title: "WHY / WHAT under each step \u00B7 Alt+L", on: function () { R().toggleLearn && R().toggleLearn(); } }
-    ];
+    ].concat(
+      // The sixth slot, and only when it means something. Dragging Rocky out of the way pins
+      // him there, which also stops him following the step — a fair trade the learner asked
+      // for, but one they need a way out of. The grid already has an empty sixth cell, so this
+      // costs nothing when he has not been moved, which is the "six, not nine" rule above.
+      (R() && R().pinned)
+        ? [{ icon: "↺", label: "Follow", title: "Let Rocky move with the step again",
+            on: function () { R().unpin && R().unpin(); } }]
+        : []
+    );
   }
 
   function closeMenu() {

@@ -75,7 +75,8 @@
   var state = { mood: "neutral", glow: "#ffcf5a", targetGlow: "#ffcf5a",
                 x: window.innerWidth - (W + 20), y: window.innerHeight - (H + 48),
                 tx: window.innerWidth - (W + 20), ty: window.innerHeight - (H + 48),
-                blink: 1, nextBlink: 2, visible: false, pointDir: 1, t: 0, pending: null, arriveBy: 0, exploring: false };
+                blink: 1, nextBlink: 2, visible: false, pointDir: 1, t: 0, pending: null, arriveBy: 0, exploring: false,
+                pinned: false };   // the learner has dragged him somewhere and he stays there
 
   function hx(c){ c=String(c||""); if(c[0]==="#"){var n=parseInt(c.slice(1),16);return[n>>16,(n>>8)&255,n&255];}
     var m=/rgba?\(([^)]+)\)/.exec(c); if(m){var p=m[1].split(",").map(Number);return[p[0]||0,p[1]||0,p[2]||0];} return [255,207,90]; }   // hex OR rgb() — the halo blend feeds rgb() back in
@@ -139,7 +140,17 @@
   function reposition(rect){
     var margin=16, rw=W, rh=H;
     var right = rect.right + margin + rw < window.innerWidth;
+    /*
+     * POINTING IS NOT MOVING.
+     *
+     * When the learner has dragged him somewhere, he stays there — that is the whole point of
+     * dragging him out of the way of a control he was covering. But he must still FACE the
+     * thing he is pointing at, or he sits in the corner gesturing at nothing, which reads as
+     * broken rather than as considerate. So the direction is always updated; only the position
+     * is withheld.
+     */
     state.pointDir = right ? -1 : 1;
+    if(state.pinned){ positionBubble(); return; }
     state.tx = right ? rect.right + margin : Math.max(8, rect.left - margin - rw);
     state.ty = Math.max(8, Math.min(window.innerHeight - rh - 8, rect.top + rect.height/2 - rh*0.42));
     positionBubble();
@@ -207,6 +218,31 @@
     if(q) say(q.text, q.copy, q.learn, q.extra);
   }
 
+  /*
+   * THE WAY BACK.
+   *
+   * Opening the ask box, or getting an answer, replaces whatever Rocky was saying. There was no
+   * way back to it: Escape closed the box, but nothing on screen said so, and after an answer
+   * the only control was another "Follow-up…" field. A learner who asked one question to get
+   * unstuck had no route back to the step they were stuck on, which is the wrong direction for
+   * a thing whose job is to keep them moving.
+   *
+   * lastGuidance is the most recent card that was GUIDANCE rather than conversation, and going
+   * back re-renders it. If fresher guidance arrived while the box was open it was held in the
+   * queue, and that is newer and therefore better than what we remembered — prefer it.
+   */
+  var lastGuidance = null;
+  function isChat(extra){ return !!(extra && (extra.ask || extra.ai)); }
+  function goBack(){
+    ask.open=false; ask.value=""; ask.caret=null; ask.focused=false;
+    var q=ask.queued; ask.queued=null;
+    if(q){ say(q.text, q.copy, q.learn, q.extra); return; }
+    if(lastGuidance){ var g=lastGuidance; say(g.text, g.copy, g.learn, g.extra); return; }
+    // Nothing to go back TO — Rocky had not said anything before the question. Clear the card
+    // and let the pilot speak on its next turn rather than leaving a dead panel on screen.
+    bub.style.opacity=0; learn.last=null;
+  }
+
   function say(text, copyText, L, extra){
     var wantsAsk = !!(extra && extra.ask);
     // `demand` marks something the learner explicitly asked for by clicking. Those must
@@ -221,9 +257,33 @@
     if(demanded){ ask.open=false; ask.queued=null; }   // the new panel replaces the box
     if(!text){ bub.style.opacity=0; learn.last=null; ask.open=false; ask.value=""; return; }
     learn.last = { text:text, copy:copyText, learn:L, extra:extra };
+    if(!isChat(extra)) lastGuidance = learn.last;      // what "back" goes back to
     bub.innerHTML="";
-    if(extra && extra.label){ var hd=document.createElement("div"); hd.textContent=extra.label;
-      hd.style.cssText="font:800 10px 'Segoe UI',system-ui,sans-serif;letter-spacing:1.4px;color:"+(extra.mood==="concerned"?"#ff9a3c":"#7df9ff")+";margin-bottom:4px"; bub.appendChild(hd); }
+    if((extra && extra.label) || isChat(extra)){
+      var hd=document.createElement("div");
+      hd.style.cssText="display:flex;align-items:center;gap:7px;margin-bottom:4px";
+      if(isChat(extra)){
+        // Only on a conversation card. Guidance has nothing to go back to and an inert arrow
+        // on every card would be noise.
+        var bk=document.createElement("button"); bk.type="button"; bk.textContent="‹";
+        bk.title = lastGuidance ? "Back to the step" : "Close";
+        bk.setAttribute("aria-label", bk.title);
+        bk.setAttribute("data-labpilot","1");
+        bk.style.cssText="flex:none;pointer-events:auto;cursor:pointer;background:rgba(255,255,255,.07);"+
+          "color:#cdd6ff;border:1px solid rgba(140,160,255,.35);border-radius:6px;width:20px;height:20px;"+
+          "line-height:1;padding:0;font:700 14px 'Segoe UI',system-ui,sans-serif";
+        bk.addEventListener("mouseenter",function(){ bk.style.background="rgba(255,255,255,.16)"; bk.style.borderColor="#ffcf5a"; });
+        bk.addEventListener("mouseleave",function(){ bk.style.background="rgba(255,255,255,.07)"; bk.style.borderColor="rgba(140,160,255,.35)"; });
+        bk.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation(); goBack(); });
+        hd.appendChild(bk);
+      }
+      if(extra && extra.label){
+        var lb2=document.createElement("span"); lb2.textContent=extra.label;
+        lb2.style.cssText="font:800 10px 'Segoe UI',system-ui,sans-serif;letter-spacing:1.4px;color:"+(extra.mood==="concerned"?"#ff9a3c":"#7df9ff");
+        hd.appendChild(lb2);
+      }
+      bub.appendChild(hd);
+    }
     var tx=document.createElement("div"); tx.textContent=text; bub.appendChild(tx);
     if(extra && extra.ai){ var ai=document.createElement("div"); ai.style.cssText="margin-top:8px;padding-top:7px;border-top:1px solid rgba(140,160,255,.25);font:500 12.5px/1.45 'Segoe UI',system-ui,sans-serif;color:#9ff0e0";
       var al=document.createElement("span"); al.textContent="AI · "; al.style.cssText="font-weight:800;font-size:10px;letter-spacing:1.2px;color:#a78bfa"; ai.appendChild(al);
@@ -266,7 +326,7 @@
       // the portal must not see these keys, and Escape closes the box
       ["keydown","keyup","keypress","input","beforeinput","paste","cut"].forEach(function(t){
         inp.addEventListener(t,function(e){ e.stopPropagation();
-          if(t==="keydown" && e.key==="Escape"){ e.preventDefault(); askClose(); return; }
+          if(t==="keydown" && e.key==="Escape"){ e.preventDefault(); goBack(); return; }
           if(t==="keydown" && (e.key==="Enter" || e.keyCode===13) && !e.shiftKey){
             e.preventDefault(); submitAsk(); return;
           }
@@ -349,6 +409,13 @@
     explore:function(on){ if(!on) askClose(); state.exploring=!!on; setMood(on?"explore":"neutral"); if(on){ show(); } },
     get exploring(){ return state.exploring; },
     rect:function(){ return host.getBoundingClientRect(); },
+    // The learner has dragged him somewhere and he is staying there. The explore menu offers
+    // a way back ONLY when this is true, so the option costs nothing the rest of the time.
+    get pinned(){ return state.pinned; },
+    // Which way he is pointing: -1 the target is to his right, 1 to his left. Exposed so a
+    // test can prove a PARKED Rocky still faces the control rather than staring into space.
+    get facing(){ return state.pointDir; },
+    unpin:function(){ releasePin(); return false; },
     dimBubble:function(on){ bub.style.opacity = on ? 0 : (learn.last ? 1 : 0); },              // ring open → bubble steps aside
     react:function(on){ setMood(on ? "happy" : (state.exploring ? "explore" : "point")); },   // he smiles while you choose
     dismissAnnounce:function(){ if(learn.last && learn.last.extra && learn.last.extra.ask){ bub.style.opacity=0; learn.last=null; ask.open=false; ask.value=""; ask.caret=null; ask.queued=null;
@@ -394,7 +461,96 @@
       if(under && under.closest && under.closest("button,a[href],input,select,textarea,summary,[contenteditable],[role=button],[role=link],[role=menuitem],[role=tab],[role=option],[role=checkbox],[role=switch],[role=radio],[role=combobox],[role=slider]")) return false; } catch(e){}
     return true;
   }
+  /*
+   * DRAGGING HIM OUT OF THE WAY.
+   *
+   * Rocky places himself beside the control he is pointing at, and sometimes that is exactly
+   * where the learner needs to look or click. There was no way to move him, so the only options
+   * were to work around him or hide him entirely.
+   *
+   * WHY THIS IS NOT pointer-events:auto. The host is deliberately click-through: hitRocky()
+   * does pixel-perfect alpha testing and REFUSES the hit when a real page control lies
+   * underneath, so Rocky can never steal a click from the portal. Making him a solid object to
+   * grab would throw that away. The drag therefore runs on the same document-level capture
+   * path, gated by the same hit test, and the guarantee is untouched.
+   *
+   * A DRAG MUST NOT BE A CLICK. Clicking Rocky opens the menu, so a sloppy drag that also
+   * counted as a click would open the menu every time someone moved him. Nothing is claimed
+   * until the pointer has travelled DRAG_SLOP, and once it has, the click that follows the
+   * release is swallowed.
+   *
+   * The position is remembered as a FRACTION of the viewport rather than pixels, so it survives
+   * a resized window and a different monitor instead of parking him off-screen.
+   */
+  var DRAG_SLOP = 4;                                  // px before an intent to drag is believed
+  var POS_KEY = "lpRockyPos";
+  var drag = { on:false, moved:false, id:null, dx:0, dy:0 };
+  var swallowClick = false;
+
+  function clampX(x){ return Math.max(4, Math.min(window.innerWidth  - W - 4, x)); }
+  function clampY(y){ return Math.max(4, Math.min(window.innerHeight - H - 4, y)); }
+
+  function savePin(){
+    try {
+      var fx = (window.innerWidth  - W - 8) > 0 ? (state.x - 4) / (window.innerWidth  - W - 8) : 0;
+      var fy = (window.innerHeight - H - 8) > 0 ? (state.y - 4) / (window.innerHeight - H - 8) : 0;
+      localStorage.setItem(POS_KEY, JSON.stringify({ fx:Math.max(0,Math.min(1,fx)), fy:Math.max(0,Math.min(1,fy)) }));
+    } catch(e){ /* storage blocked: the pin simply does not outlive the page */ }
+  }
+  function loadPin(){
+    try {
+      var v = JSON.parse(localStorage.getItem(POS_KEY) || "null");
+      if(!v || typeof v.fx !== "number" || typeof v.fy !== "number") return;
+      state.pinned = true;
+      state.x = state.tx = clampX(4 + v.fx * (window.innerWidth  - W - 8));
+      state.y = state.ty = clampY(4 + v.fy * (window.innerHeight - H - 8));
+    } catch(e){ /* nothing saved, or storage blocked */ }
+  }
+  function releasePin(){
+    state.pinned = false;
+    try { localStorage.removeItem(POS_KEY); } catch(e){}
+  }
+  loadPin();
+
+  document.addEventListener("pointerdown", function(e){
+    if(e.button !== 0) return;
+    if(!hitRocky(e.clientX, e.clientY)) return;
+    // Do NOT preventDefault here. Until the pointer actually travels, this is still a click,
+    // and swallowing it would break the menu.
+    drag.on = true; drag.moved = false; drag.id = e.pointerId;
+    drag.dx = e.clientX - state.x; drag.dy = e.clientY - state.y;
+  }, true);
+
+  document.addEventListener("pointermove", function(e){
+    if(!drag.on || e.pointerId !== drag.id) return;
+    var nx = e.clientX - drag.dx, ny = e.clientY - drag.dy;
+    if(!drag.moved && (Math.abs(nx - state.x) + Math.abs(ny - state.y)) < DRAG_SLOP) return;
+    drag.moved = true;
+    e.preventDefault(); e.stopImmediatePropagation();
+    state.pinned = true;
+    // Set the eased position AND its target together: easing toward the cursor makes him lag
+    // behind the hand, which feels like dropped input rather than like holding something.
+    state.x = state.tx = clampX(nx);
+    state.y = state.ty = clampY(ny);
+    if(state.visible){ place(); positionBubble(); }
+  }, true);
+
+  function endDrag(e){
+    if(!drag.on) return;
+    var wasDrag = drag.moved;
+    drag.on = false; drag.moved = false; drag.id = null;
+    if(wasDrag){
+      swallowClick = true;
+      savePin();
+      if(e){ e.preventDefault(); e.stopImmediatePropagation(); }
+    }
+  }
+  document.addEventListener("pointerup", endDrag, true);
+  document.addEventListener("pointercancel", endDrag, true);
+
   document.addEventListener("click", function(e){
+    // the release of a drag is not a click on him, whatever the browser calls it
+    if(swallowClick){ swallowClick = false; e.preventDefault(); e.stopImmediatePropagation(); return; }
     if(!hitRocky(e.clientX, e.clientY)) return;
     e.preventDefault(); e.stopImmediatePropagation();
     document.dispatchEvent(new CustomEvent("labpilot-rocky-click", { detail: { x:e.clientX, y:e.clientY } }));
@@ -402,7 +558,7 @@
   var cursorOn=false;
   document.addEventListener("mousemove", function(e){
     var on = hitRocky(e.clientX, e.clientY);
-    if(on!==cursorOn){ cursorOn=on; document.documentElement.style.cursor = on ? "pointer" : ""; }
+    if(on!==cursorOn){ cursorOn=on; document.documentElement.style.cursor = on ? "grab" : ""; }
   }, { passive:true, capture:true });
 
   var last=performance.now();
@@ -420,5 +576,13 @@
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
-  addEventListener("resize", function(){ if(state.visible) positionBubble(); });
+  addEventListener("resize", function(){
+    // A pinned Rocky is held at absolute pixels, so shrinking the window would leave him
+    // outside it with no way to get him back. Re-clamp, and re-save so the fraction tracks.
+    if(state.pinned){
+      state.x = state.tx = clampX(state.x); state.y = state.ty = clampY(state.y);
+      savePin();
+    }
+    if(state.visible) positionBubble();
+  });
 })();
