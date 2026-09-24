@@ -295,6 +295,30 @@ check('POINT carries the guide\'s reason, and stays a plain direction without on
   assert.ok(!/part of|is here/.test(without.text), 'a reason was invented: ' + without.text);
 });
 
+check('a place name derived from a URL reads like a place, not like a URL', () => {
+  /*
+   * Rocky said "You are in catalog." on purview.microsoft.com/datagovernance/catalog, and
+   * "You are in unknownthing." on any route nobody had added to the section table - reciting
+   * the address back at the learner. Purview's own routes end in "page" (overviewpage,
+   * policiespage, as recorded in the IRM trace), so that suffix goes, and a place name is
+   * capitalised the way the portal capitalises it.
+   */
+  const at = (url) => C.say(Object.assign({}, BASE, {
+    step: null, confidence: 0.1, place: {}, url: url,
+    sayable: { stepNumber: null, total: 5, source: 'none', why: '' },
+  })).text;
+  assert.match(at('https://purview.microsoft.com/datagovernance/catalog'), /You are in Catalog\./);
+  assert.match(at('https://purview.microsoft.com/insiderriskmgmt/policiespage'), /You are in Insider Risk Management\./,
+    'the section table must still win over the slug');
+  assert.ok(!/You are in [a-z]/.test(at('https://purview.microsoft.com/somewhereelse')),
+    'a lower-case slug was spoken as a place name: ' + at('https://purview.microsoft.com/somewhereelse'));
+  // No slug at all: SITUATE, not a place claim.
+  assert.strictEqual(C.say(Object.assign({}, BASE, {
+    step: null, confidence: 0.1, place: {}, url: 'https://purview.microsoft.com/',
+    sayable: { stepNumber: null, total: 5, source: 'none', why: '' },
+  })).level, 'SITUATE');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky degrades in specificity, never into silence.\n`);

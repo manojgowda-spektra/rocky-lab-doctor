@@ -97,8 +97,22 @@
       var path = u.replace(/^https?:\/\/[^/]+/, "").replace(/[?#].*$/, "");
       var parts = path.split("/").filter(function (p) { return p && p.length > 2 && !/^\d+$/.test(p); });
       if (parts.length) {
-        var seg = parts[parts.length - 1].replace(/[-_]+/g, " ");
-        if (/^[a-z0-9 ]{3,30}$/i.test(seg)) return seg;
+        /*
+         * A URL SLUG IS NOT A PAGE NAME UNTIL IT LOOKS LIKE ONE.
+         *
+         * This returned the segment verbatim, so Rocky said "You are in catalog." on
+         * purview.microsoft.com/datagovernance/catalog and "You are in unknownthing." on any
+         * route nobody had added to the table. A learner reads that as Rocky reciting a URL,
+         * which is exactly what it was.
+         *
+         * Two tidies, both evidence-based: Purview's own routes end in "page"
+         * (overviewpage, policiespage, as recorded in the IRM trace), and a place name is
+         * capitalised the way the portal capitalises it in the nav.
+         */
+        var seg = parts[parts.length - 1].replace(/[-_]+/g, " ").replace(/\s*page$/i, "");
+        if (/^[a-z0-9 ]{3,30}$/i.test(seg)) {
+          return seg.charAt(0).toUpperCase() + seg.slice(1);
+        }
       }
     } catch (e) { /* a malformed URL is simply no section */ }
     return null;

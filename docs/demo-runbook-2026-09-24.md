@@ -45,7 +45,7 @@ cards have no "STUCK?" chip; the card scrolls instead of running off the screen.
 | **Reads the guide** | preflight names the step count; the pointer: *Select Create policy > Custom policy. Do not select Quick policy.* | GATED (real Edge, test pane); pane detection on the live CloudLabs page **REHEARSE** |
 | **…and why it matters** | *This is part of the task "Create the custom departing-user policy".* | GATED end-to-end (chain gate) — **REHEARSE**: no recorded CloudLabs pane has yet shown a `Task N:` heading in its text |
 | **Knows the page** | *You are on Policies.* | MEASURED (`aria-current`, six Purview routes) |
-| **Sees the change** | *I just saw the list went from 1 to 2 on Policies. Next, "Return to Policies and confirm that Zava Departing Employee Data Theft appears in the user-policy list."* | engine MEASURED on this list during navigation; after a Submit **REHEARSE** — never recorded |
+| **Sees the change** | *I just saw the list went from 1 to 2 on Policies. Next, "Return to Policies and confirm that Zava Departing Employee Data Theft appears in the user-policy list." This is part of the task "Create the custom departing-user policy".* (the task sentence only when the pane carries the heading) | engine MEASURED on this list during navigation; after a Submit **REHEARSE** — never recorded |
 | **Remembers it** | *I have watched the portal change once so far. Most recently the list went from 1 to 2, on Policies. Those are changes I saw, not steps I ticked off.* | GATED; deterministic, no model |
 | **Refuses a number it cannot defend** | *You look to be on the step that says "Select Create policy > Custom policy", though I am not sure enough to give you a number.* | GATED; MEASURED that no number is spoken live |
 | **Says why, or says the guide doesn't** | *The guide does not say why this step is here, and I would rather not invent a reason. What it does say is "…".* | GATED |
@@ -87,6 +87,7 @@ fixture until the build step replaces it.
 
 ### Setup (the day before, in this order)
 
+0. **Close every other browser.** Measured: with ten other Edge instances running, Rocky failed to mount on 3 of 8 loads; idle, 0 of 5.
 1. Replace `webext/lab.json` with the Purview lab's identity, or blank it — the committed file
    names a Foundry QA lab and grounds every model answer on it.
 2. `node test/open-rocky.js --fresh https://purview.microsoft.com/` — a brand-new profile. A
@@ -172,6 +173,7 @@ No card carries a "STUCK?" chip any more. The only chips left are provenance: *M
 | Killer | Before | On stage |
 | --- | --- | --- |
 | **Submit moment silent.** Never recorded after a mutating action; relay drops the grid key while the wizard is open | Record one real Submit the day before; keep the beat only if the trace shows a world event | Type *"what have I done so far?"* — if the change was seen it is there; if not, Rocky says so, and that is the honesty beat instead |
+| **Rocky does not mount at all** on a loaded machine. Measured 25 Sep: 0 failures in 5 runs on an idle machine, 3 in 8 with ten other Edge instances running. Content scripts inject (the resolver works from the isolated world) but there is no overlay, no glow and no card — silently. No product cause found; a startup storage-deadline fix changed nothing and was reverted | Low on a clean machine, **real on a busy one** | Close every other browser before the demo. After launching, confirm Rocky is there before you start — Alt+E, or check the page for `#labpilot-overlay-root` | Reload the tab; it mounts on the next load |
 | **Stale service worker** | `--fresh`, always | Restart with `--fresh`; sign in |
 | **Wrong lab identity** | Replace `lab.json` | Do not ask "which lab is this?" |
 | **Pane not read** | Rehearse on the production pane; task list in view | Reload; narrate the step from the guide |
