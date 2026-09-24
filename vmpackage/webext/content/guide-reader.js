@@ -387,9 +387,42 @@
   // {3,140} tail. A mutation sweep found the filter that used to sit here could be deleted with
   // every test still green — dead code that only looked like a guard.
 
+  /*
+   * MEASURED ON THE REAL ZAVA GUIDES, AND IT WAS WRONG THREE TIMES OUT OF FIVE.
+   *
+   * The first version matched "to <verb> …" anywhere in a line. On 136 real instruction lines it
+   * produced five clauses: one genuine ("to confirm that the uploads are readable"), one that was
+   * the instruction itself ("Use Word for the web to create …"), and three false positives — two
+   * of which INVERTED the guide. From "Do not disable unrelated tenant settings merely to make the
+   * page contain only four selections", Rocky would have said "This step is here to make the page
+   * contain only four selections." From "return to Review, and select Submit", it read the page
+   * name as a verb.
+   *
+   * A purpose clause is only trusted when its own sentence is a plain positive instruction:
+   *   - the sentence does not contain a negation ("do not", "never", "avoid", "merely to")
+   *   - it is not the "Use <tool> to <do the thing>" form, where the to-clause IS the action
+   *   - it is not "the option/ability/permission to …", which describes a control, not a reason
+   *   - the verb after "to" is lower-case: "to Review" is a page, not a purpose
+   * Genuine clauses ("Click Continue with GitHub to sign in to GitHub Copilot") pass all four. On
+   * the Zava corpus this leaves one clause in 136 lines, which is the honest rate for prose that
+   * rarely explains itself — and it is one clause Rocky will never get backwards.
+   */
+  var NEGATED_RE = /\b(?:do not|don['’]t|never|avoid|instead of|rather than|merely to|without)\b/i;
+  var USE_FORM_RE = /^\s*(?:use|using|with)\b/i;
+  var DESCRIBES_CONTROL_RE = /\b(?:the|an?)\s+(?:option|ability|permission|setting|button|link|checkbox|toggle|switch)\s+to\s*$/i;
+
   function purposeOf(str) {
-    var m = String(str || "").replace(/\*\*/g, "").match(PURPOSE_RE);
+    var text = String(str || "").replace(/\*\*/g, "");
+    var m = text.match(PURPOSE_RE);
     if (!m) return null;
+    // Judge the clause by the SENTENCE it sits in, not the whole line.
+    var start = text.lastIndexOf(". ", m.index);
+    var end = text.indexOf(". ", m.index);
+    var sentence = text.slice(start < 0 ? 0 : start + 2, end < 0 ? text.length : end + 1);
+    if (NEGATED_RE.test(sentence)) return null;
+    if (USE_FORM_RE.test(sentence)) return null;
+    if (DESCRIBES_CONTROL_RE.test(text.slice(0, m.index + m[0].indexOf(m[1])))) return null;
+    if (!/^[a-z]/.test(m[1])) return null;                       // "to Review" is a place
     var clause = m[1].replace(/\s+/g, " ").replace(/[.,;:\s]+$/, "").trim();
     if (!clause) return null;
     return "to " + clause.charAt(0).toLowerCase() + clause.slice(1);

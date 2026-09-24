@@ -45,8 +45,15 @@ design — a mentor who talks constantly is a mentor you stop hearing.
 **Where the reason comes from**, best first, and null when none applies:
 
 1. `step.learn.why` — an author's note on a captured bundle (28/28 steps on the Foundry lab)
-2. `step.why` — the purpose clause in the guide's own line: *"to sign in to GitHub Copilot"*
-3. `step.task` — the task heading the step sits under: *"Create the custom departing-user policy"*
+2. `step.why` — the purpose clause in the guide's own line: *"to sign in to GitHub Copilot"*.
+   **Measured on the 136 real Zava lines: one genuine clause.** The first version produced five,
+   three of them false and two inverting the guide (*"Do not disable unrelated settings merely to
+   make the page contain only four selections"* became *"This step is here to make the page contain
+   only four selections."*). It is now trusted only from a plain positive sentence — no negation,
+   not the "Use <tool> to <do it>" form, not "the option to …", lower-case verb. On formal lab
+   prose this fires rarely; when it fires it is the author's reason and cannot be backwards.
+3. `step.task` — the task heading the step sits under: *"Create the custom departing-user policy"*.
+   This is the source that fires on most Purview steps, because the guide is organised by task.
 4. the knowledge base — what this kind of control is for
 5. the derived dependency — what later steps name that this step creates
 
@@ -255,7 +262,7 @@ because confidence is under 0.80. When it is over: *"Step 5 of 9. It says: …"*
 
 | Gap | Fix | Where |
 | --- | --- | --- |
-| Purpose clauses parsed and discarded | kept as `step.why` | guide-reader.js |
+| Purpose clauses parsed and discarded | kept as `step.why`, only from a plain positive sentence — the first version inverted the guide on 2 of 136 real lines and is pinned by tests | guide-reader.js |
 | Task headings and the objective skipped as non-steps | `step.task`, `read().objective` | guide-reader.js |
 | World-model rebuilt steps from text alone, dropping `raw`, `why`, `task`, `learn` | passed through on ingest | world-model.js |
 | No why on POINT | appended from `mentor.why()` | pilot.js → coach.js |

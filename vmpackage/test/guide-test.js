@@ -233,6 +233,50 @@ check('a contentless purpose ("to proceed") is not a why', () => {
   assert.strictEqual(r.why, null, 'Rocky would say "this step is here to proceed": ' + JSON.stringify(r.why));
 });
 
+check('a purpose clause is never taken from a sentence that says NOT to', () => {
+  /*
+   * MEASURED, and it was the failure this project exists to prevent. On the 136 real Zava lines
+   * the first purposeOf() produced five clauses; three were false positives and two of those
+   * INVERTED the guide. Every one of the five is pinned here, verbatim.
+   */
+  // Inverted: the guide says do NOT do this for that reason.
+  assert.strictEqual(G.purposeOf(
+    'Preserve any indicators that were already enabled. Do not disable unrelated tenant settings merely to make the page contain only four selections.'),
+    null, 'Rocky would say "this step is here to make the page contain only four selections" — the opposite of the guide');
+  // A page name read as a verb.
+  assert.strictEqual(G.purposeOf('Correct any mismatch with Edit, return to Review, and select Submit.'), null,
+    '"to Review" is a page, not a purpose');
+  // A control being described, inside a negated sentence.
+  assert.strictEqual(G.purposeOf(
+    'Use the operator-provided removable-storage test device. Do not select the option to allow an override.'),
+    null, 'a described option became a purpose');
+  // The instruction itself, in the "Use <tool> to <do it>" form.
+  assert.strictEqual(G.purposeOf('Use Word for the web to create Zava-Customer-Payments.docx in that folder.'), null,
+    'the action was restated as its own purpose');
+  // The one genuine clause on the corpus survives every guard.
+  assert.strictEqual(G.purposeOf(
+    'Open one SharePoint document and the OneDrive document to confirm that the uploads are readable and retain their synthetic values.'),
+    'to confirm that the uploads are readable and retain their synthetic values');
+});
+
+check('MEASURED: no why on the real corpus comes from a negated sentence', () => {
+  // The general form of the guard, over every real line, so a new false positive cannot creep
+  // back in through a wording the five cases above do not cover.
+  const Z = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures-zava-guide.json'), 'utf8'));
+  const lines = [].concat(...Object.values(Z));
+  let produced = 0;
+  for (const l of lines) {
+    const w = G.purposeOf(l);
+    if (!w) continue;
+    produced++;
+    assert.ok(!/\b(do not|don['’]t|never|merely)\b/i.test(l), 'a why from a negated line: ' + JSON.stringify(w) + ' <- ' + l.slice(0, 100));
+    assert.ok(!/^\s*use\b/i.test(l), 'a "Use … to …" instruction became a why: ' + JSON.stringify(w));
+  }
+  console.log(`         ${produced} purpose clause(s) from ${lines.length} real lines`);
+  assert.ok(produced >= 1, 'the extractor has gone silent on the corpus');
+  assert.ok(produced <= 4, `${produced} clauses from a corpus that measured five before the guards — a guard has been lost`);
+});
+
 check('a task heading attaches to every step under it, and the objective is kept', () => {
   const lines = [
     'In this challenge, you will enable four Office indicators and create the custom policy.',
