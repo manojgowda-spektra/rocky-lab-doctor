@@ -30,7 +30,9 @@
     "https://*.sharepoint.com/*",
     "https://*.microsoft.com/*",
     "https://ml.azure.com/*",
-    "https://*.azure.com/*"
+    "https://*.azure.com/*",
+    "https://*.portal.azure.net/*",
+    "https://*.azure.net/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -79,6 +81,7 @@
         "content/cloudlabs-kb.js",
         "content/perception.js",
         "content/completion.js",
+        "content/relay.js",
         "content/world-model.js",
         "content/label-resolver.js",
         "content/guide-reader.js",

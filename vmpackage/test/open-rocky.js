@@ -18,6 +18,7 @@
  *
  *   node test/open-rocky.js                    lab + Purview
  *   node test/open-rocky.js <url> [<url> ...]  whatever you want instead
+ *   node test/open-rocky.js --fresh            new profile: REQUIRED after editing background.js
  */
 'use strict';
 const { spawn } = require('child_process');
@@ -31,7 +32,23 @@ const EDGE = [
 ].find((p) => fs.existsSync(p));
 
 const EXT = path.resolve(__dirname, '..', 'webext');
-const PROFILE = path.join(os.tmpdir(), 'rocky-fresh');
+/*
+ * THE PROFILE, AND A TRAP THAT INVALIDATES TEST RESULTS SILENTLY.
+ *
+ * A persisted profile keeps the sign-in, which is why it is the default. But with
+ * --load-extension, restarting the browser reloads the CONTENT SCRIPTS and does NOT reliably
+ * reload the extension's SERVICE WORKER. Measured: after editing background.js and restarting,
+ * the new content scripts were running while the worker was still the old build — it answered
+ * the messages it had always answered and silently ignored the new ones. Nothing errors. The
+ * feature simply does not work and every diagnostic points somewhere else.
+ *
+ * So: --fresh takes a brand new profile directory, which always loads the worker you just
+ * wrote. Use it after ANY change to background.js. The cost is signing in again.
+ */
+const FRESH = process.argv.includes('--fresh');
+const PROFILE = FRESH
+  ? path.join(os.tmpdir(), 'rocky-fresh-' + Date.now())
+  : path.join(os.tmpdir(), 'rocky-fresh');
 const PORT = 9600;
 
 // The lab this project is being tested against. Override by passing URLs on the command line.
@@ -70,7 +87,11 @@ function main() {
 
   console.log(`  edge       ${EDGE}`);
   console.log(`  extension  ${EXT}   (${declared.length} content scripts, all present)`);
-  console.log(`  profile    ${PROFILE}   — a sign-in here survives a relaunch`);
+  console.log(`  profile    ${PROFILE}`);
+  console.log(FRESH
+    ? '             BRAND NEW — the service worker is guaranteed fresh, and you will sign in again'
+    : '             reused, so a sign-in survives. If you changed background.js, pass --fresh:');
+  if (!FRESH) console.log('             a restart reloads content scripts but NOT the worker.');
   console.log(`  debugging  http://127.0.0.1:${PORT}`);
   open.forEach((u, i) => console.log(`  tab ${i + 1}      ${u.slice(0, 96)}`));
   console.log('');
