@@ -269,14 +269,35 @@ async function main() {
     // The dependable, learner-visible evidence is what the scripts PUT IN THE DOM, plus the
     // extension's own world reporting itself. We read the DOM (shared between worlds) and
     // the stylesheet the content scripts inject.
-    // Wait (up to 20s) for the content scripts to actually produce their DOM. On a busy
-    // machine Edge can take several seconds to install an unpacked extension and reach
-    // document_idle; a fixed sleep produced a false failure during a full build.
-    const readyBy = Date.now() + 20000;
+    /*
+     * WAIT FOR THE CONTENT SCRIPTS, AND SAY SO HONESTLY IF THEY NEVER COME.
+     *
+     * The deadline was a fixed 20 seconds and it produced false failures repeatedly — five
+     * times across one session, each passing on retry with an unchanged tree. Every one was
+     * under load: installing an unpacked extension and reaching document_idle takes far longer
+     * when several other browsers are already running, which happens constantly during
+     * development and in CI.
+     *
+     * 60 seconds, because a false failure in a release gate is far more expensive than a slow
+     * one, and a genuinely broken extension fails the later assertions anyway. The elapsed time
+     * is reported either way, so a build that is creeping towards the limit is visible before
+     * it starts failing.
+     */
+    const startedWaiting = Date.now();
+    const readyBy = startedWaiting + 60000;
     let injected = false;
     while (Date.now() < readyBy && !injected) {
       injected = await ask(`!!document.querySelector('[data-labpilot="1"]')`);
       if (!injected) await new Promise((r) => setTimeout(r, 500));
+    }
+    const waitedMs = Date.now() - startedWaiting;
+    if (!injected) {
+      // A bare "the extension never injected" sends the reader hunting through the extension.
+      // Say what was actually true: how long we waited, and whether the page was even there.
+      const alive = await ask('!!document.body').catch(() => false);
+      oks.push(`waited ${Math.round(waitedMs / 1000)}s for injection; page body present: ${alive}`);
+    } else if (waitedMs > 8000) {
+      oks.push(`content scripts took ${Math.round(waitedMs / 1000)}s to inject (slow machine or contention)`);
     }
 
     const domEvidence = await ask(`(function(){

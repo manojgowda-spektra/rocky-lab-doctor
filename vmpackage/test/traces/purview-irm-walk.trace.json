@@ -1,0 +1,269 @@
+{
+ "schema": "rocky-trace/2",
+ "name": "purview-irm-walk",
+ "recordedAt": "2026-09-24T10:40:42.036Z",
+ "portal": "purview.microsoft.com",
+ "startedAt": 1790246442036,
+ "endedAt": 1790246479652,
+ "samples": [
+  {
+   "t": 0,
+   "url": "/insiderriskmgmt/overviewpage",
+   "place": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "source": "aria-current",
+    "confidence": 0.95
+   },
+   "heading": "Overview",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  },
+  {
+   "t": 4869,
+   "url": "/insiderriskmgmt/overviewpage",
+   "place": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "source": "aria-current",
+    "confidence": 0.95
+   },
+   "heading": "Overview",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  },
+  {
+   "t": 19460,
+   "url": "/insiderriskmgmt/overviewpage",
+   "place": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "source": "aria-current",
+    "confidence": 0.95
+   },
+   "heading": "Overview",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  },
+  {
+   "t": 20001,
+   "url": "/insiderriskmgmt/policiespage",
+   "place": {
+    "section": "Insider Risk Management",
+    "page": "Policies",
+    "source": "aria-current",
+    "confidence": 0.95
+   },
+   "heading": "Policies",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  },
+  {
+   "t": 29157,
+   "url": "/insiderriskmgmt/policiespage",
+   "place": {
+    "section": "Insider Risk Management",
+    "page": "Policies",
+    "source": "aria-current",
+    "confidence": 0.95
+   },
+   "heading": "Policies",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  },
+  {
+   "t": 30001,
+   "url": "/insiderriskmgmt/overviewpage",
+   "place": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "source": "aria-current",
+    "confidence": 0.95
+   },
+   "heading": "Overview",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  }
+ ],
+ "events": [
+  {
+   "t": -64340,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/overviewpage",
+   "kind": "announce",
+   "klass": "busy",
+   "text": "Loading Navigation",
+   "name": null,
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  },
+  {
+   "t": 22027,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+   "kind": "announce",
+   "klass": "other",
+   "text": "List loaded No data available",
+   "name": null,
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  },
+  {
+   "t": 22027,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+   "kind": "announce",
+   "klass": "count",
+   "text": "0 items",
+   "name": null,
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": 0
+  },
+  {
+   "t": 22042,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+   "kind": "announce",
+   "klass": "other",
+   "text": "Attention: You currently aren't assigned to a role group that allows you to view alerts. Consider assigning somebody to this role Learn which role groups are needed to review alerts",
+   "name": null,
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  },
+  {
+   "t": 22045,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+   "kind": "announce",
+   "klass": "other",
+   "text": "Review collection policies. Collection policies control what activities can be detected by device indicators. We recommend reviewing your org’s collection policies to ensure they’re set up to detect the device activities you want to detect in your insider risk policies.Learn more about collection po",
+   "name": null,
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  },
+  {
+   "t": 22046,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+   "kind": "announce",
+   "klass": "other",
+   "text": "Scan for potential risks in your org. Turn on analytics to scan user activity daily. You'll get real-time, pseudonymized insights to help you set up and refine policies so you're detecting the most relevant activity. Learn more about analytics",
+   "name": null,
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  },
+  {
+   "t": 22921,
+   "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+   "kind": "list-grew",
+   "klass": null,
+   "text": null,
+   "name": "  Policy name   Status  Users in sc",
+   "from": 0,
+   "to": 1,
+   "declared": true,
+   "assertive": false,
+   "count": null
+  }
+ ],
+ "actions": [
+  {
+   "t": 4867,
+   "name": "Users ",
+   "role": "menuitem",
+   "region": "menu",
+   "from": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "route": "/insiderriskmgmt/overviewpage",
+    "completed": 0
+   }
+  },
+  {
+   "t": 19457,
+   "name": "Policies",
+   "role": "menuitem",
+   "region": "menu",
+   "from": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "route": "/insiderriskmgmt/overviewpage",
+    "completed": 0
+   }
+  },
+  {
+   "t": 29153,
+   "name": "Overview",
+   "role": "menuitem",
+   "region": "menu",
+   "from": {
+    "section": "Insider Risk Management",
+    "page": "Policies",
+    "route": "/insiderriskmgmt/policiespage",
+    "completed": 0
+   }
+  }
+ ],
+ "notes": [],
+ "durationMs": 37616
+}

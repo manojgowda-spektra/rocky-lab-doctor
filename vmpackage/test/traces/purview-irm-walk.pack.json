@@ -1,0 +1,249 @@
+{
+ "schema": "rocky-pack/1",
+ "name": "purview-irm-walk",
+ "portal": "purview.microsoft.com",
+ "derivedAt": "2026-09-24T10:42:19.404Z",
+ "recordedAt": "2026-09-24T10:40:42.036Z",
+ "durationMs": 37616,
+ "steps": [
+  {
+   "index": 0,
+   "startState": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "route": "/insiderriskmgmt/overviewpage",
+    "completed": 0
+   },
+   "action": {
+    "name": "Users ",
+    "role": "menuitem",
+    "region": "menu",
+    "t": 4867
+   },
+   "window": {
+    "from": 4867,
+    "to": 19457
+   },
+   "atoms": [],
+   "success": [],
+   "satisfies": false,
+   "satisfyRule": "nothing happened at all",
+   "failure": [],
+   "movement": [],
+   "latency": {
+    "observedMs": null,
+    "klass": "unknown",
+    "deadlineMs": null,
+    "why": "nothing observed in this window"
+   },
+   "transition": null,
+   "observability": "silent",
+   "observabilityWhy": "nothing happened at all",
+   "observabilityCause": "movement-only"
+  },
+  {
+   "index": 1,
+   "startState": {
+    "section": "Insider Risk Management",
+    "page": "Overview",
+    "route": "/insiderriskmgmt/overviewpage",
+    "completed": 0
+   },
+   "action": {
+    "name": "Policies",
+    "role": "menuitem",
+    "region": "menu",
+    "t": 19457
+   },
+   "window": {
+    "from": 19457,
+    "to": 29153
+   },
+   "atoms": [
+    {
+     "kind": "announce",
+     "klass": "other",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "assertive": false,
+     "text": "List loaded No data available",
+     "survival": "lexical",
+     "at": 22027,
+     "detail": "other: List loaded No data available",
+     "discrimination": 0
+    },
+    {
+     "kind": "announce",
+     "klass": "count",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "assertive": false,
+     "text": "0 items",
+     "survival": "lexical",
+     "at": 22027,
+     "detail": "count: 0 items",
+     "discrimination": 0
+    },
+    {
+     "kind": "announce",
+     "klass": "other",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "assertive": false,
+     "text": "Attention: You currently aren't assigned to a role group that allows you to view alerts. Consider assigning somebody to this role Learn which role groups are needed to review alerts",
+     "survival": "lexical",
+     "at": 22042,
+     "detail": "other: Attention: You currently aren't assigned to a role group tha",
+     "discrimination": 0
+    },
+    {
+     "kind": "announce",
+     "klass": "other",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "assertive": false,
+     "text": "Review collection policies. Collection policies control what activities can be detected by device indicators. We recommend reviewing your org’s collection policies to ensure they’re set up to detect the device activities you want to detect in your insider risk policies.Learn more about collection po",
+     "survival": "lexical",
+     "at": 22045,
+     "detail": "other: Review collection policies. Collection policies control what",
+     "discrimination": 0
+    },
+    {
+     "kind": "announce",
+     "klass": "other",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "assertive": false,
+     "text": "Scan for potential risks in your org. Turn on analytics to scan user activity daily. You'll get real-time, pseudonymized insights to help you set up and refine policies so you're detecting the most relevant activity. Learn more about analytics",
+     "survival": "lexical",
+     "at": 22046,
+     "detail": "other: Scan for potential risks in your org. Turn on analytics to s",
+     "discrimination": 0
+    },
+    {
+     "kind": "count",
+     "dir": "up",
+     "name": "  Policy name   Status  Users in sc",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "from": 0,
+     "to": 1,
+     "declared": true,
+     "survival": "structural",
+     "at": 22921,
+     "detail": "  Policy name   Status  Users in sc 0 → 1",
+     "discrimination": 0
+    },
+    {
+     "kind": "place",
+     "name": "Insider Risk Management > Policies",
+     "survival": "structural",
+     "source": "aria-current",
+     "at": 20001,
+     "detail": "place → Insider Risk Management > Policies",
+     "discrimination": 0
+    }
+   ],
+   "success": [
+    {
+     "kind": "count",
+     "dir": "up",
+     "name": "  Policy name   Status  Users in sc",
+     "frame": "https://purview.microsoft.com/insiderriskmgmt/policiespage",
+     "from": 0,
+     "to": 1,
+     "declared": true,
+     "survival": "structural",
+     "at": 22921,
+     "detail": "  Policy name   Status  Users in sc 0 → 1",
+     "discrimination": 0
+    }
+   ],
+   "satisfies": true,
+   "satisfyRule": "one structural atom unique in this run",
+   "failure": [],
+   "movement": [
+    {
+     "kind": "place",
+     "name": "Insider Risk Management > Policies",
+     "survival": "structural",
+     "source": "aria-current",
+     "at": 20001,
+     "detail": "place → Insider Risk Management > Policies",
+     "discrimination": 0
+    }
+   ],
+   "latency": {
+    "observedMs": 544,
+    "klass": "ui",
+    "deadlineMs": 3264,
+    "why": "the outcome appeared immediately; 6x the observed time, floored at 3s"
+   },
+   "transition": "Insider Risk Management > Policies",
+   "observability": "observable",
+   "observabilityWhy": "one structural atom unique in this run",
+   "observabilityCause": "satisfied"
+  },
+  {
+   "index": 2,
+   "startState": {
+    "section": "Insider Risk Management",
+    "page": "Policies",
+    "route": "/insiderriskmgmt/policiespage",
+    "completed": 0
+   },
+   "action": {
+    "name": "Overview",
+    "role": "menuitem",
+    "region": "menu",
+    "t": 29153
+   },
+   "window": {
+    "from": 29153,
+    "to": 37616
+   },
+   "atoms": [
+    {
+     "kind": "place",
+     "name": "Insider Risk Management > Overview",
+     "survival": "structural",
+     "source": "aria-current",
+     "at": 30001,
+     "detail": "place → Insider Risk Management > Overview",
+     "discrimination": 0
+    }
+   ],
+   "success": [],
+   "satisfies": false,
+   "satisfyRule": "everything that happened here was MOVEMENT — a place change or a dialog. Nothing announced an outcome, no list changed, no empty state cleared, so there is no evidence the world is different",
+   "failure": [],
+   "movement": [
+    {
+     "kind": "place",
+     "name": "Insider Risk Management > Overview",
+     "survival": "structural",
+     "source": "aria-current",
+     "at": 30001,
+     "detail": "place → Insider Risk Management > Overview",
+     "discrimination": 0
+    }
+   ],
+   "latency": {
+    "observedMs": 848,
+    "klass": "ui",
+    "deadlineMs": 5088,
+    "why": "the outcome appeared immediately; 6x the observed time, floored at 3s"
+   },
+   "transition": "Insider Risk Management > Overview",
+   "observability": "ambiguous",
+   "observabilityWhy": "everything that happened here was MOVEMENT — a place change or a dialog. Nothing announced an outcome, no list changed, no empty state cleared, so there is no evidence the world is different",
+   "observabilityCause": "movement-only"
+  }
+ ],
+ "summary": {
+  "steps": 3,
+  "observable": 1,
+  "ambiguous": 1,
+  "silent": 1,
+  "withFailure": 0,
+  "async": 0,
+  "places": [
+   "Insider Risk Management > Overview",
+   "Insider Risk Management > Policies"
+  ]
+ }
+}
