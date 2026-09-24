@@ -199,7 +199,23 @@
       return { level: "ASK", canGlow: false, why: "coach-missing",
                text: "I can see this page but I have not matched it to a lab guide. What are you trying to do?" };
     }
+    /*
+     * THE COACH GETS THE WORLD MODEL, not just the world model's step index.
+     *
+     * `sayable` is the single authority on whether a step number may be spoken at all, and
+     * `place` is the only thing in the extension that reads where the learner is from the page
+     * rather than from a URL pattern. Passing them here is what stops coach.js keeping its own
+     * private answer to both questions.
+     */
+    var snap = null;
+    try {
+      var PZ = window.LabPilotPosition;
+      snap = PZ ? PZ.read() : null;
+    } catch (e) { snap = null; }
+
     return C.say({
+      sayable: snap ? snap.sayable : null,
+      place: snap ? snap.place : null,
       lab: world.lab, steps: world.steps, doneMap: world.doneMap,
       step: world.step, index: world.index, total: world.total,
       confidence: world.confidence, hop: world.hop, done: world.done, complete: world.complete,

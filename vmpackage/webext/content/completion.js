@@ -247,6 +247,35 @@
             } catch (e) { host = null; }
           }
           if (host) note(host, txt(host));
+
+          /*
+           * A LIVE REGION THAT ARRIVES ALREADY FULL.
+           *
+           * The check above reads records[i].target, which for an appendChild is the PARENT.
+           * So a portal that builds its error toast complete with its text and then attaches it
+           * - `body.appendChild(div[role=alert] "Client Error...")` - produces one record whose
+           * target is <body>, and body.closest(LIVE_SEL) is null. The announcement was dropped
+           * entirely, silently, and it is the assertive kind: errors and permission failures,
+           * the announcements that matter most.
+           *
+           * Found by provoking a real error on the live Azure portal and watching nothing reach
+           * Position. The seeding pass in start() hid it during development, because anything
+           * present before Rocky loaded was picked up by querySelectorAll instead.
+           */
+          var added = records[i].addedNodes;
+          for (var a = 0; added && a < added.length; a++) {
+            var nd = added[a];
+            if (!nd || nd.nodeType !== 1) continue;
+            try {
+              if (nd.closest && nd.closest('[data-labpilot], #labpilot-overlay-root, #labpilot-rocky')) continue;
+              if (nd.matches && nd.matches(LIVE_SEL)) note(nd, txt(nd));
+              // The region may be nested inside the subtree that was attached.
+              if (nd.querySelectorAll) {
+                var inner = nd.querySelectorAll(LIVE_SEL);
+                for (var b = 0; b < inner.length; b++) note(inner[b], txt(inner[b]));
+              }
+            } catch (e) { /* a node that will not be queried cannot be heard */ }
+          }
         }
       });
       // characterData and childList both matter: portals variously replace the text node and

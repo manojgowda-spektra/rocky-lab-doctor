@@ -43,6 +43,7 @@ function makeDom() {
       css: o.css || null,
       getBoundingClientRect() { return { width: o.hidden ? 0 : 400, height: o.hidden ? 0 : 200, top: 0, left: 0, right: 400, bottom: 200 }; },
       closest(sel) { return matches(this, sel) ? this : null; },
+      matches(sel) { return matches(this, sel); },
       querySelectorAll(sel) { return this.kids.filter((k) => matches(k, sel)); },
       get parentElement() { return null; },
     };
@@ -86,6 +87,13 @@ function makeDom() {
     setBodyText(t) { body._text = t; },
     // Announce: change a live region's text and fire the observer, exactly as a portal does.
     announce(node, text) { node._text = text; if (mutationCb) mutationCb([{ target: node }]); },
+    /*
+     * ATTACH: the OTHER way a portal announces something — build the toast complete with its
+     * text and append the finished thing. The mutation record's target is then the PARENT, and
+     * the live region is only in addedNodes. announce() above could never produce this shape,
+     * which is why the gap survived 28 passing tests.
+     */
+    attach(parent, node) { parent.kids.push(node); if (mutationCb) mutationCb([{ target: parent, addedNodes: [node] }]); },
     tick(ms) { clock += (ms || 1); },
   };
 }
@@ -502,6 +510,55 @@ check('the empty-state scan does not force layout', () => {
   const fn = code.slice(code.indexOf('function emptyStates'), code.indexOf('function dialogs'));
   assert.ok(/textContent/.test(fn), 'emptyStates no longer uses textContent');
   assert.ok(!/innerText/.test(fn), 'emptyStates reads innerText, which forces a reflow on every observation');
+});
+
+check('a live region that arrives ALREADY FULL is still heard', () => {
+  /*
+   * MEASURED ON THE LIVE AZURE PORTAL. An error was provoked and nothing reached Position.
+   *
+   * The observer read records[i].target, which for an appendChild is the PARENT — so a portal
+   * that attaches a finished `div[role=alert]` produced one record whose target was <body>,
+   * and body.closest(LIVE_SEL) is null. The announcement vanished. The failures that matter
+   * most are exactly the ones delivered this way: Azure's measured permission error is a
+   * role=alertdialog that appears when it happens.
+   */
+  const dom = makeDom();
+  const C = load(dom);
+  C.start();
+  const toast = dom.el({
+    attrs: { role: 'alert' },
+    text: "Client Error - Looks like you don't have the right permissions to do this",
+  });
+  dom.attach(dom.body, toast);
+  const said = C.announcements(60000);
+  const hit = said.find((a) => /right permissions/.test(a.text));
+  assert.ok(hit, 'an appended live region was never heard: ' + JSON.stringify(said.map((x) => x.text)));
+  assert.strictEqual(hit.kind, 'failure', 'heard, but not as a failure');
+  assert.strictEqual(hit.assertive, true, 'role=alert is assertive by definition');
+});
+
+check('a live region nested inside an attached subtree is heard', () => {
+  // React portals mount a wrapper, not a bare region: <div class="toast-host"><div role=status>
+  const dom = makeDom();
+  const C = load(dom);
+  C.start();
+  const inner = dom.el({ attrs: { role: 'status' }, text: 'Policy created successfully' });
+  const wrapper = dom.el({ attrs: { class: 'toast-host' }, kids: [inner] });
+  dom.attach(dom.body, wrapper);
+  const said = C.announcements(60000);
+  assert.ok(said.some((a) => /Policy created/.test(a.text)),
+    'a region one level inside the attached node was missed');
+});
+
+check('attaching something that is not a live region stays silent', () => {
+  // The fix must not turn every appendChild on a busy portal into an announcement.
+  const dom = makeDom();
+  const C = load(dom);
+  C.start();
+  const plain = dom.el({ attrs: { class: 'row' }, text: 'Just another table row of content here' });
+  dom.attach(dom.body, plain);
+  assert.strictEqual(C.announcements(60000).length, 0,
+    'an ordinary node was treated as an announcement');
 });
 
 console.log('');

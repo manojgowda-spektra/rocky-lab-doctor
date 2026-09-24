@@ -119,7 +119,7 @@ check('ORIENT: belief too weak to name a step, but the URL still says the sectio
   }));
   assert.strictEqual(r.level, 'ORIENT');
   assert.match(r.text, /Insider Risk Management/);
-  assert.ok(!/Step \d+ of/.test(r.text), `claimed a step number at confidence 0.2: "${r.text}"`);
+  assert.ok(!/Step \S+ of/.test(r.text), `claimed a step number at confidence 0.2: "${r.text}"`);
 });
 
 check('ORIENT names the next UNFINISHED step, from the done ledger', () => {
@@ -161,7 +161,7 @@ check('a step NUMBER appears only when the belief has converged', () => {
     const r = C.say(Object.assign({}, BASE, {
       step: STEPS[2], index: 2, confidence: conf, verdict: { status: 'resolved', label: 'Save' },
     }));
-    assert.ok(!/Step \d+ of/.test(r.text), `claimed a step number at confidence ${conf}: "${r.text}"`);
+    assert.ok(!/Step \S+ of/.test(r.text), `claimed a step number at confidence ${conf}: "${r.text}"`);
   }
   const sure = C.say(Object.assign({}, BASE, {
     step: STEPS[2], index: 2, confidence: 0.85, verdict: { status: 'resolved', label: 'Save' },
@@ -191,6 +191,88 @@ check('the section is read from the URL, and an unknown one still yields somethi
   const other = C._sectionOf('https://portal.azure.com/resource-groups');
   assert.ok(other && other.length > 2, `no fallback section for an unknown route: ${other}`);
   assert.strictEqual(C._sectionOf('not a url'), null);
+});
+
+/* ------------------------------------------------------------------------------------------
+ * THE COACH CONSUMES THE WORLD MODEL.
+ *
+ * Until now coach.js answered "may I say a step number?" and "where is the learner?" entirely
+ * on its own, with a threshold and a URL regex table that sat beside position.js's answers to
+ * the same two questions. Two engines, one screen, no tie-break. These pin the consolidation.
+ * ------------------------------------------------------------------------------------------ */
+
+check('Position can VETO a number the coach would happily have said', () => {
+  // The negative assertions below match `Step \S+ of`, not `Step \d+ of`. A mutation that
+  // dropped the veto emitted "Step null of 5", which is worse than the bug being guarded and
+  // which the digit form happily accepted. A "no number here" test has to reject every shape
+  // of number, including the broken ones.
+  // The important direction. Confidence is 0.95 and the verdict is resolved, so every one of
+  // the coach's own rules says "state the number" - and Position, which can see that the
+  // evidence is a nav item present on every page, says no. Position wins.
+  const r = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.95,
+    verdict: { status: 'resolved', label: 'Save' },
+    sayable: { stepNumber: null, total: 5, source: 'none', why: 'position unknown' },
+  }));
+  assert.ok(!/Step \S+ of/.test(r.text),
+    'the coach overruled Position and stated a number anyway: "' + r.text + '"');
+  assert.match(r.text, /Save|Click/, 'vetoing the number should not cost the whole sentence');
+});
+
+check('Position can AUTHORISE a number the coach would have withheld', () => {
+  // The other direction, and the reason a veto is not enough on its own: a recorded script
+  // knows exactly which step it is on while the belief confidence is still 0.
+  const r = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0,
+    verdict: { status: 'resolved', label: 'Save' },
+    sayable: { stepNumber: 3, total: 5, source: 'script', why: 'following a recorded script' },
+  }));
+  assert.match(r.text, /Step 3 of 5/,
+    'the coach ignored Position and withheld a number it was told was safe: "' + r.text + '"');
+});
+
+check('the number Position gives is the number shown, not a recomputed one', () => {
+  // A regression guard with teeth: index and sayable.stepNumber deliberately disagree. The
+  // old code did (index + 1); anything that still does will print 3 here instead of 4.
+  const r = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.9,
+    verdict: { status: 'resolved', label: 'Save' },
+    sayable: { stepNumber: 4, total: 9, source: 'belief', why: '' },
+  }));
+  assert.match(r.text, /Step 4 of 9/, 'the coach recomputed the number instead of using it: "' + r.text + '"');
+});
+
+check('the veto holds at LOCATE too, not only at POINT', () => {
+  const r = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.95, verdict: { status: 'ambiguous' },
+    sayable: { stepNumber: null, total: 5, source: 'none', why: 'position unknown' },
+  }));
+  assert.strictEqual(r.level, 'LOCATE');
+  assert.ok(!/Step \S+ of/.test(r.text), 'LOCATE leaked a number Position vetoed: "' + r.text + '"');
+});
+
+check('ORIENT names the page Position read, not the one the URL table guessed', () => {
+  // sectionOf() can only recognise hosts somebody remembered to add, and it answers from the
+  // URL - which on a single-page portal stops changing long before the learner does.
+  const r = C.say(Object.assign({}, BASE, {
+    step: null, confidence: 0.1, url: 'https://purview.microsoft.com/unknownthing',
+    place: { page: 'Insider risk management', section: 'Purview' },
+  }));
+  assert.strictEqual(r.level, 'ORIENT');
+  assert.match(r.text, /You are in Insider risk management/, r.text);
+});
+
+check('with no Position loaded the coach still works exactly as before', () => {
+  // Degradation, not dependency. position.js failing to load must cost Rocky accuracy, never
+  // his voice - the same rule every other level in this file follows.
+  const r = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.85, verdict: { status: 'resolved', label: 'Save' },
+  }));
+  assert.match(r.text, /Step 3 of 5/, 'the fallback threshold stopped working: "' + r.text + '"');
+  const low = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.3, verdict: { status: 'resolved', label: 'Save' },
+  }));
+  assert.ok(!/Step \S+ of/.test(low.text), 'the fallback threshold stopped guarding: "' + low.text + '"');
 });
 
 console.log('');

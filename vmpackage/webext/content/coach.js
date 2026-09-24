@@ -127,6 +127,29 @@
    *   surface   non-browser surface for this step, if any
    * }
    */
+  /*
+   * THE STEP NUMBER COMES FROM EXACTLY ONE PLACE.
+   *
+   * This file used to decide for itself whether a number was safe to say, using its own
+   * CONF_NUMBER - which sat beside position.js's SAY_AT and pilot.js's CONF_SHOW, three copies
+   * of one rule and three chances for them to contradict each other on screen.
+   *
+   * Position owns it now. `sayable.stepNumber` is null when Rocky must not state a number, and
+   * checking it IS the rule; there is nothing else to weigh up. The old threshold survives only
+   * for the case where position.js is not loaded at all, so this file still degrades rather
+   * than falling silent.
+   */
+  function stepNumber(ctx) {
+    if (ctx.sayable) {
+      return ctx.sayable.stepNumber
+        ? { n: ctx.sayable.stepNumber, total: ctx.sayable.total || ctx.total || 0 }
+        : null;
+    }
+    var conf = typeof ctx.confidence === "number" ? ctx.confidence : 0;
+    var total = ctx.total || (ctx.steps && ctx.steps.length) || 0;
+    return (conf >= CONF_NUMBER && total) ? { n: (ctx.index || 0) + 1, total: total } : null;
+  }
+
   function say(ctx) {
     ctx = ctx || {};
     var step = ctx.step || null;
@@ -134,7 +157,13 @@
     var verdict = ctx.verdict || null;
     var total = ctx.total || (ctx.steps && ctx.steps.length) || 0;
     var done = ctx.done || 0;
-    var section = sectionOf(ctx.url);
+    /*
+     * WHERE THEY ARE, from Position first. sectionOf() is a URL regex table - a second place
+     * engine living next to the real one - and it can only ever recognise the handful of hosts
+     * somebody remembered to add. Position reads the page itself, so it is right more often and
+     * in more places; the table stays as the fallback for when Position has nothing.
+     */
+    var section = (ctx.place && (ctx.place.page || ctx.place.section)) || sectionOf(ctx.url);
     var label = step ? clean(firstLabel(step, ctx.hop)) : "";
 
     // A step Rocky cannot see is its own answer, and an honest one. Saying which surface it
@@ -159,7 +188,8 @@
 
     // 1. POINT — the control resolved uniquely. The only level that glows.
     if (verdict && verdict.status === "resolved" && step) {
-      var num = conf >= CONF_NUMBER && total ? "Step " + (ctx.index + 1) + " of " + total + ". " : "";
+      var sn = stepNumber(ctx);
+      var num = sn ? "Step " + sn.n + " of " + sn.total + ". " : "";
       return {
         level: "POINT", canGlow: true, why: "resolved",
         text: num + (step.text ? clean(step.text) : "Click " + label + "."),
@@ -169,7 +199,8 @@
     // 2. LOCATE — the step is known, the control is not on screen. Name what to look for and
     //    where it tends to live. No glow: Rocky has not found it and will not pretend to.
     if (step && conf >= CONF_STEP && label) {
-      var num2 = conf >= CONF_NUMBER && total ? "Step " + (ctx.index + 1) + " of " + total + ": " : "";
+      var sn2 = stepNumber(ctx);
+      var num2 = sn2 ? "Step " + sn2.n + " of " + sn2.total + ": " : "";
       var amb = verdict && verdict.status === "ambiguous";
       return {
         level: "LOCATE", canGlow: false, why: amb ? "ambiguous" : "absent",

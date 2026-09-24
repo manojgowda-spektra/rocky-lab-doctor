@@ -173,6 +173,149 @@ check('recovery is hard to enter and trivially easy to leave', () => {
   assert.ok(lim.MIN_GAP_MS >= 15000, `gap is only ${lim.MIN_GAP_MS} ms`);
 });
 
+/* ------------------------------------------------------------------------------------------
+ * RUNG 0 - DIAGNOSE. The portal said what went wrong; these pin that Rocky repeats it.
+ *
+ * The bar these have to clear: before this layer existed, recovery's ONLY trigger was a dwell
+ * timer, so the best Rocky could offer a learner staring at "you do not have permission" was
+ * "you have been on this step a little while". Every test here is about that gap.
+ * ------------------------------------------------------------------------------------------ */
+
+const FAIL_AT = 1000000;
+const fail = (text, at) => ({ text, frame: 'https://x.reactblade.portal.azure.net', at: at || FAIL_AT });
+const fresh = () => ({ rung: 0, lastRungAt: 0, engaged: false, said: 0, saidFailure: null });
+
+check('a portal failure is classified, not just repeated', () => {
+  // The real one, measured on the live Azure portal.
+  assert.strictEqual(
+    RC._classify("Client Error - Looks like you don't have the right permissions").code,
+    'permission');
+  assert.strictEqual(RC._classify('The resource group already exists.').code, 'conflict');
+  assert.strictEqual(RC._classify('Resource not found').code, 'notfound');
+  assert.strictEqual(RC._classify('Request timed out, please try again').code, 'transient');
+  assert.strictEqual(RC._classify('Name is required').code, 'validation');
+  /*
+   * THE NUMERIC BRANCHES, tested on their own.
+   *
+   * `\b404\b` shipped as `<BS>404<BS>` - a heredoc ate one backslash and Python turned the
+   * survivor into a backspace - and every test above still passed, because each phrase matched
+   * a DIFFERENT alternative in the same regex. A pattern with five alternatives needs a case
+   * that only one of them can satisfy, or four of them can rot unnoticed.
+   */
+  assert.strictEqual(RC._classify('Request failed: 404').code, 'notfound');
+  assert.strictEqual(RC._classify('The service returned 503.').code, 'transient');
+  assert.strictEqual(RC._classify('Cost is 404404 per month').code, 'unknown',
+    'the word boundary is gone - 404 is matching inside a longer number');
+});
+
+check('an error Rocky cannot read gets no invented cause', () => {
+  // Guessing a plausible reason for an unreadable error is how a tutor loses a learner for
+  // good. The unknown class must offer NO advice at all.
+  const c = RC._classify('Operation failed with status QX-77.');
+  assert.strictEqual(c.code, 'unknown');
+  assert.strictEqual(c.move, '', 'Rocky invented a cause for an error he cannot read');
+  const d = RC._diagnose(fresh(), fail('Operation failed with status QX-77.'), FAIL_AT + 1000);
+  assert.ok(d, 'an unreadable failure should still be reported');
+  assert.ok(/cannot tell/i.test(d.text), 'Rocky did not admit he cannot tell: ' + d.text);
+});
+
+check('a permission failure explains the lab cause, not the learner', () => {
+  const d = RC._diagnose(fresh(), fail("You don't have the right permissions"), FAIL_AT + 1000);
+  assert.ok(d, 'no diagnosis for a fresh permission failure');
+  assert.strictEqual(d.kind, 'DIAGNOSE');
+  assert.strictEqual(d.rung, 0, 'a diagnosis must not consume a ladder rung');
+  assert.ok(/permissions problem/i.test(d.text), d.text);
+  assert.ok(/not something you typed wrong|role/i.test(d.text),
+    'Rocky blamed the learner for a permissions failure: ' + d.text);
+});
+
+check('Rocky quotes the portal rather than paraphrasing it', () => {
+  // He did not watch the click fail. He watched the portal say so, and the sentence must not
+  // claim more than that.
+  const d = RC._diagnose(fresh(), fail('Client Error - no permission to list keys'), FAIL_AT + 1);
+  assert.ok(d.text.indexOf('Client Error - no permission to list keys') >= 0,
+    'the portal\u2019s own words are missing: ' + d.text);
+  assert.ok(/portal said/i.test(d.text), 'no attribution to the portal: ' + d.text);
+});
+
+check('each distinct failure is announced exactly once', () => {
+  const st = fresh();
+  const f = fail('Access denied');
+  const d1 = RC._diagnose(st, f, FAIL_AT + 1000);
+  assert.ok(d1, 'first failure was silent');
+  st.saidFailure = d1.id; st.lastRungAt = FAIL_AT + 1000;
+  // WELL OUTSIDE the rate-limit window, or this proves nothing: an earlier version of this
+  // test asked again 1 s later, so FAILURE_GAP_MS returned null and the assertion passed even
+  // with the de-duplication deleted. A test that two separate guards can satisfy is testing
+  // neither of them.
+  assert.strictEqual(RC._diagnose(st, f, FAIL_AT + 20000), null,
+    'the same failure was announced twice');
+  // A NEW failure with the same words is a new event, and must speak again.
+  const later = fail('Access denied', FAIL_AT + 30000);
+  assert.ok(RC._diagnose(st, later, FAIL_AT + 31000),
+    'a second, genuinely new failure was swallowed');
+});
+
+check('a stale failure is old news and stays quiet', () => {
+  // Rising edge, not state. A banner that has been sitting there for two minutes says nothing
+  // about now - and on a Rocky that has just reloaded it would otherwise announce history.
+  assert.strictEqual(RC._diagnose(fresh(), fail('Access denied'), FAIL_AT + 120000), null,
+    'Rocky announced a two-minute-old error as if it had just happened');
+  assert.ok(RC._diagnose(fresh(), fail('Access denied'), FAIL_AT + 3000),
+    'a three-second-old failure should still be fresh');
+});
+
+check('two failures in the same breath get one sentence', () => {
+  const st = fresh();
+  const d1 = RC._diagnose(st, fail('Access denied'), FAIL_AT + 500);
+  st.saidFailure = d1.id; st.lastRungAt = FAIL_AT + 500;
+  assert.strictEqual(RC._diagnose(st, fail('Name is required', FAIL_AT + 600), FAIL_AT + 900), null,
+    'Rocky talked over himself');
+});
+
+check('no failure means no diagnosis', () => {
+  assert.strictEqual(RC._diagnose(fresh(), null, FAIL_AT), null);
+  assert.strictEqual(RC._diagnose(fresh(), { text: '', at: FAIL_AT }, FAIL_AT + 1), null);
+});
+
+/* ---- the ladder now consumes Position ---------------------------------------------------- */
+
+check('the dwell ladder shuts up once the lab is complete', () => {
+  const w = world({ stuck: 'dwelling' });
+  assert.ok(RC._ladder(w, S(), 100000), 'baseline: a stuck learner should get a rung');
+  assert.strictEqual(
+    RC._ladder(w, S(), 100000, { workflow: { state: 'complete' }, place: {} }), null,
+    'Rocky nagged a learner who had already finished the lab');
+});
+
+check('a hint says where the learner is, when Position knows', () => {
+  const snap = { workflow: { state: 'guiding' }, place: { page: 'Insider risk management' } };
+  const r1 = RC._ladder(world({ stuck: 'dwelling' }), S(), 100000, snap);
+  assert.ok(/Insider risk management/.test(r1.text), 'rung 1 ignored Position: ' + r1.text);
+  const r3 = RC._ladder(world({ stuck: 'dwelling' }), S({ rung: 2, lastRungAt: 0 }), 100000, snap);
+  assert.strictEqual(r3.rung, 3);
+  assert.ok(/Insider risk management/.test(r3.text), 'rung 3 ignored Position: ' + r3.text);
+});
+
+check('a hint stays unqualified when Position does not know where they are', () => {
+  // An unqualified sentence beats a confidently wrong one. No place, no claim about place.
+  const r = RC._ladder(world({ stuck: 'dwelling' }), S(), 100000,
+    { workflow: { state: 'guiding' }, place: { page: null } });
+  assert.ok(!/You are on/.test(r.text), 'Rocky claimed a place he does not know: ' + r.text);
+});
+
+check('recovery actually reads Position and the failure channel', () => {
+  // A wiring test, because the whole point of this layer is that it is CONNECTED. Behavioural,
+  // not a grep for a word: the module must resolve window.LabPilotPosition at call time.
+  const src = fs.readFileSync(
+    path.join(__dirname, '..', 'webext', 'content', 'recovery.js'), 'utf8');
+  assert.ok(/window\.LabPilotPosition/.test(src), 'recovery never reaches for Position');
+  assert.ok(/recovery\s*&&\s*snap\.recovery\.failure|recovery\.failure/.test(src),
+    'recovery never reads the portal failure channel');
+  assert.ok(/lastCompletion/.test(src),
+    'recovery does not reset on an observed world change');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky helps when you are stuck, and knows when to stop.\n`);

@@ -65,9 +65,11 @@
     lastReason: null,
     engaged: false,
     said: 0,
+    saidFailure: null,     // id of the last failure announced, so each one is said exactly once
   };
 
   function W() { return window.LabPilotWorld; }
+  function POS() { return window.LabPilotPosition; }
   function P() { return window.LabPilotPilot; }
   function R() { return window.LabPilotRocky; }
   function KB() { return window.LabPilotKB; }
@@ -112,14 +114,95 @@
     w.note({ type: glowed ? "misclick" : "click" });
   }
 
+  /*
+   * RUNG 0 - DIAGNOSE. The portal already said what went wrong; Rocky was not listening.
+   *
+   * Everything below this point is a DWELL ladder: it fires because time passed. That is the
+   * weakest evidence in the building, and until now it was the only trigger recovery had -
+   * so the best Rocky could manage at a learner staring at a red error banner was "you have
+   * been on this step a little while".
+   *
+   * The relay carries the portal's own failure announcements from every frame, including the
+   * cross-origin Azure blade where they actually appear, and position.read().recovery.failure
+   * surfaces the latest one. Reacting to THAT is the difference between a timer and a trainer:
+   * "you have been here a while" becomes "that failed on permissions, and here is what that
+   * usually means".
+   *
+   * Rung 0 sits OUTSIDE the ladder and does not consume a rung. A learner who hits three
+   * genuine errors deserves three genuine diagnoses, and should still have the full hint
+   * ladder afterwards.
+   */
+  var FAILURE_TTL_MS = 45000;   // older than this is old news, not something that just happened
+  var FAILURE_GAP_MS = 5000;    // two failures in the same breath get one sentence, not two
+
+  var FAILURES = [
+    { code: "permission",
+      re: /permission|not authoriz|unauthoriz|access denied|forbidden|do not have access|don.t have (the )?right|insufficient privileg|requires? (the )?role/i,
+      move: "That is a permissions problem, not something you typed wrong. In a lab it usually " +
+            "means the account has not been given the role yet. Wait a minute, refresh, and try " +
+            "again - role assignments take time to take effect." },
+    { code: "conflict",
+      re: /already exists|already in use|already been|conflict|duplicate|is taken/i,
+      move: "Something with that name is already there. Either an earlier attempt of yours " +
+            "worked, or you need a different name." },
+    { code: "notfound",
+      re: /not found|does not exist|no longer exists|could not be found|couldn.t be found|\b404\b/i,
+      move: "Whatever that was pointing at is not there. Usually it means an earlier step did " +
+            "not finish, rather than this one being wrong." },
+    { code: "transient",
+      re: /try again|timed out|timeout|temporar|throttl|too many requests|network error|\b(503|500|502|429)\b/i,
+      move: "That one looks temporary. Give it a moment and do exactly the same thing again." },
+    { code: "validation",
+      re: /required|invalid|must be|not valid|please enter|cannot be empty|can.t be empty|too (long|short)/i,
+      move: "The form is not happy with something on it. Look for the field marked in red - the " +
+            "portal puts the reason right next to it." },
+  ];
+
+  /*
+   * Pure, and unit tested. Returns a code and the one useful thing to do about it, or the
+   * unknown class - which deliberately offers no advice, because inventing a plausible cause
+   * for an error Rocky cannot read is exactly the behaviour that loses a learner's trust.
+   */
+  function classify(text) {
+    var s = String(text || "");
+    for (var i = 0; i < FAILURES.length; i++) {
+      if (FAILURES[i].re.test(s)) return { code: FAILURES[i].code, move: FAILURES[i].move };
+    }
+    return { code: "unknown", move: "" };
+  }
+
+  function diagnose(state, failure, nowMs) {
+    if (!failure || !failure.text) return null;
+    // RISING EDGE, not a state. A failure banner that is merely PRESENT says nothing about
+    // now; one that has just arrived says everything. Same rule as the Completion Engine.
+    var id = failure.at + "│" + failure.text;
+    if (state.saidFailure === id) return null;
+    if (!failure.at || nowMs - failure.at > FAILURE_TTL_MS) return null;
+    if (nowMs - state.lastRungAt < FAILURE_GAP_MS) return null;
+
+    var c = classify(failure.text);
+    var quoted = String(failure.text).replace(/\s+/g, " ").trim().slice(0, 160);
+    return {
+      rung: 0, kind: "DIAGNOSE", code: c.code, id: id,
+      // Rocky QUOTES the portal rather than paraphrasing it. He did not see the click fail; he
+      // saw the portal say so, and the sentence should not claim more than that.
+      text: "Something just failed. The portal said: “" + quoted + "”" +
+            (c.move ? " " + c.move : " I cannot tell what caused that one."),
+    };
+  }
+
   // ---- the ladder (pure; unit tested) --------------------------------------------------------
 
   /*
    * Which rung, given the world and our own history. Returns null for "say nothing", which is
    * the common case and must stay the common case.
    */
-  function ladder(world, state, nowMs) {
+  function ladder(world, state, nowMs, snap) {
     if (!world || !world.step) return null;
+    // THE LAB IS FINISHED. Position derives this rather than storing it, so it cannot go stale
+    // the way a cached flag can. Nagging someone who has already finished is the worst
+    // possible moment to nag.
+    if (snap && snap.workflow && snap.workflow.state === "complete") return null;
     if (!world.stuck) return null;                         // not stuck: nothing to do
     if (state.rung >= MAX_RUNGS + 1) return null;          // said our piece; stop offering
     if (nowMs - state.lastRungAt < MIN_GAP_MS) return null;
@@ -132,11 +215,17 @@
     var ti = Math.max(0, Math.min(world.hop || 0, tg.length - 1));
     var label = (tg[ti] && tg[ti].label) || "the next control";
 
+    // WHERE THEY ACTUALLY ARE, from Position, which is the only thing in the extension that
+    // knows. Empty when it does not know - an unqualified sentence beats a confident wrong one.
+    var page = "";
+    try { page = (snap && snap.place && snap.place.page) || ""; } catch (e0) { page = ""; }
+    var here = page ? " You are on " + page + "." : "";
+
     if (next === 1) {
       // POINT. The glow, if any, already happened. Add only WHERE we are.
       return {
         rung: 1, kind: "POINT",
-        text: "You have been on this step a little while. It is: " + (step.text || label),
+        text: "You have been on this step a little while." + here + " It is: " + (step.text || label),
       };
     }
     if (next === 2) {
@@ -157,7 +246,8 @@
       // RECOVER. Get back to a state we both understand, rather than hunting from here.
       return {
         rung: 3, kind: "RECOVER",
-        text: "Let us get back to somewhere we both recognise. Go back to the page the guide opened this exercise on, and I will pick the step up from there.",
+        text: (page ? "You are on " + page + ", and I cannot line that up with this step. " : "") +
+              "Let us get back to somewhere we both recognise. Go back to the page the guide opened this exercise on, and I will pick the step up from there.",
       };
     }
     // STOP. Not a hint: an honest admission, plus the one thing that is still useful.
@@ -173,6 +263,9 @@
     if (st.rung === 0 && !st.engaged) return;
     st.rung = 0; st.engaged = false; st.lastReason = null;
     st.lastResetWhy = why || null;
+    // st.saidFailure is deliberately NOT cleared. It is keyed on the failure's own timestamp,
+    // so a genuinely new failure always speaks; clearing it here would let one banner be
+    // announced twice because something unrelated reset the ladder in between.
   }
 
   function speak(rungObj) {
@@ -207,7 +300,7 @@
     return true;
   }
 
-  var lastIndex = -1, lastDone = -1;
+  var lastIndex = -1, lastDone = -1, lastCompletionAt = 0;
 
   /*
    * One turn. Driven by the pilot's own perception events, never a timer — a recovery loop on
@@ -220,6 +313,40 @@
     var world = w.current();
     if (!world || !world.step) return;
 
+    var snap = null;
+    try { var pz = POS(); snap = pz ? pz.read() : null; } catch (e1) { snap = null; }
+
+    /*
+     * A WORLD CHANGE ENDS RECOVERY. "A learner action is evidence of attempt; a world change is
+     * evidence of completion" - so the strongest possible signal that someone is no longer
+     * stuck is the page itself doing something, and it should silence Rocky before any ladder
+     * logic runs. This reaches across frames, so it works on Azure, where the grid that
+     * changes is not even in this document.
+     */
+    if (snap && snap.lastCompletion && snap.lastCompletion.at &&
+        snap.lastCompletion.at !== lastCompletionAt) {
+      lastCompletionAt = snap.lastCompletion.at;
+      reset("world-changed");
+    }
+
+    /*
+     * RUNG 0 PREEMPTS THE LADDER. A portal that has just announced a failure outranks a dwell
+     * timer completely, and it has to be checked BEFORE the progress-reset return below - a
+     * failed action usually leaves the step index exactly where it was, which is precisely the
+     * case the dwell ladder handles worst.
+     */
+    var d = snap ? diagnose(st, snap.recovery && snap.recovery.failure, Date.now()) : null;
+    if (d) {
+      if (speak(d)) {
+        st.saidFailure = d.id;            // one sentence per distinct failure, not per turn
+        st.lastRungAt = Date.now();
+        st.lastReason = "failure:" + d.code;
+        st.engaged = true;
+        st.said++;
+      }
+      return;                             // never a diagnosis and a hint in the same breath
+    }
+
     // PROGRESS RESETS EVERYTHING. Advancing a step, or finishing one, means whatever they were
     // stuck on is behind them. Cheap to check and the most important rule here.
     if (world.index !== lastIndex || world.done !== lastDone) {
@@ -228,7 +355,7 @@
       return;
     }
 
-    var rungObj = ladder(world, st, Date.now());
+    var rungObj = ladder(world, st, Date.now(), snap);
     if (!rungObj) return;
     if (!speak(rungObj)) return;
     st.rung = rungObj.rung;
@@ -266,6 +393,8 @@
   window.LabPilotRecovery = {
     start: start, stop: stop, status: status,
     _ladder: ladder,            // pure, unit tested
+    _diagnose: diagnose,        // pure, unit tested
+    _classify: classify,        // pure, unit tested
     _state: st,
     _onClick: onClick,
     _limits: { MAX_RUNGS: MAX_RUNGS, MIN_GAP_MS: MIN_GAP_MS },

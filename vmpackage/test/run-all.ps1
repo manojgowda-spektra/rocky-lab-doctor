@@ -23,9 +23,6 @@ function Gate($name, $cmd, $what) {
 Gate 'Source integrity' { node (Join-Path $pkg 'test/source-integrity-test.js') | Out-Null } `
   'no mangled escape in a shipped file: the class of bug that reached a learner VM'
 
-Gate 'Package integrity' { node (Join-Path $pkg 'test/package-integrity-test.js') | Out-Null } `
-  'the bytes inside the shipped zip and the loose installers, which source integrity never reads'
-
 Gate 'Manifest vs real labs' { node (Join-Path $pkg 'test/manifest-hosts-test.js') | Out-Null } `
   'every host the real lab guides send a learner to, by the actual MV3 match-pattern rule'
 
@@ -111,6 +108,13 @@ if (-not $SkipInstall) {
   Gate 'Install rehearsal' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $pkg 'test/install-local.ps1') | Out-Null } `
     'the CloudLabs install path end to end: bootstrap, lab.json, preflight, uninstall'
 }
+
+# AFTER the install rehearsal, because that is what rebuilds the package. This used to be gate 2,
+# which meant it compared a stale zip against fresh source and went red on every change until the
+# suite was run a second time. A gate that is red for a reason nobody acts on teaches people to
+# ignore red.
+Gate 'Package integrity' { node (Join-Path $pkg 'test/package-integrity-test.js') | Out-Null } `
+  'the bytes inside the shipped zip and the loose installers, which source integrity never reads'
 
 Write-Host ""
 Write-Host "=== SUMMARY ===" -ForegroundColor Cyan
