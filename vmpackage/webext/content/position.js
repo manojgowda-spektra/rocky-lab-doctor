@@ -288,12 +288,33 @@
      * the difference reads sayable.source; a caller that just needs a number gets one that is
      * honestly derived either way.
      */
-    if (!w && cursor.source === "bundle-cursor" && cursor.index >= 0 && cursor.total) {
+    /*
+     * THIS GATE WAS DEAD, AND ITS BEING DEAD RE-CREATED THE BUG THIS FILE EXISTS TO END.
+     *
+     * The condition used to be `!w`. But `w` is world-model's current(), which returns a fully
+     * formed object with blank state when nothing has been ingested, and world-model.js has no
+     * top-frame guard — so it is defined in every frame and `!w` is never true at run time.
+     * SCRIPT mode could therefore never activate.
+     *
+     * The consequence on the captured-bundle path: Position reported "position unknown" to the
+     * model and to every caller that asks whether a number may be stated, while content.js
+     * rendered "Step 3 of 16" from the same cursor on the same screen. Two answers to one
+     * question, which is precisely what this module was written to prevent.
+     *
+     * The test that covers SCRIPT mode passed throughout, because its harness only defines
+     * LabPilotWorld when the fixture asks for one — so the gate was never exercised with the
+     * world model present, which is the only way it ever runs in a browser.
+     *
+     * What the condition MEANS is "no guide has been read here", not "no world model object".
+     */
+    var noGuide = !w || !w.steps || !w.steps.length;
+    if (noGuide && cursor.source === "bundle-cursor" && cursor.index >= 0 && cursor.total) {
       sayable.stepNumber = cursor.index + 1;
       sayable.total = cursor.total;
       sayable.source = "script";
       sayable.why = "following a recorded script; the cursor advances on observed navigation";
     } else if (!w) sayable.why = "no world model in this frame";
+    else if (noGuide) sayable.why = "no guide has been read on this page";
     else if (belief.index < 0) sayable.why = "position unknown";
     else if (done.complete) sayable.why = "the lab is complete; there is no current step";
     else if (belief.confidence < SAY_AT) {

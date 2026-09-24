@@ -140,6 +140,44 @@ check('a CURSOR has no confidence, by construction', () => {
   assert.strictEqual(s.belief.index, -1, 'a cursor was promoted into a belief');
 });
 
+check('SCRIPT mode survives the world model being loaded, which it always is', () => {
+  /*
+   * THE REGRESSION THIS EXISTS FOR. The gate used to read `!w` — no world model OBJECT. But
+   * world-model.js has no top-frame guard, so it is defined in every frame, and current()
+   * returns a fully formed object with blank state when no guide has been ingested. `!w` was
+   * therefore never true in a browser, and SCRIPT mode could not activate at all.
+   *
+   * On the captured-bundle path that meant Position told the model "position unknown" while
+   * content.js rendered "Step 3 of 16" from the very same cursor — two answers to one question,
+   * on one screen, which is the exact bug position.js was written to end.
+   *
+   * The test below this one passed throughout, because makePage() only defines LabPilotWorld
+   * when the fixture asks for one. A gate is only trustworthy if it is exercised in the shape it
+   * ships in, so this hands over an EMPTY world model rather than none.
+   */
+  const empty = { lab: null, step: null, index: -1, hop: 0, total: 0, confidence: 0,
+                  steps: [], doneMap: {}, resolution: null, stuck: null, complete: false,
+                  done: 0, learner: {}, url: '', route: '', observeMs: 0 };
+  const P = makePage({ world: empty, watcher: { stepIndex: 2, totalSteps: 6 } });
+  const s = P.read();
+  assert.strictEqual(s.sayable.stepNumber, 3,
+    'SCRIPT mode is dead whenever the world model is loaded — which is always: ' + s.sayable.why);
+  assert.strictEqual(s.sayable.source, 'script');
+});
+
+check('a world model WITH a guide still outranks the recorded cursor', () => {
+  // The other half of the fix: "no guide" must mean no guide, not no confident belief. A real
+  // guide with a weak belief must NOT fall through to the script cursor and state a number.
+  const P = makePage({
+    world: { steps: GUIDE_STEPS, index: -1, confidence: 0.2, doneMap: {}, done: 0, total: 3,
+             step: null, hop: 0, complete: false, learner: {}, stuck: null, resolution: null },
+    watcher: { stepIndex: 2, totalSteps: 6 },
+  });
+  const s = P.read();
+  assert.strictEqual(s.sayable.stepNumber, null,
+    'a weak belief on a real guide borrowed the script cursor number: ' + s.sayable.why);
+});
+
 check('SCRIPT mode is sayable but labelled, because the two paths are exclusive', () => {
   /*
    * content.js hands over to the pilot the moment a guide is found and drives the lab itself

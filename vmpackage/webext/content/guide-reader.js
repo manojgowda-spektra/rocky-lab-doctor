@@ -249,8 +249,22 @@
 
     if (!targets.length) return null;
     targets.sort(function (a, b) { return a.n - b.n; });
-    return {
+      /*
+       * THE AUTHOR'S MARK-UP IS EVIDENCE, so it is kept alongside the clean text.
+       *
+       * `text` has ** stripped because that is what a learner should read. But an author bolds
+       * or backticks a name precisely because it is a proper noun the learner must reproduce
+       * exactly — which is the single best signal for which names are things the learner
+       * CREATES, and therefore which later steps depend on them. mentor.js derives "what happens
+       * if I skip this" from it.
+       *
+       * Stripping it here and nowhere keeping it meant that derivation found bold names in a
+       * markdown file during development and nothing at all at run time: the feature would have
+       * shipped silently doing nothing on every bolded artefact in the corpus.
+       */
+      return {
       text: text.replace(/\*\*/g, ""),
+      raw: text,
       targets: targets,
       surface: surface ? surface.surface : "browser",
       surfaceWhy: surface ? surface.why : null,
@@ -339,6 +353,7 @@
     var surface = surfaceOf(line);            // the rules' surface classification wins where it has one
     return {
       text: line.replace(/\*\*/g, ""),
+      raw: line,                      // see parseLine: the author's mark-up is evidence
       targets: targets,
       surface: surface ? surface.surface : (a.surface || "browser"),
       surfaceWhy: surface ? surface.why : null,

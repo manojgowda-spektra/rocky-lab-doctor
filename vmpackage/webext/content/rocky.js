@@ -55,6 +55,13 @@
     happy:    { halo: "#ffdd7a", eye: "arc",  bob: 6,  point: false },
     think:    { halo: "#a78bfa", eye: "oval", bob: 3,  point: false },
     concerned:{ halo: "#ff9a3c", eye: "oval", bob: 3,  point: false, tilt: -8 },
+    /*
+     * `sad` had FIVE callers and did not exist. setMood falls through to "neutral", so the two
+     * moments designed to read as humility — the STOP rung ("I am out of useful suggestions for
+     * this step") and the AI-failure reply — rendered as business as usual, bobbing at 4px with
+     * a cheerful amber halo. A muted blue, the slowest bob in the table, and a downward tilt.
+     */
+    sad:      { halo: "#8fa3c8", eye: "oval", bob: 2,  point: false, tilt: -14 },
     celebrate:{ halo: "#5ef0a0", eye: "arc",  bob: 11, point: false },
     explore:  { halo: "#7df9ff", eye: "oval", bob: 4,  point: true  },   // watching, not guiding
   };

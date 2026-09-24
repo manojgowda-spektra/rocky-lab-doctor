@@ -225,7 +225,8 @@
       // POINT. The glow, if any, already happened. Add only WHERE we are.
       return {
         rung: 1, kind: "POINT",
-        text: "You have been on this step a little while." + here + " It is: " + (step.text || label),
+        text: "This one takes people a minute." + here + " The step is: " + (step.text || label) +
+              " Tell me what you can see and I will narrow it down.",
       };
     }
     if (next === 2) {
@@ -253,7 +254,8 @@
     // STOP. Not a hint: an honest admission, plus the one thing that is still useful.
     return {
       rung: 4, kind: "STOP",
-      text: "I am out of useful suggestions for this step — I cannot see what is blocking you. Ask me a question and I will answer from the lab guide.",
+      text: "I have run out of ideas from what I can see. Tell me what the screen says — the error, " +
+            "or what happens when you click — and we will work it out.",
     };
   }
 

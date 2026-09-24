@@ -99,7 +99,11 @@ check('LOCATE: the step is known but the control is not on screen — named, not
   assert.strictEqual(r.level, 'LOCATE');
   assert.strictEqual(r.canGlow, false, 'Rocky offered to glow a control he could not find');
   assert.match(r.text, /Settings/);
-  assert.match(r.text, /cannot see it/i);
+  // BEHAVIOUR, not wording: Rocky must admit the control is not here and say where it tends to
+  // live. An earlier version pinned the exact phrase "cannot see it" and went red on a rewrite
+  // that said the same thing better.
+  assert.match(r.text, /not on this page|cannot see it|is not here/i,
+    'LOCATE must admit the control is not on screen: ' + r.text);
 });
 
 check('LOCATE handles ambiguity by asking, never by choosing', () => {

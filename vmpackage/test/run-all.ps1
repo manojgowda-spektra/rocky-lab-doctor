@@ -83,6 +83,9 @@ Gate 'Cross-tab' { node (Join-Path $pkg 'test/crosstab-test.js') | Out-Null } `
 Gate 'No feedback loops' { node (Join-Path $pkg 'test/no-feedback-loop-test.js') | Out-Null } `
   'Rocky never wakes himself up, and the glow arrives even if the animation does not'
 
+Gate 'Mentor layer' { node (Join-Path $pkg 'test/mentor-test.js') | Out-Null } `
+  'the five questions answered from evidence, or not at all'
+
 Gate 'Coach ladder' { node (Join-Path $pkg 'test/coach-test.js') | Out-Null } `
   'there is no input for which Rocky has nothing true and useful to say'
 

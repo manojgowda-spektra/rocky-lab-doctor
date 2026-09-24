@@ -92,6 +92,7 @@
         "content/controls.js",
         "content/explain-cache.js",
         "content/explore.js",
+        "content/mentor.js",
         "content/coach.js",
         "content/pilot.js",
         "content/recovery.js",

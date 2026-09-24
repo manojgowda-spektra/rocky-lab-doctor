@@ -130,7 +130,9 @@ check('the last rung is an honest admission, NOT the answer', () => {
   // rung must move away from the answer, not toward it.
   const r4 = RC._ladder(world({ stuck: 'dwelling' }), S({ rung: 3, lastRungAt: 0 }), 100000);
   assert.strictEqual(r4.kind, 'STOP');
-  assert.match(r4.text, /out of useful suggestions|cannot see/i);
+  // BEHAVIOUR: an admission plus a request for what only the learner can see. Never the answer.
+  assert.match(r4.text, /run out of ideas|out of useful suggestions|cannot see/i,
+    'STOP must be an honest admission: ' + r4.text);
   assert.ok(!/click the|press the|the answer is/i.test(r4.text), `rung 4 gave the answer: ${r4.text}`);
 });
 

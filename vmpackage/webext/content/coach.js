@@ -181,8 +181,8 @@
     if (ctx.complete && total) {
       return {
         level: "DONE", canGlow: false, why: "complete",
-        text: "That looks like all " + total + " steps done" + (ctx.lab ? " for " + clean(ctx.lab) : "") +
-              ". Ask me anything about what you just did, or carry on exploring.",
+        text: "That is all " + total + " steps of " + (ctx.lab ? clean(ctx.lab) : "the lab") +
+              ". Before you close it — anything you want to go back over?",
       };
     }
 
@@ -205,9 +205,9 @@
       return {
         level: "LOCATE", canGlow: false, why: amb ? "ambiguous" : "absent",
         text: amb
-          ? num2 + "I can see more than one “" + label + "” here, so I will not guess. " +
+          ? num2 + "There is more than one “" + label + "” on this page, so I would be guessing. " +
             "Which part of the page are you working in?"
-          : num2 + "This step wants “" + label + "”. I cannot see it on this page. " +
+          : num2 + "You are looking for “" + label + "”, and it is not on this page. " +
             whereItUsuallyIs(label),
       };
     }
@@ -220,8 +220,12 @@
       return {
         level: "ORIENT", canGlow: false, why: "section-only",
         text: "You are in " + section + ". " +
-              (next ? "The next thing the guide asks for is: " + clean(next) + "."
-                    : "I am not certain which step you are on yet."),
+              (next
+                ? "The next thing the guide asks for here is: " + clean(next) + "."
+                : (total
+                    ? done + " of " + total + " look done, and I cannot yet tell which one you are on. " +
+                      "What did you last click?"
+                    : "I cannot yet tell which step you are on. What did you last click?")),
       };
     }
 
@@ -231,7 +235,7 @@
         level: "SITUATE", canGlow: false, why: "lab-only",
         text: (ctx.lab ? clean(ctx.lab) + ". " : "") +
               done + " of " + total + " steps look done from here. " +
-              "I cannot match this page to the guide, so I will stay quiet until it looks familiar.",
+              "I do not recognise this page from the guide — ask me rather than waiting for me to point.",
       };
     }
 
@@ -239,7 +243,8 @@
     //    knows the answer, and asking is the one move that always makes progress.
     return {
       level: "ASK", canGlow: false, why: "no-guide",
-      text: "I can see this page but I have not matched it to a lab guide. What are you trying to do?",
+      text: "I have no guide for this page. What are you trying to get done? " +
+            "I can still tell you about anything on screen.",
     };
   }
 

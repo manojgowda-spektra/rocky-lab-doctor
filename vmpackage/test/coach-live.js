@@ -96,6 +96,26 @@ const READ = `(() => { try {
     coach: said ? { level: said.level, why: said.why, text: said.text } : null,
     recovery: RC ? RC.status() : null,
     hasRecovery: !!RC,
+    mentor: (function () {
+      var MEN = window.LabPilotMentor;
+      if (!MEN) return { here: false };
+      try {
+        var b = MEN.brief();
+        return {
+          here: true,
+          where: b.where ? b.where.text : null,
+          whereWhy: b.where ? b.where.why : null,
+          did: b.did ? b.did.text : null,
+          why: b.why ? b.why.text : null,
+          next: b.next ? b.next.text : null,
+          ifNot: b.ifNot ? b.ifNot.text : null,
+          journey: MEN.journey().length,
+          block: MEN.promptBlock(),
+        };
+      } catch (e) { return { here: true, threw: e.message }; }
+    })(),
+    // The coach must reach the learner through announce(), not through the spinner.
+    coachViaAnnounce: !!(window.LabPilotRocky && window.LabPilotRocky.announce),
   };
 // A throw here used to return undefined, which the caller read as "not ready yet" and then
 // waited 60 s for a condition that could never become true. An error must arrive as data.
@@ -248,6 +268,29 @@ const PROVOKE = (text) => `(async () => {
     } else {
       console.log(`  [--]   ORIENT not the active level here (${top.coach ? top.coach.level : '-'}) — place check not applicable`);
     }
+
+    // ---- 3b. the mentor layer --------------------------------------------------------------
+    const men = top.mentor || { here: false };
+    say(men.here, 'the mentor layer is loaded in this frame', men.threw ? 'THREW: ' + men.threw : '');
+    if (men.here && !men.threw) {
+      console.log(`     mentor.where  ${JSON.stringify(men.where)}`);
+      console.log(`     mentor.did    ${JSON.stringify(men.did)}   (journey: ${men.journey})`);
+      console.log(`     mentor.next   ${JSON.stringify(men.next)}`);
+      console.log(`     mentor.ifNot  ${JSON.stringify(men.ifNot)}`);
+      say(typeof men.block === 'string' && men.block.length > 40,
+        'the model receives the whole world model, not one sentence',
+        men.block ? men.block.length + ' chars' : 'empty');
+      // The line that stops the model inventing a summary of work that never happened.
+      say(/OBSERVED ACCOMPLISHMENTS/.test(men.block || ''),
+        'the grounding names the accomplishments channel explicitly');
+      const claimsWork = men.journey === 0 && men.did !== null;
+      say(!claimsWork, 'no accomplishment is claimed without an observed world change');
+      console.log('');
+      console.log('     --- WHAT THE MODEL IS TOLD ---');
+      String(men.block || '').split(/\n/).forEach((l) => console.log('       ' + l.slice(0, 104)));
+      console.log('');
+    }
+    say(top.coachViaAnnounce, 'Rocky can deliver a coach line as a card rather than a spinner');
 
     // ---- 4. the failure channel, end to end ------------------------------------------------
     say(top.hasRecovery, 'the recovery ladder is loaded in this frame');

@@ -197,7 +197,8 @@
       // The ladder is not loaded. Say the one thing that is true without it rather than
       // returning null and letting the caller fall through to silence.
       return { level: "ASK", canGlow: false, why: "coach-missing",
-               text: "I can see this page but I have not matched it to a lab guide. What are you trying to do?" };
+               text: "I have no guide for this page. What are you trying to get done? " +
+                     "I can still tell you about anything on screen." };
     }
     /*
      * THE COACH GETS THE WORLD MODEL, not just the world model's step index.
@@ -228,13 +229,30 @@
 
   // ---- speaking -----------------------------------------------------------------------------
 
-  // Rocky has no generic say(): the character exposes checking() for "thinking out loud" and
-  // happy() for good news. checking() is the right voice for everything the pilot says, since
-  // every one of its messages is about finding or not finding something.
-  function say(text) {
+  /*
+   * THE COACH LADDER WAS BEING DELIVERED THROUGH THE SPINNER.
+   *
+   * This function took ONE argument while both of its callers passed two — the mood was dropped
+   * on the floor — and it routed everything to rocky.checking(), whose whole job is to say "One
+   * sec, finding this step..." while Rocky looks for something. checking() forces the purple
+   * `think` halo and calls the renderer with no `extra`, so the label chip, the ask box and the
+   * Learn panel were all unreachable by construction.
+   *
+   * The effect: every ORIENT, LOCATE, SITUATE and ASK line — the entire ladder written to sound
+   * like an instructor, the one part of Rocky that degrades in specificity rather than into
+   * silence — rendered identically to a loading state. Recovery, explore, progress and the
+   * watcher all go through announce() and all get a proper card. The one module written to
+   * sound human was the one module whose output looked like a spinner.
+   *
+   * announce() with an empty label renders the card with no chip, which is what these lines
+   * want: the sentence carries the state, and no instructor announces their mode before
+   * speaking.
+   */
+  function say(text, mood) {
     try {
       var R = window.LabPilotRocky;
-      if (R && R.checking) { R.checking(text); return true; }
+      if (R && R.announce) { R.announce(text, { label: "", mood: mood || "neutral", hint: "" }); return true; }
+      if (R && R.checking) { R.checking(text); return true; }   // older build: worse, but not silence
     } catch (e) { /* ignore */ }
     return false;
   }

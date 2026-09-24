@@ -76,8 +76,23 @@
      * the model was told nothing about position on exactly the labs where the belief model is
      * the authority, and a model told nothing invents something.
      */
+    /*
+     * THE MENTOR BLOCK, NOT ONE SENTENCE.
+     *
+     * promptLine() collapses to exactly "The learner is on step 3 of 12." whenever the belief is
+     * confident — place, progress and next step are assembled only on the UNSURE branch. So the
+     * better Rocky's belief got, the thinner the model's context became, and questions the model
+     * was being asked to answer ("what have I done so far?") had no evidence behind them at all.
+     * A model with no evidence and a direct question invents an answer; that was observed.
+     *
+     * promptBlock() carries the lot — position, the accomplishments Rocky actually watched
+     * happen, why the step matters, what comes next, and what depends on it — and says so
+     * explicitly when there is nothing, which is what stops the invention.
+     */
+    var MEN = window.LabPilotMentor;
     var POS = window.LabPilotPosition;
-    if (POS && POS.promptLine) bits.push(POS.promptLine());
+    if (MEN && MEN.promptBlock) bits.push(MEN.promptBlock());
+    else if (POS && POS.promptLine) bits.push(POS.promptLine());
 
     var s = steps();
     if (s && s.totalSteps) {
