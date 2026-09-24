@@ -1,333 +1,281 @@
 # Rocky — the mentor voice
 
-24 September 2026. How Rocky speaks, what every sentence is built from, and what shipped today.
+24 September 2026, second version. How Rocky speaks, what every sentence is built from, and what
+shipped today — corrected by three independent reviewers who read the first version against the
+code and refuted seventeen of its claims. What they found is folded in below and stated plainly
+where it changed a claim.
 
-Every template below is quoted from the code as it ships, not drafted for this document. Each one
-carries its evidence standing — **OBSERVED** (a world change or a portal announcement Rocky
-watched), **INFERRED** (from the guide's words or the done-ledger), **UNKNOWN** (Rocky says so) —
-because a mentor who cannot tell the learner which of the three they are hearing is a chatbot with
-better manners.
+Every template is quoted from the code as it ships (commit `33fd7bc`). Each carries its evidence
+standing: **OBSERVED** (a world change or portal announcement Rocky watched), **INFERRED** (from
+the guide's words, the done-ledger, or a belief over control labels — a belief is an inference
+however confident), **UNKNOWN** (Rocky says so).
 
 ---
 
 ## The idea in one paragraph
 
 Rocky already knows where the learner is, what the portal just did, what failed, what the guide
-asks next and why the guide says it matters. Until today almost none of that reached the learner:
-the coach ladder was delivered through the spinner, the failure channel was used as a mute button,
-the purpose clause in every guide line was parsed and thrown away, and "what have I done so far?"
-went to the documentation corpus. The mentor voice is not new intelligence. It is the existing
-intelligence, finally said out loud — with the subject of every sentence being **you** or **the
-portal**, never Rocky and never "the step".
+asks next and — when the guide says — why. Until today almost none of it reached the learner: the
+coach ladder was delivered through the spinner, the failure channel was used as a mute button, the
+guide's purpose clauses and task headings were parsed and discarded, and *"what have I done so
+far?"* went to the documentation corpus. Then, when the first pass wired it, a third layer
+(`pilot.js compactSteps()`) silently stripped it again before the only `ingest()` call. The mentor
+voice is not new intelligence. It is the existing intelligence, said out loud, with the subject of
+every sentence being **you** or **the portal** — and with a chain gate that drives the real path
+from the guide pane to the spoken sentence, so it cannot go quiet unnoticed a fourth time.
 
 ---
 
 ## 1. Coach layer design
 
-One rule decides what Rocky may say: **each field of the world model is either evidence-backed or
-null, and null renders as silence or an admission, never as a guess.** The coach layer is the set
-of surfaces that turn those fields into sentences.
+One rule: **each field of the world model is evidence-backed or null, and null renders as silence
+or an admission, never a guess.**
 
 | Surface | Fires when | Builds from | Standing |
 | --- | --- | --- | --- |
-| **Teaching moment** (`mentor.js`) | A new world change is observed | `lastCompletion` + the next unfinished step + the guide's reason for it | OBSERVED, then INFERRED |
-| **Coach ladder** (`coach.js`, via `pilot.js`) | Every perception tick, degrading POINT → LOCATE → ORIENT → SITUATE → ASK | resolved control, `sayable`, `place`, done-ledger, and now `why` | mixed, each part labelled by source |
-| **Recovery rung 0** (`recovery.js`) | The portal announces a failure | the announcement, verbatim, classified | OBSERVED |
-| **Recovery rungs 1–3** | The world model's stuck reason | the reason itself, the last observed change, the guide's why | OBSERVED reason, INFERRED help |
-| **Typed questions** (`lab-context.js`) | The learner asks | Position, the journey, the guide | labelled in the answer |
-| **The model** (`background.js`) | A question nothing deterministic answers | `promptBlock()`, every line marked | the marks are the contract |
+| **Teaching moment** (`mentor.js`) | a new world change is observed | `lastCompletion`, the next unfinished step (never the one the change belongs to), the guide's task heading | OBSERVED, then INFERRED |
+| **Coach ladder** (`coach.js` via `pilot.js`) | every perception tick; POINT → LOCATE → ORIENT → SITUATE → ASK | resolved control, `sayable`, `place`, done-ledger, `why` | mixed, each part labelled by source |
+| **Recovery rung 0** | the portal announces a failure | the announcement verbatim, classified | OBSERVED |
+| **Recovery rungs 1–3** | the world model's stuck reason | the reason's own counter, the last observed change, the guide's why | OBSERVED reason, INFERRED help |
+| **Typed questions** (`lab-context.js`) | the learner asks | Position, the journey, the guide | labelled in the answer |
+| **The model** (`background.js`) | nothing deterministic answers | `promptBlock()` plus eight context lines, every one marked | the marks are the contract |
 
-**Precedence when several could speak:** an open ask box silences everything proactive; a portal
-failure outranks the stuck ladder; the teaching moment speaks once per observed change with a
-12-second gap; the ladder waits 20 seconds between rungs and stops after three. Restraint is the
-design — a mentor who talks constantly is a mentor you stop hearing.
+**Precedence:** an open ask box silences everything proactive; a portal failure outranks the stuck
+ladder; the moment speaks once per observed change with a 12-second gap; the ladder waits 20
+seconds between rungs and stops after three.
 
-**Where the reason comes from**, best first, and null when none applies:
+**Where the reason comes from**, best first, null when none applies:
 
-1. `step.learn.why` — an author's note on a captured bundle (28/28 steps on the Foundry lab)
-2. `step.why` — the purpose clause in the guide's own line: *"to sign in to GitHub Copilot"*.
-   **Measured on the 136 real Zava lines: one genuine clause.** The first version produced five,
-   three of them false and two inverting the guide (*"Do not disable unrelated settings merely to
-   make the page contain only four selections"* became *"This step is here to make the page contain
-   only four selections."*). It is now trusted only from a plain positive sentence — no negation,
-   not the "Use <tool> to <do it>" form, not "the option to …", lower-case verb. On formal lab
-   prose this fires rarely; when it fires it is the author's reason and cannot be backwards.
-3. `step.task` — the task heading the step sits under: *"Create the custom departing-user policy"*.
-   This is the source that fires on most Purview steps, because the guide is organised by task.
+1. `step.learn.why` — an author's note on a captured bundle (`webext/bundle/full-bundle.json`,
+   `labs[0].tasks[].steps[].learn`; 28 steps carry one)
+2. `step.why` — the guide line's own purpose clause. **Measured on 136 real Zava lines: one
+   genuine clause.** The first extractor found five, three false, two inverting the guide; it is
+   now trusted only from a plain positive sentence. Not spoken on POINT or in the moment, because
+   it is the tail of the very line the learner is reading.
+3. `step.task` — the task heading above the step. Gated end to end through the shipping path
+   (guide-reader → `compactSteps` → `ingest` → `why`). **Not yet seen on a live lab:** no recorded
+   CloudLabs pane has shown a `Task N:` heading in its text. REHEARSE.
 4. the knowledge base — what this kind of control is for
 5. the derived dependency — what later steps name that this step creates
-
-Items 2 and 3 are new today and are the ones that fire on Purview and Azure, where nobody has
-written notes.
 
 ---
 
 ## 2. Teaching behaviour
 
-**A direction becomes a lesson by adding the guide's reason — and only the guide's.**
-
 | Before | After (shipped) |
 | --- | --- |
-| Click Create policy. | Step 4 of 9. Select Create policy > Custom policy. **This is part of Create the custom departing-user policy.** |
-| Click on Continue with GitHub. | Click on Continue with GitHub to sign in to GitHub Copilot. **This step is here to sign in to GitHub Copilot.** |
-| (no completion message at all) | **That went through — the list went from 1 to 2.** Next, return to Policies and confirm that Zava Departing Employee Data Theft appears in the user-policy list. |
+| Click Create policy. | Step 4 of 9. Select Create policy > Custom policy. Do not select Quick policy. **This is part of the task "Create the custom departing-user policy".** |
+| *(silence on a change)* | **I just saw the list went from 1 to 2 on Policies.** Next, "Return to Policies and confirm that Zava Departing Employee Data Theft appears in the user-policy list." |
+| *(silence on an announcement)* | **The portal just announced "Policy created successfully".** Next, "…" |
 
-Rules:
-- The reason is appended, never substituted — the instruction stays first, because the learner
-  is about to act on it.
-- A knowledge-base or derived reason is used in the coach and in recovery rung 2, but **not** in
-  the teaching moment. The moment is short by design; a generic note would make it a lecture.
-- With no reason from any source, the sentence stays a plain direction. Rocky does not invent one.
-- "Why is Microsoft asking me to do this?" is answered at the task level (*"This is part of…"*),
-  which is the level the author wrote it at. Rocky does not manufacture product rationale.
+Rules: the reason is appended, never substituted; only a task heading is appended to the moment
+(a knowledge-base note would make it a lecture; a purpose clause would repeat the next line); the
+moment says what was *seen*, not what was *achieved* — the one `list-grew` ever recorded on Purview
+was a grid rendering on page load; with no reason from any source the sentence stays a direction.
 
 ---
 
 ## 3. Recovery behaviour
 
-**Rung 0 — the portal said what went wrong.** Shipped strings:
+**Rung 0 — the portal said what went wrong.**
 
-> Something just failed. The portal said: "Client Error — Looks like you don't have the right
-> permissions" **That is a permissions problem, not something you typed wrong. In a lab it usually
-> means the account has not been given the role yet. Wait a minute, refresh, and try again — role
-> assignments take time to take effect.**
+> The portal just reported "You currently aren't assigned to a role group that allows you to view
+> alerts". **That is a permissions problem, not something you typed wrong. In a lab it usually
+> means this account has not been given that role. If it was assigned in the last few minutes,
+> wait a moment and refresh; if not, the lab guide or your instructor has to grant it, because
+> nothing you click here will.**
 
-The six classes and their moves: **permission** (above), **conflict** — *"Something with that name
-is already there. Either an earlier attempt of yours worked, or you need a different name."*,
-**not found** — *"Whatever that was pointing at is not there. Usually it means an earlier step did
-not finish, rather than this one being wrong."*, **transient** — *"That one looks temporary. Give it
-a moment and do exactly the same thing again."*, **validation** — *"The form is not happy with
-something on it. Look for the field marked in red — the portal puts the reason right next to it."*,
-**unknown** — *"I cannot tell what caused that one."* Purview's *"You currently aren't assigned to a
-role group…"* — recorded on the Insider Risk lab — is now classified as permission.
+The other classes: **conflict** — *"Something with that name is already there. Either an earlier
+attempt of yours worked, or you need a different name."*; **not found** — *"The portal could not
+find what that action was looking for. Usually that means an earlier step did not finish, rather
+than this one being wrong."*; **transient** — *"That one looks temporary. Give it a moment and do
+exactly the same thing again."*; **validation** — *"The form is not happy with something on it.
+Look for the field marked in red, because the portal puts the reason right next to it."*;
+**unknown** — *"I cannot tell what caused that one. What else does the message say?"*
 
-**Rungs 1–3 — the stuck ladder, now speaking from its reason.** The world model knows *why* it
-thinks the learner is stuck; the ladder used to say "you have been on this step a little while" for
-all four reasons. Shipped:
+**Rungs 1–3 — the stuck ladder, speaking from what its counter measured.**
 
-| Stuck reason (OBSERVED) | Rung 1 opens with |
+| Stuck reason | Rung 1 opens with |
 | --- | --- |
-| repeated attempts | You have clicked around this step a few times and the page has not changed. |
-| oscillating | You have moved between pages a few times without landing on the one this step needs. |
-| after an error | The portal reported an error and nothing has changed since. |
-| dwelling | Nothing on the page has changed for a while. |
+| repeated attempts (misses of a glowed control) | You have clicked 3 times on things other than the control I highlighted. |
+| oscillating (address changes on this step) | The page address has changed 4 times since this step began, and I have not seen the step finish. |
+| after an error (a diagnosis was spoken) | The portal reported an error and nothing has changed since. |
+| dwelling (45 s with a control resolved and no miss) | Since the list went from 1 to 2, nothing I watch for on this page has moved this step on. / Nothing I watch for on this page has moved this step on since you reached it. |
 
-…followed, when there is one, by *"The last thing I saw the portal do was the list went from 1 to
-2."*, then *"You are on Policies. The step is: … What can you see on the screen?"* Rung 1 ends by
-asking, because the learner can see something Rocky cannot.
+…then *"The last change I saw was when the list went from 1 to 2."* (or *"The last thing I saw was
+the portal say '…'."*), *"You are on Policies. The guide says '…' What can you see on the
+screen?"*
 
-Rung 2 teaches from the guide's reason before the knowledge base. Rung 3: *"You are on Policies,
-and I cannot line that up with this step. Let us get back to somewhere we both recognise…"* Stop:
-*"I have run out of ideas from what I can see. Tell me what the screen says — the error, or what
-happens when you click — and we will work it out."*
+Rung 2 is the guide's reason alone, else the knowledge base, else *"If 'Create policy' is not on
+the screen, it is probably inside a menu or tab you have not opened yet. Open the ones near the top
+of the page and tell me what appears."* Rung 3: *"You are on Policies. Let's reset to a place we
+both recognise. Go back to the page this task started on, and I will pick the step up from
+there."* Stop: *"I have run out of ideas from what I can see. Tell me what the screen says — the
+error, or what happens when you click — and we will work it out."* No card carries a chip; orange
+is kept for a real portal error.
 
-**The feed was wrong, and it is fixed.** Every click anywhere counted as an attempt, so a learner
-filling three wizard fields correctly was "stuck" by the third; and the page-change counter was
-never reset, so four page moves early in a lab made every later step read as "oscillating" for the
-rest of the session. Now a click is an attempt only when it misses a glowed control, and the
-page-change count resets when the step advances, as attempts already did. Without this, no
-rewording of rung 1 could have made recovery feel intelligent.
+**The feed, corrected three ways.** Every click anywhere counted as an attempt, so a learner
+filling three wizard fields correctly was "stuck" by the third — now only a click that misses a
+glowed control counts. The page-change counter was never reset — now it resets when the step
+advances. Dwelling fired after 45 quiet seconds with nothing glowed — now it needs a resolved
+control the learner could be failing to click. And "after an error" could never fire because
+nothing fed `errors`; a spoken diagnosis now does. Four reasons, four reachable.
 
 ---
 
 ## 4. Mentor conversation models
 
-Five shapes. Every message is one of them.
+**A. The moment** — *seen → next → why next.* *I just saw the list went from 1 to 2 on Policies.
+Next, "Return to Policies and confirm …" This is part of the task "…".*
 
-**A. The moment** — proactive, on an observed change. *Evidence → next → why next.*
-> That went through — the list went from 1 to 2. Next, return to Policies and confirm that Zava
-> Departing Employee Data Theft appears in the user-policy list.
+**B. The pointer** — *direction → reason.* *Select Create policy > Custom policy. This is part of
+the task "Create the custom departing-user policy".*
 
-**B. The pointer** — proactive, when the control resolves. *Direction → reason.*
-> Step 4 of 9. Select Create policy > Custom policy. This is part of Create the custom
-> departing-user policy.
+**C. The diagnosis** — *quote → whose fault → one move.* *The portal just reported "…". That is a
+permissions problem, not something you typed wrong…*
 
-**C. The diagnosis** — proactive, on a portal failure. *Quote → whose fault → one move.*
-> Something just failed. The portal said: "…" That is a permissions problem, not something you
-> typed wrong…
+**D. The check-in** — *what I measured → last change → where you are → the step → a question
+back.* *You have clicked 3 times on things other than the control I highlighted. The last change I
+saw was when … You are on Policies. The guide says "…" What can you see on the screen?*
 
-**D. The check-in** — proactive, when stuck. *What I observed → where you are → the step → a
-question back.*
-> You have clicked around this step a few times and the page has not changed. You are on Policies.
-> The step is: Select Create policy > Custom policy. What can you see on the screen?
-
-**E. The answer** — reactive, to a typed question. *Answer first → its standing → what is known
-instead.*
-> I have not yet watched the page change in a way that proves a step finished, so I will not claim
-> anything is done. What I can see is that you are on Home.
-
-Model answers (F) follow the same order and are governed by the prompt in §9.
+**E. The answer** — *answer first → its standing → what is known instead.* *I have not yet
+watched the page change in a way that proves a step finished, so I will not claim anything is
+done. What I can see is that you are on Home.*
 
 ---
 
 ## 5. Message templates
 
-Placeholders in `{}`; standing in brackets.
-
 **Where am I**
-- `You are on {place}. That is step {n} of {m}.` — [OBSERVED place, OBSERVED/INFERRED number by source]
-- `You are on {place}.` — [OBSERVED] when the number is not sayable
-- *(nothing)* — when neither is known; the coach's ORIENT/SITUATE line carries the admission
+- `You are on step {n} of {m}, which says "{text}".` — [INFERRED number, from `sayableStep()` only]
+- `You look to be on the step that says "{text}", though I am not sure enough to give you a number.` — [INFERRED, hedged]
+- `The guide is open but I cannot tell which line you are on. What did you last click?` — [UNKNOWN]
+- *(`brief().where` — `You are on {place}. That is step {n} of {m}.` — is model grounding only; no surface speaks it)*
 
 **What did I accomplish**
-- `{n} things I watched happen, the latest first: {e1}; {e2}; {e3}. Those are portal changes I saw, not steps I ticked off.` — [OBSERVED]
-- `One thing I watched happen: {e1}. Those are portal changes I saw…` — [OBSERVED]
-- `I have not yet watched the page change in a way that proves a step finished, so I will not claim anything is done. What I can see is that you are on {place}.` — [UNKNOWN, with what is known]
+- `I have watched the portal change {n} times so far. Most recently {e1}, on {place}; before that {e2}; and before that {e3}. Those are changes I saw, not steps I ticked off.` — [OBSERVED]
+- `I have watched the portal change once so far. Most recently …` — [OBSERVED]
+- `I have not yet watched the page change in a way that proves a step finished, so I will not claim anything is done. What I can see is that you are on {place}.` — [UNKNOWN]
 
 **Why does it matter**
-- `This step is here {purpose}.` — [INFERRED from the guide's purpose clause]
-- `This is part of {task}.` — [INFERRED from the task heading]
-- `"{label}" is {what} {does}` — [INFERRED from the knowledge base]
+- `This is part of the task "{task}".` — [INFERRED, guide heading]
+- `You do that {purpose}.` — [INFERRED, guide clause; rung 2 and the model only]
+- `"{label}" is {what} {does}` — [INFERRED, knowledge base]
 - `This is where {artefact} gets made, and {a later step needs it | N later steps need it}.` — [INFERRED, derived]
-- *(nothing)* — no source
+- `The guide does not say why this step is here, and I would rather not invent a reason. What it does say is "{text}".` — [UNKNOWN]
 
 **What should I do next**
-- `Next, {next step, guide's words}.` — [INFERRED from the done-ledger]
-- `It says: {step text}` / `Step {n} of {m}. It says: {step text}` — [INFERRED / OBSERVED number]
+- `Next, "{next step}."` — [INFERRED, done-ledger, never the step just changed]
 
-**What happens if I don't**
-- `Step {k} needs {artefact}: "{later step text}"` — [INFERRED, derived; numbered only when sayable]
-- `A later step needs {artefact}: "…"` — [INFERRED, unnumbered]
-- *(nothing)* — the common case, by design (one tracked step in sixteen has an edge)
+**What happens if I don't** — model grounding only until a surface speaks it:
+- `Step {k} needs {artefact}: "{later step}"` / `A later step needs {artefact}: "…"` — [INFERRED, derived]
 
-**Something failed**
-- `Something just failed. The portal said: "{verbatim}" {move}` — [OBSERVED quote, INFERRED move]
+**Something failed** — `The portal just reported "{verbatim}". {move}` — [OBSERVED quote]
 
-**You look stuck**
-- `{reason sentence} {last observed change} You are on {place}. The step is: {text} What can you see on the screen?`
+**Done** — `You have worked through all {m} steps of {lab}, as far as I can see. Anything you want to go back over before you close the lab?` — [INFERRED — the ledger infers]
 
-**Done**
-- `That is all {m} steps of {lab}. Before you close it — anything you want to go back over?`
+**Cannot place you** — `You are on {page}. {done} of the {total} steps look done, and I cannot yet tell which one you are on. What did you last click?` / `I have no guide for this page. What are you trying to get done? I can still tell you about anything on screen.`
 
-**Cannot place you**
-- `You are in {section}. {done} of {total} look done, and I cannot yet tell which one you are on. What did you last click?`
-- `I have no guide for this page. What are you trying to get done? I can still tell you about anything on screen.`
+**Not on screen** — `"{label}" is not showing anywhere I can see on this page. It usually lives in the left-hand menu, or behind the gear icon.`
 
 ---
 
-## 6. Coaching scenarios (Purview, Zava Challenge 4)
+## 6. Scenarios (Purview, Zava Challenge 4)
 
-**Scenario 1 — the learner opens Policies with the guide read.**
-Coach, POINT: *"Select Create policy > Custom policy. This is part of Create the custom
-departing-user policy."* Glow on Create policy. No number: the belief has not converged. Standing:
-INFERRED (guide), OBSERVED (place).
-
-**Scenario 2 — the learner submits the policy.**
-List re-renders 1 → 2. Moment: *"That went through — the list went from 1 to 2. Next, return to
-Policies and confirm that Zava Departing Employee Data Theft appears in the user-policy list."*
-Standing: OBSERVED, then INFERRED. Journey records it. Asked *"what have I done so far?"*: *"One
-thing I watched happen: the list went from 1 to 2 (on Policies). Those are portal changes I saw,
-not steps I ticked off."*
-
-**Scenario 3 — the account lacks the Investigators role.**
-Portal announces *"You currently aren't assigned to a role group that allows you to view alerts."*
-Rung 0: *"Something just failed. The portal said: '…' That is a permissions problem, not something
-you typed wrong. In a lab it usually means the account has not been given the role yet…"* Standing:
-OBSERVED quote. The stuck ladder is pre-empted.
-
-**Scenario 4 — the learner wanders between Settings and Policies four times.**
-Rung 1: *"You have moved between pages a few times without landing on the one this step needs. The
-last thing I saw the portal do was the list went from 1 to 2. You are on Settings. The step is: …
-What can you see on the screen?"* Twenty seconds later, rung 2 with the guide's reason. Then rung
-3. Then stop. The counter resets the moment the step advances.
-
-**Scenario 5 — the learner fills the wizard correctly, slowly.**
-Nothing. Three clicks on fields Rocky has nothing glowed on are the learner working, not three
-attempts. Before today this was scenario 4.
-
-**Scenario 6 — the learner asks "which step am I on?" mid-wizard.**
-*"It says: Enter the policy name Zava Departing Employee Data Theft…"* — the step, no number,
-because confidence is under 0.80. When it is over: *"Step 5 of 9. It says: …"*
+1. **Learner opens Policies with the guide read.** POINT: *Select Create policy > Custom policy. Do
+   not select Quick policy. This is part of the task "Create the custom departing-user policy".*
+   — the task line only if the pane carries the heading (REHEARSE).
+2. **Learner submits the policy.** *I just saw the list went from 1 to 2 on Policies. Next, "Return
+   to Policies and confirm …"* Asked *what have I done so far?*: *I have watched the portal change
+   once so far. Most recently the list went from 1 to 2, on Policies. Those are changes I saw, not
+   steps I ticked off.* — REHEARSE: never recorded after a Submit.
+3. **The account lacks the Investigators role.** Rung 0, verbatim quote, permission move. The stuck
+   ladder is pre-empted. *(The announcement is recorded on this lab's Policies page.)*
+4. **The learner moves between Settings and Policies four times.** *The page address has changed 4
+   times since this step began, and I have not seen the step finish. …* Then rung 2, rung 3, stop.
+   The counter resets when the step advances.
+5. **The learner fills the wizard correctly, slowly.** Nothing — no control is glowed, so clicks
+   are not misses and dwelling does not arm. *(Before today: three "attempts" and an orange
+   "STUCK?" card at the third field.)*
+6. **"Which step am I on?" mid-wizard.** *You look to be on the step that says "Enter the policy
+   name Zava Departing Employee Data Theft…", though I am not sure enough to give you a number.*
 
 ---
 
-## 7. Workflow guidance examples
+## 7. Workflow guidance
 
-- **Objective → task → step.** The pane's *"In this challenge, you will… create the custom policy
-  Zava Departing Employee Data Theft…"* is kept as the objective; *"Task 2: Create the custom
-  departing-user policy"* attaches to every step beneath it; each step's own *"to …"* clause is its
-  purpose. Rocky answers "what does this accomplish?" at whichever level the author wrote.
-- **What it unlocks.** *"This is where Zava Auto-Label Policy gets made, and 2 later steps need
-  it."* — derived from the guide naming the artefact later. Fires on about one tracked step in
-  sixteen on the real corpus; silent otherwise.
-- **Expected outcome.** The guide's *"and wait for the success notification"* is exactly the kind
-  of announcement the Completion Engine listens for; when it arrives, the moment says so.
-- **Recorded knowledge.** A recorded walk tells Lab Doctor which steps are observable at all. Steps
-  it marks *silent* are steps where Rocky will not have a moment to speak — the honest expectation
-  is set before the learner arrives, not discovered during.
+Objective → task → step: the pane's *"In this challenge, you will …"* is kept; *"Task 2: …"*
+attaches to the steps beneath it; each step's own *"to …"* clause is its purpose when it is a plain
+positive one. Rocky answers "what does this accomplish?" at whichever level the author wrote. What
+it unlocks: the derived dependency, on roughly one tracked step in sixteen. Expected outcome: the
+guide's *"and wait for the success notification"* is what the Completion Engine listens for.
+Recorded knowledge: Lab Doctor marks a step *silent* when a walk produced no observable change,
+which is the honest expectation set before a learner arrives.
 
 ---
 
-## 8. Explanation improvements shipped today
+## 8. What shipped today
 
-| Gap | Fix | Where |
-| --- | --- | --- |
-| Purpose clauses parsed and discarded | kept as `step.why`, only from a plain positive sentence — the first version inverted the guide on 2 of 136 real lines and is pinned by tests | guide-reader.js |
-| Task headings and the objective skipped as non-steps | `step.task`, `read().objective` | guide-reader.js |
-| World-model rebuilt steps from text alone, dropping `raw`, `why`, `task`, `learn` | passed through on ingest | world-model.js |
-| No why on POINT | appended from `mentor.why()` | pilot.js → coach.js |
-| Moment said what changed, not what next was for | appends the next step's guide reason | mentor.js |
-| Rung 1 was a timer talking | opens with the observed stuck reason and the last observed change | recovery.js |
-| Rung 2 went to the KB first | guide's reason first | recovery.js |
-| Any click was an attempt; page moves never reset | attempts need a glowed target; resets on advance | recovery.js, world-model.js |
-| "What have I done so far?" went to the docs corpus | answered from the journey, or honestly not | lab-context.js |
-| Model could not tell observed from inferred | every prompt line marked | mentor.js, background.js |
+| Gap | Fix |
+| --- | --- |
+| Purpose clauses parsed and discarded | kept as `step.why`, only from a plain positive sentence; the first extractor inverted the guide on 2 of 136 real lines and is pinned by tests |
+| Task headings and the objective skipped | `step.task`, `read().objective` |
+| World-model rebuilt steps from text alone | ingest passes `raw / why / task / learn` through |
+| **`pilot.js compactSteps()` stripped them again before the only `ingest()` call** | passed through, exported, and a chain gate drives guide-reader → compactSteps → ingest → why on a real line — the test that would have caught it |
+| No why on POINT | task reason appended from `mentor.why()`; purpose clause deliberately not |
+| Moment claimed causation and could name the step just finished | *"I just saw …"*; the next step skips the believed step; quoted, not lower-cased |
+| Rung 1 was a timer talking | opens with what its counter measured and the last observed change |
+| Any click was an attempt; page moves never reset; dwell needed no target; "after-error" never fed | all four corrected |
+| "What have I done so far?" went to the docs corpus | answered from the journey, count matching the list, or an honest refusal |
+| No typed route to "why am I doing this?" | answered from the guide's reason or an honest refusal |
+| Eight of nine model context lines unmarked, under "What is actually true right now" | every line marked OBSERVED / INFERRED / UNKNOWN / PROVISIONED; a belief is INFERRED |
+| "STUCK?" chip on a permissions diagnosis | no chips on recovery cards |
+| Card could run off the screen | `max-height`, scroll |
+| Displayed step text kept backticks | stripped from `text`; `raw` keeps them |
 
 ---
 
-## 9. Prompt changes
+## 9. Prompt
 
-`ROCKY_SYSTEM` (rewritten earlier today as instructions to an instructor) gains one rule:
+`ROCKY_SYSTEM` is written as instructions to an instructor (British spelling, subject "you" or the
+portal, one sentence for a simple question, up to about 150 words for an explanation, never a
+list) and says what each mark permits: *quote OBSERVED, hedge INFERRED, never upgrade UNKNOWN*.
 
-> Each Context line is marked OBSERVED, INFERRED or UNKNOWN. Quote OBSERVED lines as fact. Hedge
-> INFERRED lines ('the guide suggests', 'it looks like'). Never upgrade an UNKNOWN line into a
-> claim, and when the learner asks about something UNKNOWN, say what you can see instead.
-
-And `promptBlock()` now reads, live on Purview:
+What the model receives on Purview with no guide read — **read live through `coach-live.js`**:
 
 ```
-UNKNOWN (position): Rocky is NOT certain which step the learner is on (position unknown). What is known: in Home…
-UNKNOWN (accomplishments): none observed yet this session. Rocky has not watched the page change in a way that proves a step finished. Do NOT tell the learner they have completed anything.
-UNKNOWN (consequence): nothing in the guide names anything this step creates, so do not claim a consequence for skipping it.
+UNKNOWN (position): Rocky is NOT certain which step the learner is on (no guide has been read on this page)…
+UNKNOWN (accomplishments): none observed yet this session… Do NOT tell the learner they have completed anything.
+UNKNOWN (consequence): nothing in the guide names anything this step creates…
 ```
 
-…and, when there is evidence:
+What it would receive with evidence — **the code's output on a fixture, not yet observed on a
+portal**:
 
 ```
-OBSERVED (position): The learner is on step 4 of 9.
+INFERRED (position): The learner is on step 4 of 9.
 OBSERVED (accomplishments) — world changes Rocky watched happen, in order:
 • the list went from 1 to 2 (on Policies)
-INFERRED from the guide (why the current step matters, guide-task): This is part of Create the custom departing-user policy.
-INFERRED from the done-ledger (next unfinished step, in the guide's own words): Return to Policies and confirm…
-OBSERVED (portal failure, verbatim): "You currently aren't assigned to a role group that allows you to view alerts"
+INFERRED (why the step Rocky is pointing at matters, from the guide's task heading): This is part of the task "…".
+INFERRED from the done-ledger (next unfinished step, in the guide's own words): Return to Policies and confirm …
+OBSERVED (portal failure, verbatim): "You currently aren't assigned to a role group…"
 ```
-
-The old cap of 110 words is gone; length follows content. Lists stay forbidden — the bubble is
-320px wide.
 
 ---
 
-## 10. Immediate implementation plan
+## 10. Status and what is next
 
-**Shipped today, gated, mutation-tested (19 of 19 mutants killed), live-validated:** everything in
-§8. Gates: mentor 47, recovery 30, pilot 26, guide 21, coach 20, typed questions 6 (new). All 32
-release gates green.
+**Shipped and gated:** everything in §8. Gates: mentor 47, recovery 30, pilot 27 (with the chain
+gate), guide 23, coach 20, typed questions 6. All 32 release gates green in one run. Each new guard
+was checked by deleting it and watching its gate go red; the sweep scripts are working files, not
+committed. Live on Purview and Azure: the coach delivered as a card, the block marked, the failure
+pipeline exercised with a synthetic node — not a real portal error.
 
-**Next, in order — each a wording-or-wiring change on an engine that already runs:**
+**Not yet seen on a live lab, in the order it matters for the demo:**
 
-1. **Retire the ALL-CAPS chips** except the provenance ones (`FROM THE CLOUDLABS DOCS`, `A KNOWN
-   ISSUE`, `MY BEST GUESS`, `AI ·`). The rung-0 diagnosis still wears "STUCK?".
-2. **Bubble max-height and scroll.** No prompt fits a five-part answer into 320px without it.
-3. **Recovery rung 2's last fallback** still says *"This step wants you to find…"*; steps do not
-   want things.
-4. **Replace the committed `webext/lab.json` fixture** or blank it — it grounds every model answer
-   on a Foundry lab that is not running.
-5. **The dependency rule's marked-name path** is unverified on a rendered guide pane; one look at a
-   live pane's `innerText` decides whether it ships or is cut to filenames.
-6. **Azure place.** Read the blade title through the relay so "You are on Microsoft Azure" becomes a
-   page name.
-7. **Record one real Submit on Purview.** Nobody has watched a completion after a mutating action.
-   The moment is designed for it and has never been seen.
-
-Not in this plan: new engines, new modules, new storage, a conversation surface. The voice is
-carried by the cards Rocky already has; the next surface is a UX decision, not a mentor one.
+1. A completion after a mutating action on Purview (the Submit moment). Never recorded.
+2. A `Task N:` heading in a rendered CloudLabs pane's text (the task reason).
+3. `webext/lab.json` is a committed Foundry fixture that grounds every model answer until replaced.
+4. `**` surviving in a rendered pane (the marked-name dependency rule; filenames are unaffected).
+5. Azure place — still the portal's name.
+6. The remaining ALL-CAPS chips outside recovery (explore, watcher, pilot preflight).
