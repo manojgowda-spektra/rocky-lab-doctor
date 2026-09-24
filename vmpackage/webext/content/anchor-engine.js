@@ -47,6 +47,51 @@ window.LabPilotAnchor = (function () {
     return r.width > 1 && r.height > 1;
   }
 
+  /*
+   * IS SOMETHING PAINTED OVER IT?
+   *
+   * isVisible() above asks whether the element is DRAWN: display, visibility, opacity, size.
+   * Every one of those passes for a control sitting underneath a modal, a wizard or a flyout,
+   * because the control really is drawn — it is just not the thing the learner can see or
+   * reach. Nothing in the engine asked the only question that matters for pointing at it: is
+   * it the topmost thing at its own position?
+   *
+   * MEASURED ON THE LIVE LAB. Purview opens "New insider risk policy" as a full-page wizard and
+   * leaves the solution navigation in the DOM behind it. The engine resolved "Policies" at 0.80
+   * from that buried nav, the overlay glowed its rectangle, and the wizard's "Users and groups"
+   * had moved into that rectangle — so Rocky said "open Policies" while pointing at a control
+   * of a different name. Worse, every click the learner then made in the wizard was not on the
+   * glowed element, so recovery.js scored it a MISCLICK; four of those tripped the stuck rule
+   * and Rocky interrupted to say "you have been on this step a little while" to someone who
+   * had finished it. One missing test produced a wrong glow, a wrong message, and a false
+   * accusation of being stuck.
+   *
+   * elementFromPoint is a hit test, so it already respects pointer-events and stacking. The
+   * glow itself is pointer-events:none (overlay.css), so Rocky cannot occlude his own target.
+   * When the answer cannot be obtained, the element is NOT treated as covered: refusing to
+   * point because a hit test threw would be a worse failure than the one being fixed.
+   */
+  function isCovered(el) {
+    try {
+      if (!el || !el.getBoundingClientRect) return false;
+      var doc = el.ownerDocument || document;
+      var win = doc.defaultView || window;
+      var r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return true;
+      // Off screen is not "covered", but it is not pointable either, and a glow drawn outside
+      // the viewport is the same nothing to a learner.
+      if (r.bottom <= 0 || r.top >= win.innerHeight || r.right <= 0 || r.left >= win.innerWidth) return true;
+      var x = Math.min(Math.max(r.left + r.width / 2, 1), win.innerWidth - 1);
+      var y = Math.min(Math.max(r.top + r.height / 2, 1), win.innerHeight - 1);
+      if (!doc.elementFromPoint) return false;                 // not a browser: cannot tell
+      var top = doc.elementFromPoint(x, y);
+      if (!top) return true;                                   // nothing there at all
+      // The hit may land on a child (a span inside the button) or on an ancestor (the button
+      // wrapping the span we resolved). Either is the same control.
+      return !(top === el || (el.contains && el.contains(top)) || (top.contains && top.contains(el)));
+    } catch (e) { return false; }
+  }
+
   function isDisabled(el) {
     if (!el) return false;
     if (el.disabled === true) return true;
@@ -310,6 +355,18 @@ window.LabPilotAnchor = (function () {
       }
       return true;
     });
+    /*
+     * DROP ANYTHING PAINTED OVER, BEFORE CHOOSING.
+     *
+     * Filtering here rather than after picking a winner matters: a buried duplicate must not
+     * be able to create a false AMBIGUOUS either. Sorted by score already, and capped so a
+     * pathological page cannot turn one resolution into hundreds of hit tests — the tail of a
+     * sorted candidate list never wins anyway.
+     */
+    if (scored.length > 20) scored = scored.slice(0, 20);
+    var reachable = scored.filter(function (c) { return !isCovered(c.el); });
+    if (scored.length && !reachable.length) return { status: "absent", reason: "covered" };
+    scored = reachable;
     if (scored.length === 0) return { status: "absent", reason: "zero-score" };
     var best = scored[0];
     if (best.score < MIN_SCORE) return { status: "absent", reason: "below-min", score: best.score };
@@ -390,7 +447,7 @@ window.LabPilotAnchor = (function () {
   return {
     resolve: resolve, resolveTarget: resolveTarget, resolveChain: resolveChain,
     resolveStep: resolveStep, isVisible: isVisible,
-    isDisabled: isDisabled, isUnstableId: isUnstableId, visibleText: visibleText,
+    isDisabled: isDisabled, isUnstableId: isUnstableId, visibleText: visibleText, isCovered: isCovered,
     fieldLabelText: fieldLabelText, scopeRoot: scopeRoot,
     _weights: W, _config: { MIN_SCORE: MIN_SCORE, MARGIN: MARGIN }
   };

@@ -183,6 +183,7 @@
       index: -1,            // best-supported step, or -1 when unknown
       confidence: 0,
       done: {},             // stepId -> when it was satisfied
+      complete: false,      // every step the ledger knows about is finished
       hop: {},              // stepId -> how many of its ordered targets the page has satisfied
       resolution: null,     // last verdict for the current target
       learner: {
@@ -628,6 +629,24 @@
      * screen this observation. The URL can then reinforce, order and disambiguate as much as
      * it likes, and can still never invent a position by itself.
      */
+    /*
+     * A FINISHED LAB MUST NOT NAG.
+     *
+     * Measured live on Challenge 04: the done ledger held all five steps, and the pointer sat
+     * on step 4 telling the learner to "open Policies" — a step its own ledger recorded as
+     * finished, on a page they had reached by finishing it. Evidence keeps arriving after a
+     * step is done, because a nav item does not disappear when you click it, so a completed
+     * step's belief stays alive and can lead again.
+     *
+     * Completion is derived in allDone() and reported by current(); the pilot goes silent on
+     * it and stuck() refuses to fire. Nothing is forced here.
+     *
+     * A STRONGER RULE WAS TRIED AND REMOVED: "a done step may not be the pointer while any
+     * step is unfinished". It was never exercised by any test, and thinking it through, it is
+     * wrong — a learner who deliberately goes back to redo an earlier step should be followed
+     * there, not dragged forward to a step they are not on. Going back is one of the
+     * behaviours position tracking has to survive, not one to override.
+     */
     var controlsAgree = best >= 0 && (
       controlBacked[best] === true ||
       // ...or the URL's reading is itself corroborated: the hop it says was just completed is
@@ -735,8 +754,26 @@
    * STUCK — cheap behavioural signals, each with support in the literature.
    * Returns a reason string, or null. The monitor decides what to do about it.
    */
+  /*
+   * Is every step finished? DERIVED, never stored.
+   *
+   * This began as a field set inside observe(), which meant note({type:"complete"}) — the path
+   * progress.js and recovery.js actually use to finish a step — left it stale until the next
+   * screen arrived. A fact this cheap to compute has no business being cached.
+   */
+  function allDone() {
+    if (!M || !M.steps.length) return false;
+    for (var i = 0; i < M.steps.length; i++) if (!M.done[M.steps[i].id]) return false;
+    return true;
+  }
+
   function stuck() {
     if (!M || M.index < 0) return null;
+    // You cannot be stuck on work the ledger says is over. Every stuck signal is a count of
+    // things the learner did WITHOUT finishing the step, so once the step is finished those
+    // counts describe the past. Left in, they produced the live failure: four clicks made
+    // while completing the lab were read as four failures to complete it.
+    if (allDone()) return null;
     var L = M.learner;
     var dwell = now() - L.enteredStep;
     // repeated attempts at the same step without advancing (wheel-spinning)
@@ -791,6 +828,9 @@
       doneMap: M.done,
       resolution: M.resolution,
       stuck: stuck(),
+      // Every step the ledger knows about is finished. The pilot must stop pointing: there is
+      // no step to point at, and a step number here would contradict the ledger.
+      complete: allDone(),
       done: Object.keys(M.done).length,
       learner: M.learner,
       url: M.url,

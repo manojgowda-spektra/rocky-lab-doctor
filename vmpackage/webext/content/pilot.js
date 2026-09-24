@@ -116,6 +116,12 @@
       return { act: "SILENT", why: "dismissed" };
     }
 
+    // Nothing left to point at. The ledger says every step is finished, so any glow would be
+    // pointing at work already done and any step number would contradict the ledger. Measured
+    // live: with all five steps recorded done, Rocky was still glowing step 4 and telling the
+    // learner to do it.
+    if (world.complete) return { act: "SILENT", why: "lab-complete" };
+
     // Observe mode: only speak when the learner is actually stuck.
     if (state.mode === "observe" && !world.stuck) {
       return { act: "SILENT", why: "observe-mode" };
@@ -183,7 +189,7 @@
     return C.say({
       lab: world.lab, steps: world.steps, doneMap: world.doneMap,
       step: world.step, index: world.index, total: world.total,
-      confidence: world.confidence, hop: world.hop, done: world.done,
+      confidence: world.confidence, hop: world.hop, done: world.done, complete: world.complete,
       surface: world.step && world.step.surface,
       verdict: opts.verdict || world.resolution,
       url: world.url || (typeof location !== "undefined" ? location.href : ""),

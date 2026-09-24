@@ -134,6 +134,16 @@
       };
     }
 
+    // 0. DONE — every step is finished. Saying so is both true and the most useful thing
+    //    there is; hunting for a control belonging to completed work is neither.
+    if (ctx.complete && total) {
+      return {
+        level: "DONE", canGlow: false, why: "complete",
+        text: "That looks like all " + total + " steps done" + (ctx.lab ? " for " + clean(ctx.lab) : "") +
+              ". Ask me anything about what you just did, or carry on exploring.",
+      };
+    }
+
     // 1. POINT — the control resolved uniquely. The only level that glows.
     if (verdict && verdict.status === "resolved" && step) {
       var num = conf >= CONF_NUMBER && total ? "Step " + (ctx.index + 1) + " of " + total + ". " : "";
@@ -202,6 +212,6 @@
   window.LabPilotCoach = {
     say: say,
     _sectionOf: sectionOf,
-    _levels: ["POINT", "LOCATE", "ORIENT", "SITUATE", "ASK", "SURFACE"],
+    _levels: ["DONE", "POINT", "LOCATE", "ORIENT", "SITUATE", "ASK", "SURFACE"],
   };
 })();
