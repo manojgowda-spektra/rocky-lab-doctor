@@ -83,15 +83,66 @@ async function inIso(c, expr) {
   return null;
 }
 
+/*
+ * TYPING, because some observable outcomes need it.
+ *
+ * On Azure every non-mutating click produces nothing: Refresh returns the same rows, and a view
+ * menu changes no state. Filtering a list DOES change its cardinality, creates nothing and costs
+ * nothing — so it is the one way to prove a real completion signal on that portal without
+ * touching the tenant. A label of the form `type:Selector=text` types into the first matching
+ * field and fires the events a framework listens for.
+ */
+const TYPE = (spec) => {
+  const eq = spec.indexOf('=');
+  const want = spec.slice(5, eq).toLowerCase();
+  const text = spec.slice(eq + 1);
+  return `(() => {
+    const want = ${JSON.stringify(want)}, text = ${JSON.stringify(text)};
+    const fields = Array.from(document.querySelectorAll('input,textarea,[contenteditable="true"],[role="searchbox"],[role="textbox"]'));
+    const name = (e) => ((e.getAttribute('aria-label') || e.getAttribute('placeholder') || '').toLowerCase());
+    // NO FALLBACK TO fields[0]. It typed into the Azure portal's global search box because the
+    // blade's filter was in a different frame and the top frame happened to have *a* field.
+    // A miss must move on to the next frame, not type somewhere arbitrary.
+    const hit = fields.find((e) => name(e).indexOf(want) >= 0);
+    if (!hit) return { ok: false, saw: fields.map(name).filter(Boolean).slice(0, 10) };
+    hit.focus();
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+    if (setter && setter.set && hit instanceof window.HTMLInputElement) setter.set.call(hit, text);
+    else hit.value = text;
+    hit.dispatchEvent(new Event('input', { bubbles: true }));
+    hit.dispatchEvent(new Event('change', { bubbles: true }));
+    hit.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: text.slice(-1) }));
+    return { ok: true, clicked: 'typed "' + text + '" into ' + (name(hit) || 'a field') };
+  })()`;
+};
+
 // Clicking is done in the PAGE world: a real user event on a real control, so the portal's own
 // handlers run exactly as they would for a learner.
 const CLICK = (label) => `(() => {
   const want = ${JSON.stringify(label)}.toLowerCase();
-  const sel = 'a[href],button,[role="button"],[role="link"],[role="tab"],[role="menuitem"],[role="treeitem"]';
-  const all = Array.from(document.querySelectorAll(sel)).filter((e) => {
-    const r = e.getBoundingClientRect();
-    return r.width > 2 && r.height > 2 && r.top < innerHeight && r.bottom > 0;
-  });
+  /*
+   * GEOMETRY IS MEANINGLESS INSIDE A CROSS-ORIGIN CHILD FRAME, and this driver had the same bug
+   * the completion engine already had fixed. Measured: every control in the Azure blade —
+   * Create, Refresh, Export to CSV, the whole command bar and grid — reports width 0, height 0,
+   * because the frame is laid out by a parent it cannot see. A width>2 filter therefore rejected
+   * all 55 of them and every Azure click "missed".
+   *
+   * So size is only trusted where this document HAS a viewport of its own. Where it does not,
+   * the style checks stand alone.
+   */
+  const hasViewport = (innerWidth || 0) > 1 && (innerHeight || 0) > 1;
+  const sel = 'a[href],button,[role="button"],[role="link"],[role="tab"],[role="menuitem"],' +
+              '[role="treeitem"],[role="option"],[role="checkbox"],[role="columnheader"],[tabindex]';
+  const shown = (e) => {
+    try {
+      const cs = getComputedStyle(e);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') return false;
+      if (!hasViewport) return true;
+      const r = e.getBoundingClientRect();
+      return r.width > 2 && r.height > 2 && r.top < innerHeight && r.bottom > 0;
+    } catch (x) { return false; }
+  };
+  const all = Array.from(document.querySelectorAll(sel)).filter(shown);
   const name = (e) => ((e.getAttribute('aria-label') || e.innerText || '').replace(/\\s+/g, ' ').trim());
   let hit = all.find((e) => name(e).toLowerCase() === want);
   if (!hit) hit = all.find((e) => name(e).toLowerCase().indexOf(want) >= 0);
@@ -171,24 +222,26 @@ const CLICK = (label) => `(() => {
         .forEach((t) => targets.push({ label: t.url.replace(/^https?:\/\//, '').slice(0, 34), ws: t.webSocketDebuggerUrl }));
     } catch (e) { /* the top frame alone, then */ }
 
-    let sawAnywhere = [];
+    const byFrame = [];
     for (const t of targets) {
       let cc;
       try { cc = t.ws === page.webSocketDebuggerUrl ? c : await connect(t.ws); } catch (e) { continue; }
-      const r = await cc.send('Runtime.evaluate', { expression: CLICK(label), returnByValue: true });
+      const expr = label.indexOf('type:') === 0 ? TYPE(label) : CLICK(label);
+      const r = await cc.send('Runtime.evaluate', { expression: expr, returnByValue: true });
       if (cc !== c) cc.close();
       const v = r.result && r.result.result && r.result.result.value;
       if (v && v.ok) return { ok: true, clicked: v.clicked, frame: t.label };
-      if (v && v.saw) sawAnywhere = sawAnywhere.concat(v.saw);
+      byFrame.push({ frame: t.label, saw: (v && v.saw) || [] });
     }
-    return { ok: false, saw: sawAnywhere };
+    return { ok: false, byFrame };
   }
 
   for (const label of clicks) {
     const before = await settle(30000);
     const v = await clickAnywhere(label);
     if (!v.ok) {
-      console.log(`  MISS  "${label}" — not on screen in any frame. Saw: ${v.saw.slice(0, 8).join(' | ')}`);
+      console.log(`  MISS  "${label}" — not on screen in any frame.`);
+      (v.byFrame || []).forEach((f) => console.log(`          ${f.frame}: ${f.saw.slice(0, 6).join(' | ') || '(nothing)'}`));
       continue;
     }
     const after = await settle(40000);

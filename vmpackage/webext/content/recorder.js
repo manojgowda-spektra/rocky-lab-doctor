@@ -102,11 +102,23 @@
     var s;
     try { s = p.read(); } catch (e) { return; }
 
+    /*
+     * DRAIN ALWAYS; ONLY THE SAMPLE IS CONDITIONAL.
+     *
+     * This returned early whenever the place signature was unchanged, which skipped the event
+     * and action drain below as well. On Azure the place NEVER changes — the portal declares no
+     * aria-current and the heading stays "Microsoft Azure" for the whole blade — so a recording
+     * there collected three relayed clicks into the relay and none of them into the trace.
+     * actions: 0, no step boundaries, nothing to derive.
+     *
+     * A repeated PLACE is genuinely noise and is still dropped. Events and actions are not: they
+     * are one-off facts and losing one loses it for good.
+     */
     var sig = placeSig(s);
-    if (sig === lastSig) return;                 // nothing moved; an unchanged sample is noise
+    var moved = sig !== lastSig;
     lastSig = sig;
 
-    if (trace.samples.length < MAX_SAMPLES) {
+    if (moved && trace.samples.length < MAX_SAMPLES) {
       trace.samples.push({
         t: nowMs() - trace.startedAt,
         url: s.place.route || "",
@@ -122,6 +134,46 @@
       });
     }
 
+    /*
+     * ACTIONS FROM CHILD FRAMES ARRIVE ON THE RELAY, NOT ON THIS DOCUMENT.
+     *
+     * The local click listener below only ever sees the top frame. On Azure every meaningful
+     * control is in the cross-origin blade, so a recording there captured three successful
+     * clicks and reported ZERO actions — and with no actions there are no step boundaries, so
+     * the derivation has nothing to attribute outcomes to.
+     */
+    var rl = R();
+    if (rl && rl.events) {
+      var all;
+      try { all = rl.events(); } catch (e) { all = []; }
+      var known = {};
+      for (var q = 0; q < trace.actions.length; q++) known[trace.actions[q]._k || ""] = 1;
+      for (var z = 0; z < all.length; z++) {
+        var ae = all[z];
+        if (ae.kind !== "action") continue;
+        // A RECORDING IS A WINDOW. The relay's storage persists across reloads and across
+        // recordings — that is deliberate, it is how a late-starting top frame catches up — so
+        // arming a second time drains the FIRST run's clicks into the second run's trace. They
+        // arrived with negative timestamps, which is the giveaway: they predate this recording.
+        if (ae.t && ae.t < trace.startedAt) continue;
+        var ak = [ae.frame, ae.name, ae.t].join("│");
+        if (known[ak] || trace.actions.length >= MAX_ACTIONS) continue;
+        var pz = P();
+        var stt = null;
+        try { stt = pz ? pz.read() : null; } catch (x) { stt = null; }
+        trace.actions.push({
+          _k: ak, t: (ae.t || nowMs()) - trace.startedAt,
+          name: ae.name, role: ae.role || "", region: ae.region || "main", frame: ae.frame,
+          from: stt ? {
+            section: stt.place.section, page: stt.place.page,
+            route: stt.place.route, completed: stt.completed.count,
+          } : null,
+        });
+        known[ak] = 1;
+      }
+      trace.actions.sort(function (a, b) { return a.t - b.t; });
+    }
+
     // Drain whatever the relay has heard since the last drain. The relay de-duplicates, so a
     // repeated read costs nothing and nothing is double-counted.
     var r = R();
@@ -132,6 +184,7 @@
       for (var i = 0; i < trace.events.length; i++) have[trace.events[i]._k] = 1;
       for (var j = 0; j < evs.length; j++) {
         var e = evs[j];
+        if (e.t && e.t < trace.startedAt) continue;      // belongs to an earlier recording
         var k = [e.frame, e.kind, e.text || "", e.name || "", e.from, e.to].join("│");
         if (have[k]) continue;
         trace.events.push({
@@ -209,13 +262,45 @@
     setTimeout(sample, 0);
   }
 
+  function onInput(e) {
+    if (!on || !trace) return;
+    var el = e && e.target;
+    if (!el || !el.tagName || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+    var type = (el.getAttribute && (el.getAttribute("type") || "")).toLowerCase();
+    if (type === "password" || type === "hidden") return;
+    try { if (el.closest && el.closest('[data-labpilot], #labpilot-overlay-root, #labpilot-rocky')) return; }
+    catch (x) { return; }
+    var nm = "";
+    try { nm = (el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.getAttribute("name") || "").trim(); }
+    catch (x) { nm = ""; }
+    if (!nm || trace.actions.length >= MAX_ACTIONS) return;
+    var p = P();
+    var before = null;
+    try { before = p ? p.read() : null; } catch (x) { before = null; }
+    trace.actions.push({
+      t: nowMs() - trace.startedAt, name: nm.slice(0, 80), role: "textbox",
+      region: regionOf(el), via: "input",
+      from: before ? {
+        section: before.place.section, page: before.place.page,
+        route: before.place.route, completed: before.completed.count,
+      } : null,
+    });
+    lastSig = "";
+    setTimeout(sample, 0);
+  }
+
   function arm(name) {
     if (!TOP) return { ok: false, why: "only the top frame records" };
     if (on) return { ok: false, why: "already recording", name: trace.name };
     trace = blank(name);
     on = true;
     lastSig = "";
-    try { document.addEventListener("click", onClick, true); } catch (e) { /* no document */ }
+    try {
+      document.addEventListener("click", onClick, true);
+      // Typing is an action too. See relay.js for why `change` and not `input`, and why the
+      // field is recorded and the value never is.
+      document.addEventListener("change", onInput, true);
+    } catch (e) { /* no document */ }
     try { timer = setInterval(sample, SAMPLE_MS); } catch (e) { timer = 0; }
     sample();
     return { ok: true, name: trace.name };
@@ -226,7 +311,10 @@
     sample();
     on = false;
     try { clearInterval(timer); } catch (e) { /* nothing */ }
-    try { document.removeEventListener("click", onClick, true); } catch (e) { /* nothing */ }
+    try {
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("change", onInput, true);
+    } catch (e) { /* nothing */ }
     trace.endedAt = nowMs();
     trace.durationMs = trace.endedAt - trace.startedAt;
     return trace;
@@ -259,6 +347,7 @@
     if (!trace) return null;
     var out = JSON.parse(JSON.stringify(trace));
     for (var i = 0; i < out.events.length; i++) delete out.events[i]._k;
+    for (var j = 0; j < out.actions.length; j++) delete out.actions[j]._k;
     return JSON.stringify(out, null, 1);
   }
 

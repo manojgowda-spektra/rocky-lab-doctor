@@ -76,12 +76,46 @@ check('the recorder is OFF until armed, and only the top frame records', () => {
     'the top-frame restriction is not explained');
 });
 
-check('the recorder captures no page text, values or keystrokes', () => {
-  // A recorder on an authenticated enterprise portal is keylogger-shaped. This one is not.
-  const r = code('content/recorder.js');
-  assert.ok(!/\.value\b/.test(r), 'the recorder reads form values');
-  assert.ok(!/keydown|keypress|keyup|input"/.test(r), 'the recorder listens to the keyboard');
-  assert.ok(!/document\.body\.(innerText|textContent)/.test(r), 'the recorder scrapes page text');
+check('the recorder captures no page text, no values and no keystrokes', () => {
+  /*
+   * A recorder on an authenticated enterprise portal is keylogger-shaped, and this one records
+   * typing now, so the line has to be drawn exactly rather than approximately.
+   *
+   * ALLOWED: that a field was filled in, and which field. "They completed the project name" is
+   * the step. FORBIDDEN: what they typed — frequently a resource name tied to their tenant, and
+   * the derivation has no use for it.
+   *
+   * An earlier version of this check tested for the substring `input"` and failed on the
+   * perfectly innocent `via: "input"`. A privacy gate that fires on a WORD rather than on a
+   * BEHAVIOUR is one nobody will trust the next time it goes off.
+   */
+  for (const f of ['content/recorder.js', 'content/relay.js']) {
+    const r = code(f);
+    assert.ok(!/addEventListener\(\s*["'](keydown|keypress|keyup)["']/.test(r),
+      f + ' listens to the keyboard');
+    assert.ok(!/addEventListener\(\s*["']input["']/.test(r),
+      f + " listens to 'input', which fires per keystroke — 'change' fires once, on commit");
+    assert.ok(!/\.value\b/.test(r), f + ' reads a field value');
+    assert.ok(!/document\.body\.(innerText|textContent)/.test(r), f + ' scrapes page text');
+  }
+});
+
+check('a password or hidden field is never recorded at all', () => {
+  for (const f of ['content/recorder.js', 'content/relay.js']) {
+    const r = code(f);
+    assert.ok(/password/.test(r) && /hidden/.test(r),
+      f + ' records typing without excluding password and hidden fields');
+  }
+});
+
+check('typing IS recorded as an action, or a whole class of lab step has no boundary', () => {
+  // "Type your project name" is step one of the shipped Foundry pack. Without an action there is
+  // no step boundary, so the derivation has nothing to attribute that step's outcome to.
+  for (const f of ['content/recorder.js', 'content/relay.js']) {
+    const r = code(f);
+    assert.ok(/addEventListener\(\s*["']change["']/.test(r), f + ' does not record a committed input');
+    assert.ok(/via: "input"/.test(r), f + ' does not mark an input-derived action as such');
+  }
 });
 
 check('the recorder never records Rocky himself', () => {
@@ -311,6 +345,34 @@ check('a REAL recording and its derived pack are committed', () => {
   const p = derive(raw);
   assert.ok(p.summary.observable >= 1,
     `no step in the real recording is observable: ${JSON.stringify(p.summary)}`);
+});
+
+check('a recording is a WINDOW — stale events from an earlier run are excluded', () => {
+  /*
+   * Measured live on Azure. The relay's storage persists across reloads and across recordings —
+   * deliberately, it is how a late-starting top frame catches up — so arming a second time
+   * drained the FIRST run's clicks into the second run's trace. Three clicks became six actions,
+   * and the giveaway was negative timestamps: they predate the recording that reported them.
+   */
+  const r = code('content/recorder.js');
+  assert.ok(/ae\.t\s*<\s*trace\.startedAt/.test(r),
+    'the recorder takes relayed ACTIONS without checking they belong to this recording');
+  assert.ok(/e\.t\s*<\s*trace\.startedAt/.test(r),
+    'the recorder takes relayed EVENTS without checking they belong to this recording');
+});
+
+check('the recorder drains the relay on EVERY tick, not only when the place moves', () => {
+  /*
+   * sample() returned early whenever the place was unchanged, which skipped the drain as well.
+   * On Azure the place NEVER changes — no aria-current, and the heading stays "Microsoft Azure"
+   * for the whole blade — so a recording there collected three relayed clicks into the relay
+   * and none into the trace. A repeated PLACE is noise; a missed action is gone for good.
+   */
+  const r = code('content/recorder.js');
+  assert.ok(!/if \(sig === lastSig\) return;/.test(r),
+    'sample() still returns early on an unchanged place, skipping the event and action drain');
+  assert.ok(/moved && trace\.samples\.length/.test(r),
+    'the sample push is not the thing gated on movement');
 });
 
 check('the manifest loads the recorder AFTER what it records', () => {

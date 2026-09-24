@@ -97,6 +97,10 @@ function atomsIn(trace, w) {
         survival: 'lexical', at: e.t,
         detail: `${e.klass}: ${String(e.text || '').slice(0, 60)}`,
       });
+    } else if (e.kind === 'action') {
+      // An action is the learner ACTING. It is the step BOUNDARY, never evidence that the step
+      // finished — the distinction the whole design rests on.
+      continue;
     } else if (e.kind === 'dialog-opened' || e.kind === 'dialog-closed') {
       found.push({
         kind: 'dialog', dir: e.kind === 'dialog-opened' ? 'open' : 'close',

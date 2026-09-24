@@ -97,6 +97,10 @@
    * the top frame would see one completion as sixty.
    */
   function keyOf(e) {
+    // An ACTION is a one-off, not a state. Two clicks on the same Refresh button are two
+    // separate things the learner did, and collapsing them would erase a step boundary — so
+    // the timestamp belongs in the key for actions, and nowhere else.
+    if (e.kind === "action") return ["action", e.frame, e.name || "", e.t].join("│");
     return [e.frame, e.kind, e.name || "", e.text || "", e.from == null ? "" : e.from,
             e.to == null ? "" : e.to].join("│");
   }
@@ -255,9 +259,102 @@
     } catch (x) { /* not an extension context */ }
   }
 
+  /*
+   * CLICKS CROSS THE FRAME BOUNDARY TOO.
+   *
+   * Measured on the live Azure portal: every meaningful control — Create, Refresh, Export to
+   * CSV, the grid itself — is in the cross-origin blade frame. A click listener on the top
+   * frame's document never sees any of them, so a recording of an Azure workflow captured
+   * THREE successful clicks and reported zero actions. Without an action there is no step
+   * boundary, and without a boundary the whole derivation has nothing to attribute outcomes to.
+   *
+   * A click is also the only direct evidence of INTENT in the entire system, so losing it on
+   * the portal with the weakest place signal is the worst possible place to lose it.
+   */
+  function clickRegion(el) {
+    try {
+      if (!el || !el.closest) return "main";
+      if (el.closest('[role="dialog"],[role="alertdialog"],dialog')) return "dialog";
+      if (el.closest('[role="menu"],[role="listbox"],[role="menubar"],[role="tree"]')) return "menu";
+      if (el.closest('[role="tablist"]')) return "tab";
+      if (el.closest('nav,[role="navigation"]')) return "nav";
+      if (el.closest('[role="banner"],header')) return "banner";
+      if (el.closest('[role="grid"],[role="table"],table')) return "grid";
+      return "main";
+    } catch (e) { return "main"; }
+  }
+
+  function onChildClick(e) {
+    var el = e && e.target;
+    if (!el) return;
+    try { if (el.closest && el.closest('[data-labpilot], #labpilot-overlay-root, #labpilot-rocky')) return; }
+    catch (x) { return; }
+    var hit = null;
+    try {
+      hit = el.closest('a[href],button,[role="button"],[role="link"],[role="tab"],[role="menuitem"],' +
+                       '[role="treeitem"],[role="option"],[role="checkbox"],input,select,summary') || el;
+    } catch (x) { hit = el; }
+    if (!hit) return;
+    var nm = "";
+    try {
+      var a = hit.getAttribute && hit.getAttribute("aria-label");
+      nm = (a && a.trim()) ? a.trim() : ((hit.innerText || hit.textContent || "").replace(/\s+/g, " ").trim());
+    } catch (x) { nm = ""; }
+    if (!nm) return;                                // an unnamed control tells the deriver nothing
+    publish({
+      kind: "action", frame: originOf(), t: Date.now(),
+      name: nm.slice(0, 80),
+      role: (hit.getAttribute && hit.getAttribute("role")) || (hit.tagName || "").toLowerCase(),
+      region: clickRegion(hit),
+    });
+  }
+
+  /*
+   * TYPING IS AN ACTION, AND THE VALUE IS NOT RECORDED.
+   *
+   * Labs type constantly — "Type your project name" is literally step one of the shipped
+   * Foundry pack — and without this those steps have no boundary, so the derivation has nothing
+   * to attribute their outcome to. A whole class of real lab steps would simply not exist.
+   *
+   * `change` and not `input`: change fires once, on commit, when the learner has finished. input
+   * fires per keystroke, which would be both a step boundary per character and, in substance, a
+   * keylogger.
+   *
+   * The FIELD is recorded; the VALUE never is. What a learner types into an enterprise portal is
+   * their business and frequently a resource name tied to their tenant, and the derivation does
+   * not need it: "they filled in the project name field" is the step, not what they called it.
+   */
+  function onChildInput(e) {
+    var el = e && e.target;
+    if (!el || !el.tagName) return;
+    if (!/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+    // Never record what was typed into a password or anything hidden.
+    var type = (el.getAttribute && (el.getAttribute("type") || "")).toLowerCase();
+    if (type === "password" || type === "hidden") return;
+    try { if (el.closest && el.closest('[data-labpilot], #labpilot-overlay-root, #labpilot-rocky')) return; }
+    catch (x) { return; }
+    var nm = "";
+    try {
+      nm = (el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.getAttribute("name") || "").trim();
+    } catch (x) { nm = ""; }
+    if (!nm) return;
+    publish({
+      kind: "action", frame: originOf(), t: Date.now(),
+      name: nm.slice(0, 80), role: "textbox", region: clickRegion(el), via: "input",
+    });
+  }
+
   function start() {
     if (started) return;
     started = true;
+    // Only a child frame reports its clicks. The top frame's recorder already has a listener of
+    // its own, and two records of one click would become two steps.
+    if (!F.isTop) {
+      try {
+        document.addEventListener("click", onChildClick, true);
+        document.addEventListener("change", onChildInput, true);
+      } catch (e) { /* no document */ }
+    }
     if (F.isTop) {
       listen();
       // The top frame has its own completion engine and its own signals — Purview keeps the

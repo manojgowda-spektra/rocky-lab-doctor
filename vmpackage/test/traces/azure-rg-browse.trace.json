@@ -1,0 +1,102 @@
+{
+ "schema": "rocky-trace/2",
+ "name": "azure-rg-browse",
+ "recordedAt": "2026-09-24T11:19:14.207Z",
+ "portal": "portal.azure.com",
+ "startedAt": 1790248754207,
+ "endedAt": 1790248787069,
+ "samples": [
+  {
+   "t": 2,
+   "url": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+   "place": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "source": "heading",
+    "confidence": 0.5
+   },
+   "heading": "Microsoft Azure",
+   "belief": {
+    "index": -1,
+    "confidence": 0
+   },
+   "cursor": {
+    "index": -1,
+    "source": "belief"
+   },
+   "completed": 0,
+   "workflow": "unknown"
+  }
+ ],
+ "events": [
+  {
+   "t": 4876,
+   "frame": "https://sandbox-1.reactblade.portal.azure.net/React/Index",
+   "kind": "action",
+   "klass": null,
+   "text": null,
+   "name": " Refresh",
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  },
+  {
+   "t": 14611,
+   "frame": "https://sandbox-1.reactblade.portal.azure.net/React/Index",
+   "kind": "action",
+   "klass": null,
+   "text": null,
+   "name": " Manage view ",
+   "from": null,
+   "to": null,
+   "declared": false,
+   "assertive": false,
+   "count": null
+  }
+ ],
+ "actions": [
+  {
+   "t": 4876,
+   "name": " Refresh",
+   "role": "menuitem",
+   "region": "menu",
+   "frame": "https://sandbox-1.reactblade.portal.azure.net/React/Index",
+   "from": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "route": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+    "completed": 0
+   }
+  },
+  {
+   "t": 14611,
+   "name": " Manage view ",
+   "role": "menuitem",
+   "region": "menu",
+   "frame": "https://sandbox-1.reactblade.portal.azure.net/React/Index",
+   "from": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "route": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+    "completed": 0
+   }
+  },
+  {
+   "t": 24366,
+   "name": " Refresh",
+   "role": "menuitem",
+   "region": "menu",
+   "frame": "https://sandbox-1.reactblade.portal.azure.net/React/Index",
+   "from": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "route": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+    "completed": 0
+   }
+  }
+ ],
+ "notes": [],
+ "durationMs": 32862
+}

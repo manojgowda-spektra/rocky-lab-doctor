@@ -2,7 +2,7 @@
  "schema": "rocky-pack/1",
  "name": "purview-irm-walk",
  "portal": "purview.microsoft.com",
- "derivedAt": "2026-09-24T10:42:19.404Z",
+ "derivedAt": "2026-09-24T11:27:39.567Z",
  "recordedAt": "2026-09-24T10:40:42.036Z",
  "durationMs": 37616,
  "steps": [

@@ -1,0 +1,126 @@
+{
+ "schema": "rocky-pack/1",
+ "name": "azure-rg-browse",
+ "portal": "portal.azure.com",
+ "derivedAt": "2026-09-24T11:27:39.424Z",
+ "recordedAt": "2026-09-24T11:19:14.207Z",
+ "durationMs": 32862,
+ "steps": [
+  {
+   "index": 0,
+   "startState": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "route": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+    "completed": 0
+   },
+   "action": {
+    "name": " Refresh",
+    "role": "menuitem",
+    "region": "menu",
+    "t": 4876
+   },
+   "window": {
+    "from": 4876,
+    "to": 14611
+   },
+   "atoms": [],
+   "success": [],
+   "satisfies": false,
+   "satisfyRule": "nothing happened at all",
+   "failure": [],
+   "movement": [],
+   "latency": {
+    "observedMs": null,
+    "klass": "unknown",
+    "deadlineMs": null,
+    "why": "nothing observed in this window"
+   },
+   "transition": null,
+   "observability": "silent",
+   "observabilityWhy": "nothing happened at all",
+   "observabilityCause": "movement-only"
+  },
+  {
+   "index": 1,
+   "startState": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "route": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+    "completed": 0
+   },
+   "action": {
+    "name": " Manage view ",
+    "role": "menuitem",
+    "region": "menu",
+    "t": 14611
+   },
+   "window": {
+    "from": 14611,
+    "to": 24366
+   },
+   "atoms": [],
+   "success": [],
+   "satisfies": false,
+   "satisfyRule": "nothing happened at all",
+   "failure": [],
+   "movement": [],
+   "latency": {
+    "observedMs": null,
+    "klass": "unknown",
+    "deadlineMs": null,
+    "why": "nothing observed in this window"
+   },
+   "transition": null,
+   "observability": "silent",
+   "observabilityWhy": "nothing happened at all",
+   "observabilityCause": "movement-only"
+  },
+  {
+   "index": 2,
+   "startState": {
+    "section": null,
+    "page": "Microsoft Azure",
+    "route": "/#view/HubsExtension/BrowseResourceGroups.ReactView",
+    "completed": 0
+   },
+   "action": {
+    "name": " Refresh",
+    "role": "menuitem",
+    "region": "menu",
+    "t": 24366
+   },
+   "window": {
+    "from": 24366,
+    "to": 32862
+   },
+   "atoms": [],
+   "success": [],
+   "satisfies": false,
+   "satisfyRule": "nothing happened at all",
+   "failure": [],
+   "movement": [],
+   "latency": {
+    "observedMs": null,
+    "klass": "unknown",
+    "deadlineMs": null,
+    "why": "nothing observed in this window"
+   },
+   "transition": null,
+   "observability": "silent",
+   "observabilityWhy": "nothing happened at all",
+   "observabilityCause": "movement-only"
+  }
+ ],
+ "summary": {
+  "steps": 3,
+  "observable": 0,
+  "ambiguous": 0,
+  "silent": 3,
+  "withFailure": 0,
+  "async": 0,
+  "places": [
+   "Microsoft Azure"
+  ]
+ }
+}
