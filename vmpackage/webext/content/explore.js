@@ -207,7 +207,9 @@
     var step = steps[st.stepIndex] || null, L = step && step.learn || null;
     var c = { lab: st.lab, title: document.title, route: location.pathname,
               history: (st.history || []).slice(-4) };
-    if (step) { c.step = step.text; c.stepNo = st.stepIndex + 1; if (L) c.learn = [L.why, L.what].filter(Boolean).join(" "); }
+    // The step TEXT is a fact about the guide and is always safe to include. The step NUMBER
+    // is a claim about the learner and comes from Position or not at all.
+    if (step) { c.step = step.text; if (L) c.learn = [L.why, L.what].filter(Boolean).join(" "); }
 
     // On a lab nobody captured there IS no bundle, so st.steps is empty and everything above
     // contributes nothing — the model would be asked "what is this step" with no step. The
@@ -219,7 +221,11 @@
       if (P && P.on && P.world && P.world.step) {
         c.step = P.world.step.text || c.step;
         c.lab = P.world.lab || c.lab;
-        if (P.progress) c.stepNo = P.progress.n;
+        // One source. P.progress is already gated on the pilot's threshold, but going through
+        // Position means there is exactly one rule and one place to change it.
+        var POS = window.LabPilotPosition;
+        var sayable = POS ? POS.read().sayable : null;
+        if (sayable && sayable.stepNumber) c.stepNo = sayable.stepNumber;
         else delete c.stepNo;                       // believed, not known — do not assert it
         if (P.world.step.surface && P.world.step.surface !== "browser") {
           c.surface = "This step happens in " + P.world.step.surface + ", which I cannot see from the browser.";
@@ -236,7 +242,19 @@
     try {
       var w = window.LabPilotWatcher && window.LabPilotWatcher.snapshot();
       if (w) {
-        c.observed = 'Step ' + (w.stepIndex + 1) + ' of ' + w.totalSteps +
+        /*
+         * THIS LINE UNDID THE HONESTY THREE LINES ABOVE.
+         *
+         * c.stepNo is carefully deleted when the belief is not confident, with the comment
+         * "believed, not known — do not assert it" — and then this assigned a step number from
+         * watcher.js's counter into the SAME prompt. A model reading both sees a number and
+         * quotes it. What the watcher OBSERVED is still worth telling the model; the step
+         * number it invented is not.
+         */
+        c.observed = (function () {
+          var POS = window.LabPilotPosition;
+          return POS ? POS.promptLine() : 'Position unknown; do not state a step number.';
+        })() +
           '; ' + Math.round(w.onStepMs / 1000) + 's on this step' +
           (w.errorsSeen.length ? '; errors on the page: ' + w.errorsSeen.join(', ') : '') +
           (w.recentClicks.length ? '; last clicks: ' + w.recentClicks.map(function (k) {
@@ -251,15 +269,31 @@
     try {
       var W = window.LabPilotWorld && window.LabPilotWorld.current();
       var Pw = window.LabPilotPilot && window.LabPilotPilot.status();
-      var ahead;
-      if (Pw && Pw.on && W && W.index >= 0 && window.LabPilotWorld.steps) {
-        ahead = window.LabPilotWorld.steps().slice(W.index + 1, W.index + 4)
-          .map(function (x, i) { return (W.index + 2 + i) + '. ' + x.text; });
-      } else {
-        ahead = steps.slice(st.stepIndex + 1, st.stepIndex + 4)
-          .map(function (x, i) { return (st.stepIndex + 2 + i) + '. ' + x.text; });
-      }
-      if (ahead && ahead.length) c.upcoming = ahead.join(' | ');
+      /*
+       * THE UPCOMING LIST NUMBERED ITSELF, and those numbers went into the same prompt from
+       * which the step number had already been deliberately withheld as unreliable. "4. Select
+       * Save" tells a model the learner is on step 3 just as plainly as saying so.
+       *
+       * The steps themselves are useful context and stay. They are numbered only when Position
+       * says a number may be stated; otherwise they are listed as what comes next, in order,
+       * with no claim about where the learner is standing.
+       */
+      var ahead = [];
+      try {
+        var POS2 = window.LabPilotPosition;
+        var st2 = POS2 ? POS2.read() : null;
+        var all = (window.LabPilotWorld && window.LabPilotWorld.steps && window.LabPilotWorld.steps()) || steps || [];
+        var from = st2 && st2.next.index >= 0 ? st2.next.index : -1;
+        if (from < 0 && Pw && Pw.on && W && W.index >= 0) from = W.index + 1;
+        if (from >= 0) {
+          var slice = all.slice(from, from + 3);
+          var numbered = !!(st2 && st2.sayable.stepNumber);
+          ahead = slice.map(function (x, i) {
+            return (numbered ? (from + 1 + i) + '. ' : '') + (x.text || '');
+          }).filter(function (t) { return t.trim(); });
+        }
+      } catch (e) { ahead = []; }
+      if (ahead.length) c.upcoming = ahead.join(' | ');
     } catch (e) {}
     return c;
   }

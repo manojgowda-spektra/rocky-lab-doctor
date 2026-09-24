@@ -82,6 +82,7 @@
         "content/perception.js",
         "content/completion.js",
         "content/relay.js",
+        "content/position.js",
         "content/world-model.js",
         "content/label-resolver.js",
         "content/guide-reader.js",

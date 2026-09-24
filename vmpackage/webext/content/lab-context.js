@@ -67,9 +67,20 @@
     } else {
       bits.push('Not running inside a provisioned CloudLabs lab, so I have no lab identity to report.');
     }
+    /*
+     * THE POSITION SENTENCE IS NOT CONDITIONAL ON THE WATCHER.
+     *
+     * It used to sit inside `if (steps())` because the number came FROM the watcher snapshot.
+     * Position does not need the watcher — on the guide-reader path there is no watcher at all,
+     * and that is the path Purview and every parsed lab use. Leaving the guard in place meant
+     * the model was told nothing about position on exactly the labs where the belief model is
+     * the authority, and a model told nothing invents something.
+     */
+    var POS = window.LabPilotPosition;
+    if (POS && POS.promptLine) bits.push(POS.promptLine());
+
     var s = steps();
     if (s && s.totalSteps) {
-      bits.push('The learner is on step ' + (s.stepIndex + 1) + ' of ' + s.totalSteps + '.');
       if (s.onStepMs > 60000) bits.push('They have been on this step for ' + Math.round(s.onStepMs / 60000) + ' minute(s).');
       if (s.errorsSeen && s.errorsSeen.length) bits.push('Errors seen on the page so far: ' + s.errorsSeen.join(', ') + '.');
     }
@@ -105,11 +116,29 @@
           }
         } catch (e) { /* fall through to the bundle answer */ }
 
+        /*
+         * "3 to go after this one" ASSERTS A POSITION AS FIRMLY AS A STEP NUMBER DOES — it
+         * says where you are by saying what is left, and it was computed from the bundle
+         * counter. Both halves of this sentence now come from Position or neither does.
+         */
+        var n1 = sayableStep();
+        if (n1) {
+          var left = n1.total - n1.n;
+          return 'Step ' + n1.n + ' of ' + n1.total + '. ' +
+            (left > 0 ? left + ' to go after this one.' : 'This is the last one.');
+        }
         var s = steps();
         if (s && s.totalSteps) {
-          var left = s.totalSteps - s.stepIndex - 1;
-          return 'Step ' + (s.stepIndex + 1) + ' of ' + s.totalSteps + '. ' +
-            (left > 0 ? left + ' to go after this one.' : 'This is the last one.');
+          // A count of FINISHED work is a fact from the ledger and safe to give; a count of
+          // what remains is not, because it depends on knowing where the learner is.
+          try {
+            var P2 = window.LabPilotPosition && window.LabPilotPosition.read();
+            if (P2 && P2.completed.count) {
+              return P2.completed.count + ' of ' + s.totalSteps + ' steps look done from here, ' +
+                'but I am not certain which one you are on right now.';
+            }
+          } catch (e) { /* fall through */ }
+          return 'This lab has ' + s.totalSteps + ' steps. I am not certain which one you are on.';
         }
 
         /*
@@ -149,13 +178,26 @@
     { m: /how long|how much time|been here/i, a: function () {
         var s = steps(); if (!s) return null;
         return 'About ' + Math.max(1, Math.round(s.sessionMs / 60000)) + ' minute(s) so far, and you are on step ' +
-          (s.stepIndex + 1) + ' of ' + s.totalSteps + '.';
+          (function () { var n2 = sayableStep(); return n2 ? n2.n + ' of ' + n2.total + '.' : 'not something I can pin down yet.'; })();
       } },
     { m: /can you see|do you know about|other learners|everyone else|validation|did i pass/i, a: function () {
         return 'Honestly: no. I can see this page and this lab environment. I cannot see other learners, ' +
           'the platform\'s own validation results, or your cloud resources. If I said otherwise I would be making it up.';
       } },
   ];
+
+  /*
+   * The ONLY way a step number leaves this file. Null means do not state one — there is
+   * deliberately no second opinion behind it, because every bug in this area came from one.
+   */
+  function sayableStep() {
+    try {
+      var P = window.LabPilotPosition;
+      if (!P) return null;
+      var s = P.read();
+      return s.sayable.stepNumber ? { n: s.sayable.stepNumber, total: s.sayable.total } : null;
+    } catch (e) { return null; }
+  }
 
   function answer(q) {
     if (!q) return null;
