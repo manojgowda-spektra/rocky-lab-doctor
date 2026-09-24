@@ -279,6 +279,22 @@ check('with no Position loaded the coach still works exactly as before', () => {
   assert.ok(!/Step \S+ of/.test(low.text), 'the fallback threshold stopped guarding: "' + low.text + '"');
 });
 
+check('POINT carries the guide\'s reason, and stays a plain direction without one', () => {
+  const withWhy = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.9, verdict: { status: 'resolved', label: 'Save' },
+    sayable: { stepNumber: 3, total: 5, source: 'belief', why: '' },
+    why: { text: 'This is part of Verify auditing.', source: 'guide-task' },
+  }));
+  assert.strictEqual(withWhy.level, 'POINT');
+  assert.match(withWhy.text, /This is part of Verify auditing\.$/, withWhy.text);
+
+  const without = C.say(Object.assign({}, BASE, {
+    step: STEPS[2], index: 2, confidence: 0.9, verdict: { status: 'resolved', label: 'Save' },
+    sayable: { stepNumber: 3, total: 5, source: 'belief', why: '' }, why: null,
+  }));
+  assert.ok(!/part of|is here/.test(without.text), 'a reason was invented: ' + without.text);
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky degrades in specificity, never into silence.\n`);

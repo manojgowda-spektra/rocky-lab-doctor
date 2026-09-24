@@ -81,12 +81,29 @@ check('the extension actually calls LabPilotWorld.note() somewhere', () => {
     'nothing feeds LabPilotWorld.note() — attempts/errors/misclicks stay 0 and stuck() is dead');
 });
 
-check('a click on something else counts as an attempt', () => {
+check('a click that MISSES the glowed control counts as an attempt', () => {
   W.reset(); W.ingest(GUIDE);
   W.observe(screen(['Create a resource']));
+  win.LabPilotOverlay = { tracked: { contains: () => false } };     // something is glowed
   const before = W.current().learner.attempts;
-  RC._onClick({ target: { nodeType: 1, closest: () => null } });
-  assert.strictEqual(W.current().learner.attempts, before + 1, 'the click was not recorded');
+  RC._onClick({ target: { nodeType: 1, closest: () => null } });    // ...and this is not it
+  assert.strictEqual(W.current().learner.attempts, before + 1, 'the miss was not recorded');
+  delete win.LabPilotOverlay;
+});
+
+check('a click when NOTHING is glowed is not an attempt', () => {
+  /*
+   * The demo-path defect: filling three wizard fields with nothing glowed made the learner
+   * "stuck" on the third, and the ladder told someone doing it right that it takes people a
+   * minute. With no target there is nothing to miss, so a click is the learner working.
+   */
+  W.reset(); W.ingest(GUIDE);
+  W.observe(screen(['Create a resource']));
+  delete win.LabPilotOverlay;
+  const before = W.current().learner.attempts;
+  for (let i = 0; i < 5; i++) RC._onClick({ target: { nodeType: 1, closest: () => null } });
+  assert.strictEqual(W.current().learner.attempts, before, 'clicks with no glow were counted as attempts');
+  assert.notStrictEqual(W.stuck(), 'repeated-attempts', 'a learner working with nothing glowed read as stuck');
 });
 
 check('Rocky never counts a click on his OWN UI', () => {
@@ -98,12 +115,14 @@ check('Rocky never counts a click on his OWN UI', () => {
   assert.strictEqual(W.current().learner.attempts, before, 'clicking Rocky counted as a failed attempt');
 });
 
-check('three attempts on one step reads as stuck', () => {
+check('three misses on one step reads as stuck', () => {
   W.reset(); W.ingest(GUIDE);
   W.observe(screen(['Create a resource']));
+  win.LabPilotOverlay = { tracked: { contains: () => false } };
   assert.strictEqual(W.stuck(), null, 'stuck before anything happened');
   for (let i = 0; i < 3; i++) RC._onClick({ target: { nodeType: 1, closest: () => null } });
   assert.strictEqual(W.stuck(), 'repeated-attempts', `got ${W.stuck()}`);
+  delete win.LabPilotOverlay;
 });
 
 // ---- 2. THE LADDER: escalates AWAY from the answer ---------------------------------------------
@@ -278,6 +297,42 @@ check('two failures in the same breath get one sentence', () => {
 check('no failure means no diagnosis', () => {
   assert.strictEqual(RC._diagnose(fresh(), null, FAIL_AT), null);
   assert.strictEqual(RC._diagnose(fresh(), { text: '', at: FAIL_AT }, FAIL_AT + 1), null);
+});
+
+/* ---- the dwell ladder names what it observed ------------------------------------------------- */
+
+check('rung 1 says WHY Rocky thinks you are stuck, not that time passed', () => {
+  // The world model knows the reason. The old rung 1 said "you have been on this step a little
+  // while" for all four of them — a timer talking. An instructor names what they saw.
+  const r1 = RC._ladder(world({ stuck: 'repeated-attempts' }), S(), 100000);
+  assert.match(r1.text, /clicked around this step a few times and the page has not changed/, r1.text);
+  const r2 = RC._ladder(world({ stuck: 'oscillating' }), S(), 100000);
+  assert.match(r2.text, /moved between pages a few times/, r2.text);
+  const r3 = RC._ladder(world({ stuck: 'after-error' }), S(), 100000);
+  assert.match(r3.text, /portal reported an error and nothing has changed since/, r3.text);
+  const r4 = RC._ladder(world({ stuck: 'dwelling' }), S(), 100000);
+  assert.match(r4.text, /Nothing on the page has changed/, r4.text);
+  for (const r of [r1, r2, r3, r4]) {
+    assert.ok(!/a little while|takes people a minute/.test(r.text), 'the timer is still talking: ' + r.text);
+    assert.match(r.text, /What can you see on the screen\?$/, 'rung 1 should end by asking, not telling');
+  }
+});
+
+check('rung 1 cites the last thing Rocky watched the portal do, when there is one', () => {
+  win.LabPilotMentor = { journey: () => [{ evidence: 'the list went from 1 to 2' }], why: () => null };
+  const r = RC._ladder(world({ stuck: 'repeated-attempts' }), S(), 100000);
+  assert.match(r.text, /The last thing I saw the portal do was the list went from 1 to 2\./, r.text);
+  delete win.LabPilotMentor;
+});
+
+check('rung 2 teaches from the guide\'s reason before the knowledge base', () => {
+  win.LabPilotMentor = { journey: () => [], why: () => ({ text: 'This is part of Create the custom departing-user policy.', source: 'guide-task' }) };
+  win.LabPilotKB = { lookup: () => ({ what: 'a button.', does: 'It does things.' }) };
+  const r = RC._ladder(world({ stuck: 'dwelling' }), S({ rung: 1, lastRungAt: 0 }), 100000);
+  assert.strictEqual(r.rung, 2);
+  assert.match(r.text, /This is part of Create the custom departing-user policy\./, r.text);
+  assert.ok(!/a button\./.test(r.text), 'the KB spoke over the guide: ' + r.text);
+  delete win.LabPilotMentor; delete win.LabPilotKB;
 });
 
 /* ---- the ladder now consumes Position ---------------------------------------------------- */

@@ -160,7 +160,23 @@
       ? "The portal says: \u201C" + entry.evidence + "\u201D"
       : "That went through \u2014 " + entry.evidence + ".";
     var nxt = snap && snap.next && snap.next.text ? clean(snap.next.text) : "";
-    if (nxt) lead += " Next, " + nxt.charAt(0).toLowerCase() + nxt.slice(1);
+    if (nxt) {
+      lead += " Next, " + nxt.charAt(0).toLowerCase() + nxt.slice(1);
+      /*
+       * WHAT THE NEXT STEP IS FOR, in the guide's words — the difference between a tracker that
+       * reads the next line and an instructor who says why it comes next. Only when the guide
+       * gives a reason; never invented, and kept short so the moment stays a moment.
+       */
+      try {
+        var w = W();
+        var steps = (w && w.steps && w.steps()) || [];
+        var ns = snap.next.index >= 0 ? steps[snap.next.index] : null;
+        var nw = ns ? why(ns, snap.next.index) : null;
+        if (nw && nw.text && (nw.source === "guide-purpose" || nw.source === "guide-task") && nw.text.length < 120) {
+          lead += " " + nw.text;
+        }
+      } catch (e) { /* no reason is better than a wrong one */ }
+    }
     return lead;
   }
 
@@ -374,7 +390,25 @@
       return { text: clean([L.why, L.what].filter(Boolean).join(" ")), source: "guide-notes" };
     }
 
-    // (b) Rocky's knowledge base, on the control this step is about
+    /*
+     * (b) THE PURPOSE THE GUIDE WROTE. "Click Continue with GitHub to sign in to GitHub Copilot"
+     * carries its own why; guide-reader now keeps it as `why` ("to sign in to GitHub Copilot").
+     * The author's reason, in the author's words, beats anything Rocky could infer.
+     */
+    if (step.why) {
+      return { text: "This step is here " + clean(step.why) + ".", source: "guide-purpose" };
+    }
+
+    /*
+     * (c) THE TASK IT SITS UNDER. A guide pane reads "Task 2: Create the custom departing-user
+     * policy" and then eight steps. Every one of those steps accomplishes that. Saying so is the
+     * answer to "what does this accomplish?" that the author already gave.
+     */
+    if (step.task) {
+      return { text: "This is part of " + clean(step.task).replace(/\.$/, "") + ".", source: "guide-task" };
+    }
+
+    // (d) Rocky's knowledge base, on the control this step is about
     var tg = (step.targets || [])[0];
     if (tg && tg.label && KB() && KB().lookup) {
       try {
@@ -509,29 +543,49 @@
    * model to prefer the Context block and to quote it. A line with no provenance is a line the
    * model will paraphrase into a claim.
    */
+  /*
+   * OBSERVED, INFERRED, UNKNOWN — said on every line, so the model can tell them apart.
+   *
+   * The system prompt tells the model the Context is observed. Some of it is not: the next step
+   * comes from a done-ledger that infers completion from evidence, and a consequence is derived
+   * from the guide's wording. A model that cannot see the difference quotes an inference as a
+   * fact. So every line names its standing, and the prompt tells the model what each standing
+   * permits: quote OBSERVED, hedge INFERRED, never upgrade UNKNOWN.
+   */
   function promptBlock() {
     var b = brief();
     var out = [];
     var p = POS();
+    var s = null;
+    try { s = p ? p.read() : null; } catch (e) { s = null; }
 
-    if (p && p.promptLine) { try { out.push(p.promptLine()); } catch (e) { /* keep going */ } }
-
-    if (b.did) {
-      var items = journey.slice(-5).map(function (j) {
-        return "\u2022 " + j.evidence + (j.place ? " (on " + j.place + ")" : "");
-      });
-      out.push("OBSERVED ACCOMPLISHMENTS \u2014 world changes Rocky watched happen, in order:\n" + items.join("\n"));
-    } else {
-      out.push("OBSERVED ACCOMPLISHMENTS: none yet this session. Rocky has not yet watched the " +
-               "page change in a way that proves a step finished. Do NOT tell the learner they " +
-               "have completed anything.");
+    if (p && p.promptLine) {
+      try {
+        var placeKind = s && s.place && s.place.source === "aria-current" ? "OBSERVED" : "INFERRED";
+        var line = p.promptLine();
+        out.push((s && s.sayable && s.sayable.stepNumber ? (s.sayable.source === "script" ? "INFERRED" : "OBSERVED") : (placeKind === "OBSERVED" && s.place.page ? "OBSERVED" : "UNKNOWN")) + " (position): " + line);
+      } catch (e) { /* keep going */ }
     }
 
-    if (b.why) out.push("WHY THE CURRENT STEP MATTERS (" + b.why.source + "): " + b.why.text);
-    if (b.next) out.push("NEXT UNFINISHED STEP, in the guide's own words: " + b.next.text);
-    if (b.ifNot) out.push("WHAT DEPENDS ON THE CURRENT STEP (derived from the guide): " + b.ifNot.text);
-    else out.push("WHAT DEPENDS ON THE CURRENT STEP: nothing in the guide names anything this " +
-                  "step creates, so do not claim a consequence for skipping it.");
+    if (b.did) {
+      var items = journey.slice(-5).map(function (jn) {
+        return "\u2022 " + jn.evidence + (jn.place ? " (on " + jn.place + ")" : "");
+      });
+      out.push("OBSERVED (accomplishments) \u2014 world changes Rocky watched happen, in order:\n" + items.join("\n"));
+    } else {
+      out.push("UNKNOWN (accomplishments): none observed yet this session. Rocky has not watched the " +
+               "page change in a way that proves a step finished. Do NOT tell the learner they have " +
+               "completed anything.");
+    }
+
+    if (b.why) out.push("INFERRED from the guide (why the current step matters, " + b.why.source + "): " + b.why.text);
+    if (b.next) out.push("INFERRED from the done-ledger (next unfinished step, in the guide's own words): " + b.next.text);
+    if (b.ifNot) out.push("INFERRED from the guide (what depends on the current step): " + b.ifNot.text);
+    else out.push("UNKNOWN (consequence): nothing in the guide names anything this step creates, so do not " +
+                  "claim a consequence for skipping it.");
+    if (s && s.recovery && s.recovery.failure && s.recovery.failure.text) {
+      out.push("OBSERVED (portal failure, verbatim): \u201C" + clean(s.recovery.failure.text).slice(0, 160) + "\u201D");
+    }
 
     return out.join("\n");
   }

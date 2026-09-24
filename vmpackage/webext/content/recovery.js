@@ -70,6 +70,7 @@
 
   function W() { return window.LabPilotWorld; }
   function POS() { return window.LabPilotPosition; }
+  function MEN() { return window.LabPilotMentor; }
   function P() { return window.LabPilotPilot; }
   function R() { return window.LabPilotRocky; }
   function KB() { return window.LabPilotKB; }
@@ -109,9 +110,19 @@
       reset("correct-click");
       return;
     }
-    // Any other click is an attempt. Only a click on something Rocky GLOWED at can be called a
-    // misclick; otherwise we have no basis for the judgement and say so by not making one.
-    w.note({ type: glowed ? "misclick" : "click" });
+    /*
+     * A CLICK IS ONLY AN ATTEMPT WHEN THERE WAS SOMETHING TO MISS.
+     *
+     * Every click anywhere used to count as an attempt, so a learner correctly filling three
+     * fields of a wizard Rocky had nothing glowed on was, by the third field, "stuck" — and the
+     * ladder said "this one takes people a minute" to someone doing it right. Verified on the
+     * demo path: the Create-policy wizard is three clicks.
+     *
+     * With nothing glowed there is no target, so a click is not evidence of struggling with
+     * one; it is the learner working. Only a click that misses a glowed control is an attempt.
+     */
+    if (!glowed) return;
+    w.note({ type: "misclick" });
   }
 
   /*
@@ -198,6 +209,29 @@
    * Which rung, given the world and our own history. Returns null for "say nothing", which is
    * the common case and must stay the common case.
    */
+  /*
+   * WHY ROCKY THINKS YOU ARE STUCK, in the words of what he observed rather than a timer.
+   *
+   * The world model already knows the REASON — repeated attempts, hunting between pages, a long
+   * dwell, an unrecovered error — and the ladder used to throw that away and say "you have been
+   * on this step a little while" for all four. An instructor names what they saw.
+   */
+  function because(world, snap) {
+    var r = world && world.stuck;
+    var last = snap && snap.lastCompletion ? snap.lastCompletion : null;
+    var comp = "";
+    try {
+      var M = MEN();
+      var j = M && M.journey ? M.journey() : [];
+      if (j.length) comp = " The last thing I saw the portal do was " + j[j.length - 1].evidence + ".";
+    } catch (e) { comp = ""; }
+    if (r === "repeated-attempts") return "You have clicked around this step a few times and the page has not changed." + comp;
+    if (r === "oscillating") return "You have moved between pages a few times without landing on the one this step needs." + comp;
+    if (r === "after-error") return "The portal reported an error and nothing has changed since." + comp;
+    if (last) return "Nothing on the page has changed since " + (comp ? "then." + comp : "the last thing I saw.");
+    return "Nothing on the page has changed for a while.";
+  }
+
   function ladder(world, state, nowMs, snap) {
     if (!world || !world.step) return null;
     // THE LAB IS FINISHED. Position derives this rather than storing it, so it cannot go stale
@@ -226,15 +260,25 @@
       // POINT. The glow, if any, already happened. Add only WHERE we are.
       return {
         rung: 1, kind: "POINT",
-        text: "This one takes people a minute." + here + " The step is: " + (step.text || label) +
-              " Tell me what you can see and I will narrow it down.",
+        text: because(world, snap) + here + " The step is: " + (step.text || label) +
+              " What can you see on the screen?",
       };
     }
     if (next === 2) {
       // TEACH. What this kind of control is for — the reasoning, deliberately not the answer.
       var teach = null;
+      /*
+       * THE GUIDE'S OWN REASON FIRST. mentor.why() knows the purpose clause the author wrote,
+       * the task the step sits under, and what later steps depend on it — all better than a
+       * generic note about what kind of control this is.
+       */
       try {
-        if (KB() && KB().lookup) {
+        var M2 = MEN();
+        var wy = M2 && M2.why ? M2.why(step, world.index) : null;
+        if (wy && wy.text) teach = wy.text + " You are looking for \u201C" + label + "\u201D.";
+      } catch (e5) { teach = null; }
+      try {
+        if (!teach && KB() && KB().lookup) {
           var e = KB().lookup({ name: label, role: "button" });
           if (e && e.what) teach = "“" + label + "” is " + e.what + (e.does ? " " + e.does : "");
         }

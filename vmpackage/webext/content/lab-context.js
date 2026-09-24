@@ -114,6 +114,29 @@
       } },
     // "what step" was missing, so that exact question fell through to the CloudLabs docs
     // corpus and came back with AWS onboarding pages. Observed live.
+    /*
+     * "WHAT HAVE I DONE SO FAR?" ANSWERED FROM WHAT ROCKY WATCHED, OR HONESTLY NOT AT ALL.
+     *
+     * This question matched nothing here, so it fell through to the CloudLabs documentation
+     * corpus, which scored an article about ARM templates at 2.81 against a 1.8 floor and
+     * answered under "MY BEST GUESS" before the model was ever called. Reproduced offline. The
+     * mentor's journey is the only honest source, and when it is empty the honest answer is that
+     * nothing has been seen to finish — said plainly, not guessed around.
+     */
+    { m: /what (have|did) i (done|do|accomplish|complete|finish)|what.*(so far|accomplished|completed)|have i (done|finished|completed) anything|what.*got done/i, a: function () {
+        var M = window.LabPilotMentor;
+        if (!M || !M.journey) return null;
+        var j;
+        try { j = M.journey(); } catch (e) { return null; }
+        if (!j.length) {
+          var pl = (function () { try { var s = window.LabPilotPosition.read(); return s.place.page || s.place.section || null; } catch (e) { return null; } })();
+          return 'I have not yet watched the page change in a way that proves a step finished, so I will not ' +
+            'claim anything is done.' + (pl ? ' What I can see is that you are on ' + pl + '.' : '');
+        }
+        var last = j.slice(-3).map(function (e) { return e.evidence + (e.place ? ' (on ' + e.place + ')' : ''); });
+        return (j.length === 1 ? 'One thing I watched happen: ' : j.length + ' things I watched happen, the latest first: ') +
+          last.reverse().join('; ') + '. Those are portal changes I saw, not steps I ticked off.';
+      } },
     { m: /where am i|wh(ich|at) step|how far|progress|how many steps|how much left|what.*doing now/i, a: function () {
         // THE PILOT FIRST. When it is driving, it holds the live belief about which step the
         // learner is on, read from the guide on screen. The watcher's list only exists on a

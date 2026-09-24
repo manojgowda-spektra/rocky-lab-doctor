@@ -244,6 +244,19 @@
         surface: s.surface || "browser",
         surfaceWhy: s.surfaceWhy || null,
         page: guide && guide.page,
+        /*
+         * WHAT THE GUIDE SAID ABOUT THE STEP, carried through rather than rebuilt without it.
+         * This object used to be constructed from text and targets alone, which silently
+         * dropped everything guide-reader had learned: the author's mark-up (`raw`, which the
+         * mentor's dependency derivation keys on), the purpose clause the guide wrote ("to sign
+         * in to GitHub Copilot"), the task heading the step sits under, and authored notes on a
+         * captured bundle. All four are the difference between "Click Save" and a sentence an
+         * instructor would say.
+         */
+        raw: s.raw || null,
+        why: s.why || null,
+        task: s.task || null,
+        learn: s.learn || null,
       });
     }
     M.lab = (guide && guide.title) || M.lab;
@@ -709,6 +722,10 @@
         M.index = best;
         M.learner.enteredStep = now();
         M.learner.attempts = 0;
+        // routeChanges was never reset ANYWHERE, so four page moves early in a lab made
+        // every later step read as "oscillating" for the rest of the session. A count of
+        // hunting between pages describes the step it happened on, exactly as attempts does.
+        M.learner.routeChanges = 0;
       }
       M.confidence = asConfidence(bestScore);
     } else {
@@ -755,6 +772,10 @@
         M.confidence = M.belief[nx];
         M.learner.enteredStep = now();
         M.learner.attempts = 0;
+        // routeChanges was never reset ANYWHERE, so four page moves early in a lab made
+        // every later step read as "oscillating" for the rest of the session. A count of
+        // hunting between pages describes the step it happened on, exactly as attempts does.
+        M.learner.routeChanges = 0;
       }
     }
     M.updatedAt = now();
@@ -790,6 +811,10 @@
       M.index = index;
       M.learner.enteredStep = now();
       M.learner.attempts = 0;
+      // routeChanges was never reset ANYWHERE, so four page moves early in a lab made
+      // every later step read as "oscillating" for the rest of the session. A count of
+      // hunting between pages describes the step it happened on, exactly as attempts does.
+      M.learner.routeChanges = 0;
     }
     M.confidence = M.belief[index];
     M.updatedAt = now();

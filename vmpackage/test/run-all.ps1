@@ -86,6 +86,9 @@ Gate 'No feedback loops' { node (Join-Path $pkg 'test/no-feedback-loop-test.js')
 Gate 'Mentor layer' { node (Join-Path $pkg 'test/mentor-test.js') | Out-Null } `
   'the five questions answered from evidence, or not at all'
 
+Gate 'Typed questions' { node (Join-Path $pkg 'test/lab-context-test.js') | Out-Null } `
+  'what a learner types meets an evidence-based answer first, never the docs corpus by default'
+
 Gate 'Coach ladder' { node (Join-Path $pkg 'test/coach-test.js') | Out-Null } `
   'there is no input for which Rocky has nothing true and useful to say'
 

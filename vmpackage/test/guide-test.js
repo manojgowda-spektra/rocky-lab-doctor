@@ -214,6 +214,49 @@ check('most of a real guide page yields targets', () => {
   assert.ok(targets >= page.length, 'fewer targets than instructions — the ordered ones were lost');
 });
 
+check('the purpose clause the guide wrote is KEPT, not thrown away', () => {
+  // dropPurpose() strips it off the control name — correct — and used to discard it. It is the
+  // author saying why, and on a parsed lab it is the only such sentence there is.
+  const r = G.parseLine('Click on Continue with GitHub to sign in to GitHub Copilot.');
+  assert.strictEqual(r.why, 'to sign in to GitHub Copilot', JSON.stringify(r.why));
+  assert.strictEqual(r.targets[0].label, 'Continue with GitHub', 'keeping the why must not cost the target');
+});
+
+check('a contentless purpose ("to proceed") is not a why', () => {
+  // The extractor on its own, then on a line the rules parse. "to proceed" explains nothing and
+  // would have Rocky say "this step is here to proceed".
+  assert.strictEqual(G.purposeOf('Click on Continue to proceed.'), null);
+  assert.strictEqual(G.purposeOf('Select Next to continue.'), null);
+  assert.strictEqual(G.purposeOf('Click Continue with GitHub to sign in to GitHub Copilot.'), 'to sign in to GitHub Copilot');
+  const r = G.parseLine('Click on Continue to proceed.');
+  assert.ok(r, 'the line should still parse to a target');
+  assert.strictEqual(r.why, null, 'Rocky would say "this step is here to proceed": ' + JSON.stringify(r.why));
+});
+
+check('a task heading attaches to every step under it, and the objective is kept', () => {
+  const lines = [
+    'In this challenge, you will enable four Office indicators and create the custom policy.',
+    'Task 1: Enable the four required global indicators',
+    'Open **Settings** > **Policy indicators**.',
+    'Select **Save** and wait for the success notification.',
+    'Task 2: Create the custom departing-user policy',
+    'Select **Create policy** > **Custom policy**.',
+  ];
+  const out = G.parseLines(lines);
+  assert.strictEqual(out.objective, 'enable four Office indicators and create the custom policy.');
+  const tasks = out.steps.map((s) => s.task);
+  assert.ok(tasks.slice(0, -1).every((t) => t === 'Enable the four required global indicators'),
+    'task 1 steps carry the wrong task: ' + JSON.stringify(tasks));
+  assert.strictEqual(tasks[tasks.length - 1], 'Create the custom departing-user policy');
+  // The heading and the objective are context, not steps to point at — and not lines to send
+  // to the AI assist either, which would hand them back as bogus steps. A mutation sweep showed
+  // the first assertion alone did not isolate this: the heading never parsed as a step anyway,
+  // so the guard's real job is keeping it out of the unparsed bucket.
+  assert.ok(out.steps.every((s) => !/^Task \d/.test(s.text)), 'a Task heading became a step');
+  assert.ok(out.unparsed.every((l) => !/^Task \d/.test(l)), 'a Task heading was queued for the AI assist: ' + JSON.stringify(out.unparsed));
+  assert.ok(out.unparsed.every((l) => !/^In this challenge/.test(l)), 'the objective was queued for the AI assist');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky can work out the steps of a lab nobody captured.\n`);

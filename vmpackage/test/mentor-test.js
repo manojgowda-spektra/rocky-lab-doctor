@@ -548,6 +548,86 @@ check('why: a knowledge base that throws costs Rocky nothing', () => {
   assert.doesNotThrow(() => M.why({ text: 'Select Save.', targets: [{ n: 1, label: 'Save' }] }, 0));
 });
 
+/* ---- 4b. why, from the guide's own words --------------------------------------------------------- */
+
+check('why: the purpose clause the guide wrote beats the knowledge base', () => {
+  // "Click Continue with GitHub to sign in to GitHub Copilot" — the author's reason, kept by
+  // guide-reader as `why`. The KB knows what a button is; the author knows why THIS click.
+  const kb = { lookup: () => ({ what: 'a sign-in button.', does: '' }) };
+  const M = load({ LabPilotKB: kb });
+  const w = M.why({ text: 'Click Continue with GitHub.', why: 'to sign in to GitHub Copilot',
+                    targets: [{ n: 1, label: 'Continue with GitHub' }] }, 0);
+  assert.strictEqual(w.source, 'guide-purpose');
+  assert.strictEqual(w.text, 'This step is here to sign in to GitHub Copilot.');
+});
+
+check('why: the task heading answers "what does this accomplish" when there is no purpose clause', () => {
+  const M = load({});
+  const w = M.why({ text: 'Select Create policy.', task: 'Create the custom departing-user policy', targets: [] }, 0);
+  assert.strictEqual(w.source, 'guide-task');
+  assert.match(w.text, /^This is part of Create the custom departing-user policy\.$/);
+});
+
+check('why: precedence is notes, then purpose, then task, then KB, then dependency', () => {
+  const kb = { lookup: () => ({ what: 'a button.', does: '' }) };
+  const M = load({ LabPilotKB: kb });
+  const full = { text: 'Select Save.', learn: { why: 'Auditing must be on first.' }, why: 'to enable auditing',
+                 task: 'Verify auditing', targets: [{ n: 1, label: 'Save' }] };
+  assert.strictEqual(M.why(full, 0).source, 'guide-notes');
+  delete full.learn;
+  assert.strictEqual(M.why(full, 0).source, 'guide-purpose');
+  delete full.why;
+  assert.strictEqual(M.why(full, 0).source, 'guide-task');
+  delete full.task;
+  assert.strictEqual(M.why(full, 0).source, 'knowledge-base');
+});
+
+check('the teaching moment says what the NEXT step is for, only when the guide says', () => {
+  const steps = [
+    { text: 'Select Save.', targets: [] },
+    { text: 'Open Policies.', why: 'to see the policy you just made', targets: [] },
+  ];
+  const M = load({ LabPilotWorld: world(steps) });
+  const t = M._momentText({ kind: 'count-grew', evidence: 'the list went from 1 to 2' },
+                          { next: { index: 1, text: 'Open Policies.' } });
+  assert.match(t, /Next, open Policies\./);
+  assert.match(t, /This step is here to see the policy you just made\./, 'the guide\'s reason for the next step is missing: ' + t);
+
+  // A knowledge-base or derived reason is NOT good enough for the moment — too generic.
+  const kb = { lookup: () => ({ what: 'the list of policies.', does: '' }) };
+  const M2 = load({ LabPilotWorld: world([{ text: 'Select Save.', targets: [] },
+                                          { text: 'Open Policies.', targets: [{ n: 1, label: 'Policies' }] }]),
+                    LabPilotKB: kb });
+  const t2 = M2._momentText({ kind: 'count-grew', evidence: 'the list went from 1 to 2' },
+                            { next: { index: 1, text: 'Open Policies.' } });
+  assert.ok(!/the list of policies/.test(t2), 'a KB note was bolted onto the moment: ' + t2);
+});
+
+check('the prompt block marks every line OBSERVED, INFERRED or UNKNOWN', () => {
+  const M = load({
+    LabPilotPosition: position({
+      lastCompletion: { kind: 'count-grew', from: 1, to: 2, at: 1000 },
+      page: 'Policies', placeSource: 'aria-current', nextIndex: 1, nextText: 'Open the policy.',
+    }),
+    LabPilotWorld: world([{ text: 'Select Save.', targets: [] }, { text: 'Open the policy.', targets: [] }]),
+  });
+  M.note();
+  const lines = M.promptBlock().split('\n').filter((l) => l.trim() && !/^\u2022/.test(l));
+  for (const l of lines) {
+    assert.match(l, /^(OBSERVED|INFERRED|UNKNOWN)\b/, 'an unmarked line reached the model: ' + l);
+  }
+  assert.ok(lines.some((l) => /^OBSERVED \(accomplishments\)/.test(l)));
+  assert.ok(lines.some((l) => /^INFERRED from the done-ledger/.test(l)), 'the next step must be marked inferred');
+});
+
+check('a portal failure reaches the model verbatim, marked OBSERVED', () => {
+  const pos = position({ page: 'Policies' });
+  const base = pos.read;
+  pos.read = () => { const s = base(); s.recovery.failure = { text: "You aren't assigned to a role group that allows you to view alerts", at: 1 }; return s; };
+  const M = load({ LabPilotPosition: pos });
+  assert.match(M.promptBlock(), /OBSERVED \(portal failure, verbatim\): \u201CYou aren't assigned to a role group/);
+});
+
 /* ---- 5. the model's grounding ------------------------------------------------------------------- */
 
 check('the prompt block tells the model plainly when NOTHING has been accomplished', () => {
@@ -558,7 +638,7 @@ check('the prompt block tells the model plainly when NOTHING has been accomplish
    */
   const M = load({ LabPilotPosition: position({ page: 'Home' }) });
   const p = M.promptBlock();
-  assert.match(p, /OBSERVED ACCOMPLISHMENTS: none yet/);
+  assert.match(p, /UNKNOWN \(accomplishments\): none observed yet/);
   assert.match(p, /Do NOT tell the learner they have completed anything/);
 });
 
@@ -570,7 +650,7 @@ check('the prompt block lists real accomplishments with their evidence', () => {
   });
   M.note();
   const p = M.promptBlock();
-  assert.match(p, /OBSERVED ACCOMPLISHMENTS/);
+  assert.match(p, /OBSERVED \(accomplishments\)/);
   assert.match(p, /the list went from 3 to 4/);
   assert.match(p, /on Policies/);
   assert.ok(!/none yet/.test(p), 'claimed nothing had happened when something had');

@@ -190,9 +190,15 @@
     if (verdict && verdict.status === "resolved" && step) {
       var sn = stepNumber(ctx);
       var num = sn ? "Step " + sn.n + " of " + sn.total + ". " : "";
+      /*
+       * "Click Create policy." is a tracker. "Click Create policy. This is part of creating the
+       * custom departing-user policy." is an instructor. The reason comes from the guide or not
+       * at all — ctx.why is null when nobody wrote one, and the sentence stays a direction.
+       */
+      var reason = ctx.why && ctx.why.text ? " " + clean(ctx.why.text) : "";
       return {
         level: "POINT", canGlow: true, why: "resolved",
-        text: num + (step.text ? clean(step.text) : "Click " + label + "."),
+        text: num + (step.text ? clean(step.text) : "Click " + label + ".") + reason,
       };
     }
 

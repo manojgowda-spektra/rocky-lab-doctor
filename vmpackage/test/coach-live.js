@@ -285,7 +285,7 @@ const PROVOKE = (text) => `(async () => {
         'the model receives the whole world model, not one sentence',
         men.block ? men.block.length + ' chars' : 'empty');
       // The line that stops the model inventing a summary of work that never happened.
-      say(/OBSERVED ACCOMPLISHMENTS/.test(men.block || ''),
+      say(/\((accomplishments)\)/.test(men.block || ''),
         'the grounding names the accomplishments channel explicitly');
       const claimsWork = men.journey === 0 && men.did !== null;
       say(!claimsWork, 'no accomplishment is claimed without an observed world change');

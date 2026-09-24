@@ -214,7 +214,16 @@
       snap = PZ ? PZ.read() : null;
     } catch (e) { snap = null; }
 
+    // WHY this step, from the guide, when the guide says. The coach appends it to POINT so the
+    // pointing sentence teaches instead of only directing.
+    var whyNow = null;
+    try {
+      var MEN = window.LabPilotMentor;
+      whyNow = MEN && MEN.why && world.step ? MEN.why(world.step, world.index) : null;
+    } catch (e) { whyNow = null; }
+
     return C.say({
+      why: whyNow,
       sayable: snap ? snap.sayable : null,
       place: snap ? snap.place : null,
       lab: world.lab, steps: world.steps, doneMap: world.doneMap,

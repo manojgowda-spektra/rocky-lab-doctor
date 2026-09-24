@@ -265,6 +265,7 @@
       return {
       text: text.replace(/\*\*/g, ""),
       raw: text,
+      why: purposeOf(text),
       targets: targets,
       surface: surface ? surface.surface : "browser",
       surfaceWhy: surface ? surface.why : null,
@@ -354,6 +355,7 @@
     return {
       text: line.replace(/\*\*/g, ""),
       raw: line,                      // see parseLine: the author's mark-up is evidence
+      why: purposeOf(line),
       targets: targets,
       surface: surface ? surface.surface : (a.surface || "browser"),
       surfaceWhy: surface ? surface.why : null,
@@ -366,14 +368,61 @@
    * model's reading if it has landed, and otherwise queued for the one question. Pure, so the
    * merge is unit tested without a DOM; read() is the only caller that then asks.
    */
+  /*
+   * THE WHY THE GUIDE ALREADY WROTE.
+   *
+   * dropPurpose() strips "to sign in to GitHub Copilot" off the end of an instruction because it
+   * is not part of the control's name — correct for finding the button, and it then threw the
+   * clause away. That clause is the author telling the learner WHY they are clicking, in the
+   * author's words, and on a parsed lab it is the only such sentence there is: the WHY panel on
+   * Rocky's card has never once been drawn on a Purview or Azure guide because nothing kept it.
+   *
+   * Kept as `why`, reading "to sign in to GitHub Copilot". Contentless purposes — "to proceed",
+   * "to continue", "to move on" — are dropped: they explain nothing and would have Rocky say
+   * "this step is here to proceed".
+   */
+  var PURPOSE_RE = /\b(?:to|so that you can|in order to)\s+((?:sign|open|view|see|enable|start|begin|create|configure|verify|confirm|allow|let|make|ensure|prepare|connect|review|access|launch|load|check|set|add|find|reach|return|get)\b[^.;]{3,140})/i;
+  // No separate "contentless purpose" filter: "to proceed", "to continue" and "to move on" are
+  // rejected because their verbs are not in PURPOSE_RE, and a bare "to start" cannot match its
+  // {3,140} tail. A mutation sweep found the filter that used to sit here could be deleted with
+  // every test still green — dead code that only looked like a guard.
+
+  function purposeOf(str) {
+    var m = String(str || "").replace(/\*\*/g, "").match(PURPOSE_RE);
+    if (!m) return null;
+    var clause = m[1].replace(/\s+/g, " ").replace(/[.,;:\s]+$/, "").trim();
+    if (!clause) return null;
+    return "to " + clause.charAt(0).toLowerCase() + clause.slice(1);
+  }
+
+  /*
+   * THE TASK A STEP SITS UNDER, AND WHAT THE CHALLENGE IS FOR.
+   *
+   * A real guide pane reads "Task 2: Create the custom departing-user policy" and then eight
+   * numbered steps; the heading is the author answering "what does this accomplish?" for every
+   * one of them, and the pane's opening "In this challenge, you will ..." answers it for the
+   * whole page. Both are on screen, both were being read into innerText, and both were skipped
+   * as lines that yield no click target.
+   */
+  var TASK_RE = /^(?:#+\s*)?Task\s+\d+\s*[:.\-\u2013\u2014]\s*(.{4,140}?)\s*$/i;
+  var OBJECTIVE_RE = /^In this (?:challenge|exercise|lab|module|task),?\s+you(?:\u2019ll|'ll| will)\s+(.{10,600})$/i;
+
   function parseLines(lines) {
     var steps = [], unparsed = [];
+    var task = null, objective = null;
     for (var i = 0; i < lines.length; i++) {
-      var p = parseLine(lines[i]) || assisted(lines[i]);       // the rules first; they always win
-      if (p) steps.push(p);
-      else if (worthAsking(lines[i])) unparsed.push(lines[i]);
+      var line = lines[i];
+      var tm = line.match(TASK_RE);
+      if (tm) { task = tm[1].replace(/\*\*/g, "").trim(); continue; }
+      if (!objective) {
+        var om = line.match(OBJECTIVE_RE);
+        if (om) { objective = om[1].replace(/\*\*/g, "").replace(/\s+/g, " ").trim(); continue; }
+      }
+      var p = parseLine(line) || assisted(line);       // the rules first; they always win
+      if (p) { p.task = task; steps.push(p); }
+      else if (worthAsking(line)) unparsed.push(line);
     }
-    return { steps: steps, unparsed: unparsed };
+    return { steps: steps, unparsed: unparsed, objective: objective };
   }
 
   // Send the lines nobody has asked about yet, once. Fire-and-forget: silence is the default
@@ -471,6 +520,7 @@
       page: currentPage(),
       title: guideTitle(pane),
       steps: parsed.steps,
+      objective: parsed.objective || null,
       found: true,
       lines: lines.length,
       assisted: helped,
@@ -499,7 +549,7 @@
     read: read,
     steps: function () { return last; },
     onChange: function (cb) { watchers.push(cb); },
-    _test: {
+    _test: { purposeOf: purposeOf, parseLines: parseLines,
       parseLine: parseLine, parseGuide: parseGuide, tidy: tidy, surfaceOf: surfaceOf, plausibleLabel: plausibleLabel,
       parseLines: parseLines, assisted: assisted, verbatim: verbatim, worthAsking: worthAsking, requestAssist: requestAssist, assist: assist,
     },

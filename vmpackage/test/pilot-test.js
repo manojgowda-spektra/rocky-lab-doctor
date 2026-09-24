@@ -267,6 +267,37 @@ check('observe() stays in the millisecond budget', () => {
   assert.ok(per < 5, `${per.toFixed(2)} ms per observation — the hot path is too slow`);
 });
 
+check('hunting between pages is forgotten once the step advances', () => {
+  /*
+   * routeChanges was never reset, so four page moves at the start of a lab made every later
+   * step read as "oscillating" for the rest of the session — and the ladder fired on a learner
+   * doing fine. It is a per-step count, like attempts, and it now resets with it.
+   */
+  W.reset(); W.ingest(GUIDE);
+  // Drive the count the real way, with the same six page moves the oscillation test above uses
+  // (the first observe has no previous route to count against).
+  for (let i = 0; i < 6; i++) W.observe(screen(['Publish'], 'https://portal.azure.com/#p' + i));
+  assert.strictEqual(W.stuck(), 'oscillating', 'baseline: four route changes should read as oscillating');
+  W.note({ type: 'complete' });
+  assert.strictEqual(W.current().learner.routeChanges, 0, 'routeChanges survived the step advance');
+  assert.notStrictEqual(W.stuck(), 'oscillating', 'still oscillating after moving on');
+});
+
+check('what the guide said about a step survives ingest', () => {
+  // ingest used to rebuild each step from text and targets alone, silently dropping the author's
+  // mark-up (which the mentor's dependency rule keys on), the purpose clause, and the task.
+  W.reset();
+  W.ingest({ title: 'T', page: 1, steps: [
+    { text: 'Click Continue.', raw: 'Click **Continue**.', why: 'to sign in', task: 'Sign in', learn: { why: 'x' },
+      targets: [{ n: 1, label: 'Continue' }] },
+  ] });
+  const s = W.steps()[0];
+  assert.strictEqual(s.raw, 'Click **Continue**.', 'raw was dropped');
+  assert.strictEqual(s.why, 'to sign in', 'why was dropped');
+  assert.strictEqual(s.task, 'Sign in', 'task was dropped');
+  assert.deepStrictEqual(s.learn, { why: 'x' }, 'learn was dropped');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky knows where he is, and stays quiet when he should.\n`);
