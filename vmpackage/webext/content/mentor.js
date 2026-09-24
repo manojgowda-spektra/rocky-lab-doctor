@@ -156,12 +156,31 @@
   // that a STEP finished, because what was observed is that the world changed.
   function momentText(entry, snap) {
     if (!entry) return null;
+    /*
+     * WHAT WAS SEEN, NOT WHAT WAS ACHIEVED. "That went through" claimed the learner caused the
+     * change; the one list-grew ever recorded on Purview was a grid rendering on page load. Rocky
+     * saw a change and says so; the learner knows what they did.
+     */
     var lead = entry.kind === "announce" || entry.kind === "announced-success"
-      ? "The portal says: \u201C" + entry.evidence + "\u201D"
-      : "That went through \u2014 " + entry.evidence + ".";
-    var nxt = snap && snap.next && snap.next.text ? clean(snap.next.text) : "";
+      ? "The portal just announced \u201C" + entry.evidence + "\u201D."
+      : "I just saw " + entry.evidence + (entry.place ? " on " + entry.place : "") + ".";
+    /*
+     * THE NEXT STEP IS NEVER THE ONE THIS CHANGE BELONGS TO. `next` is the first step the ledger
+     * has not marked done, and a relay completion does not write the ledger, so at the moment of
+     * a change it usually still points at the step just finished. Skip it when it is the step
+     * Rocky believes the learner is on.
+     */
+    var ni = snap && snap.next ? snap.next.index : -1;
+    var nxt = "";
+    try {
+      var wN = W();
+      var stepsN = (wN && wN.steps && wN.steps()) || [];
+      if (ni >= 0 && snap.belief && ni === snap.belief.index && stepsN[ni + 1]) ni = ni + 1;
+      nxt = ni >= 0 && stepsN[ni] ? clean(stepsN[ni].text) : (snap && snap.next && snap.next.text ? clean(snap.next.text) : "");
+    } catch (e) { nxt = snap && snap.next && snap.next.text ? clean(snap.next.text) : ""; }
     if (nxt) {
-      lead += " Next, " + nxt.charAt(0).toLowerCase() + nxt.slice(1);
+      // Quoted, not lower-cased: lower-casing turned "Zava Departing..." into "zava Departing...".
+      lead += " Next, \u201C" + nxt.replace(/\.$/, "") + ".\u201D";
       /*
        * WHAT THE NEXT STEP IS FOR, in the guide's words — the difference between a tracker that
        * reads the next line and an instructor who says why it comes next. Only when the guide
@@ -170,9 +189,11 @@
       try {
         var w = W();
         var steps = (w && w.steps && w.steps()) || [];
-        var ns = snap.next.index >= 0 ? steps[snap.next.index] : null;
-        var nw = ns ? why(ns, snap.next.index) : null;
-        if (nw && nw.text && (nw.source === "guide-purpose" || nw.source === "guide-task") && nw.text.length < 120) {
+        var ns = ni >= 0 ? steps[ni] : null;
+        var nw = ns ? why(ns, ni) : null;
+        // Task reason only. A purpose clause is the tail of the next step's own line, which the
+        // learner is about to read; saying it here is saying it twice.
+        if (nw && nw.text && nw.source === "guide-task" && nw.text.length < 120) {
           lead += " " + nw.text;
         }
       } catch (e) { /* no reason is better than a wrong one */ }
@@ -396,7 +417,7 @@
      * The author's reason, in the author's words, beats anything Rocky could infer.
      */
     if (step.why) {
-      return { text: "This step is here " + clean(step.why) + ".", source: "guide-purpose" };
+      return { text: "You do that " + clean(step.why) + ".", source: "guide-purpose" };
     }
 
     /*
@@ -405,7 +426,9 @@
      * answer to "what does this accomplish?" that the author already gave.
      */
     if (step.task) {
-      return { text: "This is part of " + clean(step.task).replace(/\.$/, "") + ".", source: "guide-task" };
+      // Quoted as a title: a heading is an imperative ("Create the...") and does not conjugate
+      // after "part of".
+      return { text: "This is part of the task \u201C" + clean(step.task).replace(/\.$/, "") + "\u201D.", source: "guide-task" };
     }
 
     // (d) Rocky's knowledge base, on the control this step is about
@@ -563,7 +586,15 @@
       try {
         var placeKind = s && s.place && s.place.source === "aria-current" ? "OBSERVED" : "INFERRED";
         var line = p.promptLine();
-        out.push((s && s.sayable && s.sayable.stepNumber ? (s.sayable.source === "script" ? "INFERRED" : "OBSERVED") : (placeKind === "OBSERVED" && s.place.page ? "OBSERVED" : "UNKNOWN")) + " (position): " + line);
+        /*
+         * A step number is INFERRED however sure the belief is: it is a distribution over control
+         * labels and URL hints, which is an inference by this file's own definition. The only
+         * thing about position that is OBSERVED is a place the portal declares (aria-current).
+         */
+        var posKind = (s && s.sayable && s.sayable.stepNumber)
+          ? "INFERRED"
+          : (placeKind === "OBSERVED" && s.place && (s.place.page || s.place.section) ? "OBSERVED" : "UNKNOWN");
+        out.push(posKind + " (position): " + line);
       } catch (e) { /* keep going */ }
     }
 
@@ -578,7 +609,12 @@
                "completed anything.");
     }
 
-    if (b.why) out.push("INFERRED from the guide (why the current step matters, " + b.why.source + "): " + b.why.text);
+    if (b.why) {
+      var FROM = { "guide-notes": "the author's notes", "guide-purpose": "the guide's own words",
+                   "guide-task": "the guide's task heading", "knowledge-base": "Rocky's own notes",
+                   "derived-dependency": "later steps in the guide" };
+      out.push("INFERRED (why the step Rocky is pointing at matters, from " + (FROM[b.why.source] || b.why.source) + "): " + b.why.text);
+    }
     if (b.next) out.push("INFERRED from the done-ledger (next unfinished step, in the guide's own words): " + b.next.text);
     if (b.ifNot) out.push("INFERRED from the guide (what depends on the current step): " + b.ifNot.text);
     else out.push("UNKNOWN (consequence): nothing in the guide names anything this step creates, so do not " +

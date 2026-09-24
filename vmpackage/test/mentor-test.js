@@ -463,13 +463,13 @@ check('the moment cites the evidence and never claims a step finished', () => {
   assert.ok(!/step \d/i.test(t), `the moment claimed a step number: "${t}"`);
   assert.ok(!/completed|finished|done/i.test(t),
     `the moment claimed completion rather than an observed change: "${t}"`);
-  assert.match(t, /Next, select Save/, 'the next step is not offered');
+  assert.match(t, /Next, “Select Save and wait for the confirmation\.”/, 'the next step is not offered: ' + t);
 });
 
 check('an announced success is quoted in the portal\'s own words', () => {
   const M = load({});
   const t = M._momentText({ kind: 'announce', evidence: 'Policy created successfully' }, {});
-  assert.match(t, /The portal says/, t);
+  assert.match(t, /The portal just announced/, t);
   assert.match(t, /Policy created successfully/, t);
 });
 
@@ -558,14 +558,14 @@ check('why: the purpose clause the guide wrote beats the knowledge base', () => 
   const w = M.why({ text: 'Click Continue with GitHub.', why: 'to sign in to GitHub Copilot',
                     targets: [{ n: 1, label: 'Continue with GitHub' }] }, 0);
   assert.strictEqual(w.source, 'guide-purpose');
-  assert.strictEqual(w.text, 'This step is here to sign in to GitHub Copilot.');
+  assert.strictEqual(w.text, 'You do that to sign in to GitHub Copilot.');
 });
 
 check('why: the task heading answers "what does this accomplish" when there is no purpose clause', () => {
   const M = load({});
   const w = M.why({ text: 'Select Create policy.', task: 'Create the custom departing-user policy', targets: [] }, 0);
   assert.strictEqual(w.source, 'guide-task');
-  assert.match(w.text, /^This is part of Create the custom departing-user policy\.$/);
+  assert.match(w.text, /^This is part of the task “Create the custom departing-user policy”\.$/);
 });
 
 check('why: precedence is notes, then purpose, then task, then KB, then dependency', () => {
@@ -590,8 +590,15 @@ check('the teaching moment says what the NEXT step is for, only when the guide s
   const M = load({ LabPilotWorld: world(steps) });
   const t = M._momentText({ kind: 'count-grew', evidence: 'the list went from 1 to 2' },
                           { next: { index: 1, text: 'Open Policies.' } });
-  assert.match(t, /Next, open Policies\./);
-  assert.match(t, /This step is here to see the policy you just made\./, 'the guide\'s reason for the next step is missing: ' + t);
+  assert.match(t, /Next, “Open Policies\.”/, t);
+  // A PURPOSE clause is deliberately NOT appended to the moment any more: it is the tail of the
+  // very line the learner is about to read. Only a task heading is.
+  assert.ok(!/You do that to see the policy/.test(t), 'a purpose clause was bolted onto the moment: ' + t);
+  const M3 = load({ LabPilotWorld: world([{ text: 'Select Save.', targets: [] },
+                                          { text: 'Open Policies.', task: 'Verify the policy', targets: [] }]) });
+  const t3 = M3._momentText({ kind: 'count-grew', evidence: 'the list went from 1 to 2' },
+                            { next: { index: 1, text: 'Open Policies.' } });
+  assert.match(t3, /This is part of the task “Verify the policy”\./, 'the task reason for the next step is missing: ' + t3);
 
   // A knowledge-base or derived reason is NOT good enough for the moment — too generic.
   const kb = { lookup: () => ({ what: 'the list of policies.', does: '' }) };

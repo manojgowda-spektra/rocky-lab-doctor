@@ -852,7 +852,13 @@
     // hunting between pages (oscillation / back-and-forth navigation)
     if (L.routeChanges >= OSCILLATE) return "oscillating";
     // long dwell with no progress
-    if (dwell > STUCK_MS && L.attempts === 0) return "dwelling";
+    /*
+     * DWELLING NEEDS A TARGET. With nothing resolved on this page there is nothing the learner
+     * could be failing to click, so 45 quiet seconds is Rocky's problem, not theirs. Without
+     * this, a learner typing the policy name into a wizard Rocky had nothing glowed on heard
+     * "nothing on the page has changed for a while" at the 45-second mark - while typing it.
+     */
+    if (dwell > STUCK_MS && L.attempts === 0 && M.resolution && M.resolution.status === "resolved") return "dwelling";
     // an error the learner has not recovered from
     if (L.errors > 0 && (now() - L.lastEvent) > 15000) return "after-error";
     return null;

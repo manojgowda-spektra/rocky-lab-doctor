@@ -102,7 +102,7 @@ check('LOCATE: the step is known but the control is not on screen — named, not
   // BEHAVIOUR, not wording: Rocky must admit the control is not here and say where it tends to
   // live. An earlier version pinned the exact phrase "cannot see it" and went red on a rewrite
   // that said the same thing better.
-  assert.match(r.text, /not on this page|cannot see it|is not here/i,
+  assert.match(r.text, /not showing anywhere I can see|not on this page|cannot see it|is not here/i,
     'LOCATE must admit the control is not on screen: ' + r.text);
 });
 
@@ -137,7 +137,7 @@ check('ORIENT names the next UNFINISHED step, from the done ledger', () => {
 check('SITUATE: no section either — the lab and the done count are still facts', () => {
   const r = C.say(Object.assign({}, BASE, { confidence: 0, url: 'https://example.com/', done: 2 }));
   assert.strictEqual(r.level, 'SITUATE');
-  assert.match(r.text, /2 of 5/);
+  assert.match(r.text, /2 of (the |its )?5/);
 });
 
 check('ASK: nothing matched, so turn it into a question', () => {
@@ -263,7 +263,7 @@ check('ORIENT names the page Position read, not the one the URL table guessed', 
     place: { page: 'Insider risk management', section: 'Purview' },
   }));
   assert.strictEqual(r.level, 'ORIENT');
-  assert.match(r.text, /You are in Insider risk management/, r.text);
+  assert.match(r.text, /You are (in|on) Insider risk management/, r.text);
 });
 
 check('with no Position loaded the coach still works exactly as before', () => {

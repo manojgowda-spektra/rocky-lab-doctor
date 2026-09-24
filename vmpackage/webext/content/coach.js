@@ -108,12 +108,12 @@
   // claim Rocky cannot verify would be a guess dressed as help.
   function whereItUsuallyIs(label) {
     if (/^(save|cancel|next|back|submit|create|apply|ok)$/i.test(label)) {
-      return "It is usually at the bottom or top of the panel you are filling in.";
+      return "On these forms it usually sits at the top or bottom of the panel you are filling in.";
     }
     if (/settings|indicators|policies|configuration/i.test(label)) {
-      return "It is usually in the left navigation, or behind the gear icon.";
+      return "It usually lives in the left-hand menu, or behind the gear icon.";
     }
-    return "It is usually behind a menu, a tab, or a panel that has not been opened yet.";
+    return "It may be inside a menu or tab that is not open yet.";
   }
 
   /*
@@ -171,8 +171,8 @@
     if (step && ctx.surface && ctx.surface !== "browser") {
       return {
         level: "SURFACE", canGlow: false, why: "surface:" + ctx.surface,
-        text: "This step happens in " + ctx.surface + ", which I cannot see from the browser. " +
-              (step.text ? "The guide says: " + clean(step.text) : ""),
+        text: "You do this one in " + ctx.surface + ", which I cannot see from the browser." +
+              (step.text ? " The guide says “" + clean(step.text).replace(/\.$/, "") + ".”" : ""),
       };
     }
 
@@ -181,8 +181,9 @@
     if (ctx.complete && total) {
       return {
         level: "DONE", canGlow: false, why: "complete",
-        text: "That is all " + total + " steps of " + (ctx.lab ? clean(ctx.lab) : "the lab") +
-              ". Before you close it — anything you want to go back over?",
+        // "as far as I can see": completion here is the done-ledger, which infers.
+        text: "You have worked through all " + total + " steps of " + (ctx.lab ? clean(ctx.lab) : "the lab") +
+              ", as far as I can see. Anything you want to go back over before you close the lab?",
       };
     }
 
@@ -195,7 +196,8 @@
        * custom departing-user policy." is an instructor. The reason comes from the guide or not
        * at all — ctx.why is null when nobody wrote one, and the sentence stays a direction.
        */
-      var reason = ctx.why && ctx.why.text ? " " + clean(ctx.why.text) : "";
+      // Not the purpose clause: it is the tail of the very line above it, and would read twice.
+      var reason = ctx.why && ctx.why.text && ctx.why.source !== "guide-purpose" ? " " + clean(ctx.why.text) : "";
       return {
         level: "POINT", canGlow: true, why: "resolved",
         text: num + (step.text ? clean(step.text) : "Click " + label + ".") + reason,
@@ -213,7 +215,7 @@
         text: amb
           ? num2 + "There is more than one “" + label + "” on this page, so I would be guessing. " +
             "Which part of the page are you working in?"
-          : num2 + "You are looking for “" + label + "”, and it is not on this page. " +
+          : num2 + "“" + label + "” is not showing anywhere I can see on this page. " +
             whereItUsuallyIs(label),
       };
     }
@@ -225,11 +227,11 @@
       var next = nextUnfinished(ctx);
       return {
         level: "ORIENT", canGlow: false, why: "section-only",
-        text: "You are in " + section + ". " +
+        text: (ctx.place && ctx.place.page ? "You are on " : "You are in ") + section + ". " +
               (next
-                ? "The next thing the guide asks for here is: " + clean(next) + "."
+                ? "The next thing the guide asks for here is “" + clean(next).replace(/\.$/, "") + ".”"
                 : (total
-                    ? done + " of " + total + " look done, and I cannot yet tell which one you are on. " +
+                    ? done + " of the " + total + " steps look done, and I cannot yet tell which one you are on. " +
                       "What did you last click?"
                     : "I cannot yet tell which step you are on. What did you last click?")),
       };
@@ -239,9 +241,8 @@
     if (total) {
       return {
         level: "SITUATE", canGlow: false, why: "lab-only",
-        text: (ctx.lab ? clean(ctx.lab) + ". " : "") +
-              done + " of " + total + " steps look done from here. " +
-              "I do not recognise this page from the guide — ask me rather than waiting for me to point.",
+        text: "This page is not one I recognise from the " + (ctx.lab ? clean(ctx.lab) + " " : "") + "guide. " +
+              done + " of its " + total + " steps look done so far, so ask me what you are after rather than waiting for me to point.",
       };
     }
 

@@ -56,8 +56,8 @@ check('"what have I done so far?" is answered HERE, before the docs corpus can',
   });
   const a = L.answer('what have I done so far?');
   assert.ok(a, 'the question fell through — the corpus will answer it with an ARM-template article');
-  assert.match(a, /the list went from 1 to 2 \(on Policies\)/, a);
-  assert.match(a, /portal changes I saw, not steps I ticked off/, 'the answer must say what kind of evidence it is');
+  assert.match(a, /Most recently the list went from 1 to 2, on Policies/, a);
+  assert.match(a, /changes I saw, not steps I ticked off/, 'the answer must say what kind of evidence it is');
 });
 
 check('with nothing watched, Rocky says he will not claim anything is done', () => {
@@ -81,7 +81,8 @@ check('the latest accomplishment comes first, and no more than three are listed'
   const j = ['a', 'b', 'c', 'd', 'e'].map((x, i) => ({ evidence: 'change ' + x + ' ' + i, place: null }));
   const L = load({ LabPilotMentor: { journey: () => j }, LabPilotPosition: position(null) });
   const a = L.answer('what have I done so far?');
-  assert.match(a, /^5 things I watched happen, the latest first: change e 4; change d 3; change c 2\./, a);
+  // The count matches what is listed: five changes, three named, latest first.
+  assert.match(a, /^I have watched the portal change 5 times so far\. Most recently change e 4; before that change d 3; and before that change c 2\./, a);
 });
 
 check('without the mentor loaded the question falls through, rather than crashing', () => {

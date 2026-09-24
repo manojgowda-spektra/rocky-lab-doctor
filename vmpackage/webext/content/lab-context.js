@@ -100,7 +100,9 @@
       if (s.errorsSeen && s.errorsSeen.length) bits.push('Errors seen on the page so far: ' + s.errorsSeen.join(', ') + '.');
     }
     bits.push('I can only see this page and this lab. I cannot see other learners, the platform\'s validation results, or the cloud resources themselves.');
-    return bits.join(' ');
+    // One line per fact. Joined with a space, the first OBSERVED/INFERRED/UNKNOWN mark sat in the
+    // middle of a sentence about the lab identity and the model read it as prose.
+    return bits.join('\n');
   }
 
   // The questions learners actually ask, answered from evidence rather than a model. If the
@@ -123,6 +125,27 @@
      * mentor's journey is the only honest source, and when it is empty the honest answer is that
      * nothing has been seen to finish — said plainly, not guessed around.
      */
+    /*
+     * "WHY AM I DOING THIS?" The mentor knows the guide's reason for the current step and what
+     * later steps depend on it. Until now no typed question reached either; it fell to the docs
+     * corpus or the model. With no reason in the guide, Rocky says so and quotes the step.
+     */
+    { m: /why (am i|do i|should i|would i|is this|does this)|what (is this|does this|is that) (for|do|accomplish|unlock|achieve)|what.*(point|purpose) of/i, a: function () {
+        var M = window.LabPilotMentor, Wm = window.LabPilotWorld;
+        if (!M || !M.why) return null;
+        var s;
+        try { s = window.LabPilotPosition.read(); } catch (e) { return null; }
+        var idx = s.belief.index >= 0 ? s.belief.index : s.next.index;
+        var steps = (Wm && Wm.steps && Wm.steps()) || [];
+        var step = idx >= 0 ? steps[idx] : null;
+        if (!step) return null;
+        var w = M.why(step, idx), c = M.consequence ? M.consequence(step, idx) : null;
+        if (!w && !c) {
+          return 'The guide does not say why this step is here, and I would rather not invent a reason. ' +
+            'What it does say is \u201C' + String(step.text || '').replace(/\.$/, '') + '.\u201D';
+        }
+        return (w ? w.text : '') + (c ? (w ? ' ' : '') + c.text + '.' : '');
+      } },
     { m: /what (have|did) i (done|do|accomplish|complete|finish)|what.*(so far|accomplished|completed)|have i (done|finished|completed) anything|what.*got done/i, a: function () {
         var M = window.LabPilotMentor;
         if (!M || !M.journey) return null;
@@ -133,9 +156,17 @@
           return 'I have not yet watched the page change in a way that proves a step finished, so I will not ' +
             'claim anything is done.' + (pl ? ' What I can see is that you are on ' + pl + '.' : '');
         }
-        var last = j.slice(-3).map(function (e) { return e.evidence + (e.place ? ' (on ' + e.place + ')' : ''); });
-        return (j.length === 1 ? 'One thing I watched happen: ' : j.length + ' things I watched happen, the latest first: ') +
-          last.reverse().join('; ') + '. Those are portal changes I saw, not steps I ticked off.';
+        var recent = j.slice(-3).reverse();
+        var say = function (e) {
+          return (e.kind === 'announce' || e.kind === 'announced-success')
+            ? 'the portal said \u201C' + e.evidence + '\u201D' : e.evidence;
+        };
+        var parts = [];
+        if (recent[0]) parts.push('Most recently ' + say(recent[0]) + (recent[0].place ? ', on ' + recent[0].place : ''));
+        if (recent[1]) parts.push('before that ' + say(recent[1]));
+        if (recent[2]) parts.push('and before that ' + say(recent[2]));
+        return (j.length === 1 ? 'I have watched the portal change once so far. ' : 'I have watched the portal change ' + j.length + ' times so far. ') +
+          parts.join('; ') + '. Those are changes I saw, not steps I ticked off.';
       } },
     { m: /where am i|wh(ich|at) step|how far|progress|how many steps|how much left|what.*doing now/i, a: function () {
         // THE PILOT FIRST. When it is driving, it holds the live belief about which step the
@@ -144,13 +175,16 @@
         try {
           var P = window.LabPilotPilot && window.LabPilotPilot.status();
           if (P && P.on && P.world && P.world.step) {
-            var head = P.progress
-              ? 'Step ' + P.progress.n + ' of ' + P.progress.total + '. '
-              : '';                                    // not confident enough to claim a number
-            var txt = String(P.world.step.text || '').slice(0, 180);
+            var txt = String(P.world.step.text || '').slice(0, 180).replace(/\.$/, '');
             var surf = P.world.step.surface && P.world.step.surface !== 'browser'
               ? ' That one happens in ' + P.world.step.surface + ', which I cannot see from here.' : '';
-            return head + (txt ? 'It says: ' + txt : 'I am tracking the guide but cannot name the step.') + surf;
+            if (!txt) return 'The guide is open but I cannot tell which line you are on. What did you last click?' + surf;
+            // The number comes from sayableStep() alone - one authority, the same one every other
+            // surface uses - and the sentence says how sure Rocky is either way.
+            var n2 = sayableStep();
+            return (n2
+              ? 'You are on step ' + n2.n + ' of ' + n2.total + ', which says \u201C' + txt + '.\u201D'
+              : 'You look to be on the step that says \u201C' + txt + '\u201D, though I am not sure enough to give you a number.') + surf;
           }
         } catch (e) { /* fall through to the bundle answer */ }
 
@@ -215,11 +249,13 @@
       } },
     { m: /how long|how much time|been here/i, a: function () {
         var s = steps(); if (!s) return null;
-        return 'About ' + Math.max(1, Math.round(s.sessionMs / 60000)) + ' minute(s) so far, and you are on step ' +
-          (function () { var n2 = sayableStep(); return n2 ? n2.n + ' of ' + n2.total + '.' : 'not something I can pin down yet.'; })();
+        var mins = Math.max(1, Math.round(s.sessionMs / 60000)), n2 = sayableStep();
+        return 'About ' + mins + (mins === 1 ? ' minute' : ' minutes') + ' so far' +
+          (n2 ? ', and you are on step ' + n2.n + ' of ' + n2.total + '.' : '. Which step you are on is not something I can pin down yet.');
       } },
-    { m: /can you see|do you know about|other learners|everyone else|validation|did i pass/i, a: function () {
-        return 'Honestly: no. I can see this page and this lab environment. I cannot see other learners, ' +
+    // Narrow on purpose: "can you see the Save button?" used to land here and be told "no".
+    { m: /other learners|everyone else|validation (result|status)|did i pass|my (score|grade|mark)|has (my|the) lab been (validated|checked)/i, a: function () {
+        return 'No. What I can see is this page and this lab environment. I cannot see other learners, ' +
           'the platform\'s own validation results, or your cloud resources. If I said otherwise I would be making it up.';
       } },
   ];

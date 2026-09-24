@@ -86,7 +86,7 @@
   host.appendChild(cv);
   var bub = document.createElement("div");
   bub.setAttribute("data-labpilot", "1");
-  bub.style.cssText = "position:fixed;z-index:2147483645;max-width:320px;background:#0d1426f2;color:#eef2ff;" +
+  bub.style.cssText = "position:fixed;z-index:2147483645;max-width:320px;max-height:min(60vh,520px);overflow-y:auto;background:#0d1426f2;color:#eef2ff;" +
     "border:1px solid rgba(140,160,255,.4);border-radius:14px;padding:10px 13px;font:600 13.5px/1.4 'Segoe UI',system-ui,sans-serif;" +
     "box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transition:opacity .3s;pointer-events:none;";
   (document.body || document.documentElement).appendChild(host);

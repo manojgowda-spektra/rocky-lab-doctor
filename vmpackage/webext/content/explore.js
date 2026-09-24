@@ -355,7 +355,7 @@
                     : found.kind === 'issue' ? 'A KNOWN ISSUE'
                     : 'FROM THE CLOUDLABS DOCS';
           var body = found.confident ? found.text
-                   : 'Not certain this is what you meant, but the closest I have: ' + found.text;
+                   : 'This may not be what you asked, but the closest thing in the CloudLabs docs is this. ' + found.text;
           R().announce(body, {
             label: label,
             mood: !found.confident ? 'think' : found.kind === 'issue' ? 'concerned' : 'happy',
@@ -375,10 +375,10 @@
   // documentation answers the question.
   function askModel(q) {
     if (!st.ai) {
-      R().announce('I can only answer that with my AI switched on — and I would rather say so than guess. ' +
-        'Open the extension popup → Ask Rocky and paste an endpoint, model name and key. ' +
-        'Facts about this lab and every control on screen I can still answer without it.',
-        { label: 'I CANNOT ANSWER THAT YET', mood: 'concerned', hint: 'Popup → Ask Rocky (AI)' });
+      // Said to the LEARNER, who cannot add a model. The set-up instruction lives in the hint.
+      R().announce('That one needs the AI, which is not switched on for this lab, and I would rather say so than guess. ' +
+        'Ask me about this lab or anything on the screen instead.',
+        { label: '', mood: 'neutral', hint: 'Set up: popup → Ask Rocky (AI): endpoint, model, key' });
       return;
     }
 

@@ -256,7 +256,7 @@ check('Rocky quotes the portal rather than paraphrasing it', () => {
   const d = RC._diagnose(fresh(), fail('Client Error - no permission to list keys'), FAIL_AT + 1);
   assert.ok(d.text.indexOf('Client Error - no permission to list keys') >= 0,
     'the portal\u2019s own words are missing: ' + d.text);
-  assert.ok(/portal said/i.test(d.text), 'no attribution to the portal: ' + d.text);
+  assert.ok(/portal (said|just reported)/i.test(d.text), 'no attribution to the portal: ' + d.text);
 });
 
 check('each distinct failure is announced exactly once', () => {
@@ -305,13 +305,13 @@ check('rung 1 says WHY Rocky thinks you are stuck, not that time passed', () => 
   // The world model knows the reason. The old rung 1 said "you have been on this step a little
   // while" for all four of them — a timer talking. An instructor names what they saw.
   const r1 = RC._ladder(world({ stuck: 'repeated-attempts' }), S(), 100000);
-  assert.match(r1.text, /clicked around this step a few times and the page has not changed/, r1.text);
+  assert.match(r1.text, /clicked (\d+ times|a few times) on things other than the control I highlighted/, r1.text);
   const r2 = RC._ladder(world({ stuck: 'oscillating' }), S(), 100000);
-  assert.match(r2.text, /moved between pages a few times/, r2.text);
+  assert.match(r2.text, /page address has changed .* since this step began/, r2.text);
   const r3 = RC._ladder(world({ stuck: 'after-error' }), S(), 100000);
   assert.match(r3.text, /portal reported an error and nothing has changed since/, r3.text);
   const r4 = RC._ladder(world({ stuck: 'dwelling' }), S(), 100000);
-  assert.match(r4.text, /Nothing on the page has changed/, r4.text);
+  assert.match(r4.text, /Nothing I watch for on this page has moved this step on/, r4.text);
   for (const r of [r1, r2, r3, r4]) {
     assert.ok(!/a little while|takes people a minute/.test(r.text), 'the timer is still talking: ' + r.text);
     assert.match(r.text, /What can you see on the screen\?$/, 'rung 1 should end by asking, not telling');
@@ -321,7 +321,7 @@ check('rung 1 says WHY Rocky thinks you are stuck, not that time passed', () => 
 check('rung 1 cites the last thing Rocky watched the portal do, when there is one', () => {
   win.LabPilotMentor = { journey: () => [{ evidence: 'the list went from 1 to 2' }], why: () => null };
   const r = RC._ladder(world({ stuck: 'repeated-attempts' }), S(), 100000);
-  assert.match(r.text, /The last thing I saw the portal do was the list went from 1 to 2\./, r.text);
+  assert.match(r.text, /The last change I saw was when the list went from 1 to 2\./, r.text);
   delete win.LabPilotMentor;
 });
 

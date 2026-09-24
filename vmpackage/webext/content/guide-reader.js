@@ -263,7 +263,7 @@
        * shipped silently doing nothing on every bolded artefact in the corpus.
        */
       return {
-      text: text.replace(/\*\*/g, ""),
+      text: text.replace(/\*\*/g, "").replace(/`/g, ""),   // shown to the learner; raw keeps the marks
       raw: text,
       why: purposeOf(text),
       targets: targets,
@@ -353,7 +353,7 @@
     if (!targets.length) return null;
     var surface = surfaceOf(line);            // the rules' surface classification wins where it has one
     return {
-      text: line.replace(/\*\*/g, ""),
+      text: line.replace(/\*\*/g, "").replace(/`/g, ""),
       raw: line,                      // see parseLine: the author's mark-up is evidence
       why: purposeOf(line),
       targets: targets,

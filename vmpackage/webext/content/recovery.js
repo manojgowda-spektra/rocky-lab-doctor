@@ -148,25 +148,28 @@
 
   var FAILURES = [
     { code: "permission",
-      // "aren't assigned to a role group" is Purview's wording; recorded live, see completion.js.
       re: /permission|not authoriz|unauthoriz|access denied|forbidden|do not have access|don.t have (the )?right|insufficient privileg|requires? (the )?role|assigned to a role|role group/i,
+      // "aren't assigned to a role group" is Purview's wording; recorded live, see completion.js.
+      // The old move said "wait a minute, refresh, and try again" to a learner whose account
+      // simply lacked the role: nothing they clicked was ever going to fix that.
       move: "That is a permissions problem, not something you typed wrong. In a lab it usually " +
-            "means the account has not been given the role yet. Wait a minute, refresh, and try " +
-            "again - role assignments take time to take effect." },
+            "means this account has not been given that role. If it was assigned in the last few " +
+            "minutes, wait a moment and refresh; if not, the lab guide or your instructor has to " +
+            "grant it, because nothing you click here will." },
     { code: "conflict",
       re: /already exists|already in use|already been|conflict|duplicate|is taken/i,
       move: "Something with that name is already there. Either an earlier attempt of yours " +
             "worked, or you need a different name." },
     { code: "notfound",
       re: /not found|does not exist|no longer exists|could not be found|couldn.t be found|\b404\b/i,
-      move: "Whatever that was pointing at is not there. Usually it means an earlier step did " +
+      move: "The portal could not find what that action was looking for. Usually that means an earlier step did " +
             "not finish, rather than this one being wrong." },
     { code: "transient",
       re: /try again|timed out|timeout|temporar|throttl|too many requests|network error|\b(503|500|502|429)\b/i,
       move: "That one looks temporary. Give it a moment and do exactly the same thing again." },
     { code: "validation",
       re: /required|invalid|must be|not valid|please enter|cannot be empty|can.t be empty|too (long|short)/i,
-      move: "The form is not happy with something on it. Look for the field marked in red - the " +
+      move: "The form is not happy with something on it. Look for the field marked in red, because the " +
             "portal puts the reason right next to it." },
   ];
 
@@ -198,8 +201,8 @@
       rung: 0, kind: "DIAGNOSE", code: c.code, id: id,
       // Rocky QUOTES the portal rather than paraphrasing it. He did not see the click fail; he
       // saw the portal say so, and the sentence should not claim more than that.
-      text: "Something just failed. The portal said: “" + quoted + "”" +
-            (c.move ? " " + c.move : " I cannot tell what caused that one."),
+      text: "The portal just reported “" + quoted + "”. " +
+            (c.move ? c.move : "I cannot tell what caused that one. What else does the message say?"),
     };
   }
 
@@ -219,17 +222,39 @@
   function because(world, snap) {
     var r = world && world.stuck;
     var last = snap && snap.lastCompletion ? snap.lastCompletion : null;
-    var comp = "";
+    var comp = "", lastSaid = "";
     try {
       var M = MEN();
       var j = M && M.journey ? M.journey() : [];
-      if (j.length) comp = " The last thing I saw the portal do was " + j[j.length - 1].evidence + ".";
-    } catch (e) { comp = ""; }
-    if (r === "repeated-attempts") return "You have clicked around this step a few times and the page has not changed." + comp;
-    if (r === "oscillating") return "You have moved between pages a few times without landing on the one this step needs." + comp;
+      if (j.length) {
+        var le = j[j.length - 1];
+        var announced = le.kind === "announce" || le.kind === "announced-success";
+        // Named by kind: an announcement is quoted, a change is described. "The last thing I saw
+        // the portal do was the list went from 1 to 2" was not a sentence.
+        comp = announced
+          ? " The last thing I saw was the portal say “" + le.evidence + "”."
+          : " The last change I saw was when " + le.evidence + ".";
+        lastSaid = announced ? "the portal said “" + le.evidence + "”" : le.evidence;
+      }
+    } catch (e) { comp = ""; lastSaid = ""; }
+    /*
+     * Each sentence says only what its counter measures. attempts counts misses of a marked
+     * control and nothing else; routeChanges counts address changes on this step; dwelling is
+     * the things Rocky watches for (counts, announcements, empty states) not moving. None of
+     * them is "the page has not changed", which Rocky does not measure and used to claim.
+     */
+    var L = (world && world.learner) || {};
+    if (r === "repeated-attempts") {
+      var n = L.misclicks || 0;
+      return "You have clicked " + (n ? n + " times" : "a few times") + " on things other than the control I highlighted." + comp;
+    }
+    if (r === "oscillating") {
+      var rc = L.routeChanges || 0;
+      return "The page address has changed " + (rc ? rc + " times" : "several times") + " since this step began, and I have not seen the step finish." + comp;
+    }
     if (r === "after-error") return "The portal reported an error and nothing has changed since." + comp;
-    if (last) return "Nothing on the page has changed since " + (comp ? "then." + comp : "the last thing I saw.");
-    return "Nothing on the page has changed for a while.";
+    if (lastSaid) return "Since " + lastSaid + ", nothing I watch for on this page has moved this step on.";
+    return "Nothing I watch for on this page has moved this step on since you reached it.";
   }
 
   function ladder(world, state, nowMs, snap) {
@@ -260,7 +285,7 @@
       // POINT. The glow, if any, already happened. Add only WHERE we are.
       return {
         rung: 1, kind: "POINT",
-        text: because(world, snap) + here + " The step is: " + (step.text || label) +
+        text: because(world, snap) + here + " The guide says “" + String(step.text || label).replace(/\.$/, "") + ".”" +
               " What can you see on the screen?",
       };
     }
@@ -275,7 +300,7 @@
       try {
         var M2 = MEN();
         var wy = M2 && M2.why ? M2.why(step, world.index) : null;
-        if (wy && wy.text) teach = wy.text + " You are looking for \u201C" + label + "\u201D.";
+        if (wy && wy.text) teach = wy.text;
       } catch (e5) { teach = null; }
       try {
         if (!teach && KB() && KB().lookup) {
@@ -285,15 +310,15 @@
       } catch (e3) {}
       return {
         rung: 2, kind: "TEACH",
-        text: teach || ("This step wants you to find “" + label + "”. If it is not on screen, it is usually behind a menu, a tab, or a panel that has not been opened yet."),
+        text: teach || ("If “" + label + "” is not on the screen, it is probably inside a menu or tab you have not opened yet. Open the ones near the top of the page and tell me what appears."),
       };
     }
     if (next === 3) {
       // RECOVER. Get back to a state we both understand, rather than hunting from here.
       return {
         rung: 3, kind: "RECOVER",
-        text: (page ? "You are on " + page + ", and I cannot line that up with this step. " : "") +
-              "Let us get back to somewhere we both recognise. Go back to the page the guide opened this exercise on, and I will pick the step up from there.",
+        text: (page ? "You are on " + page + ". " : "") +
+              "Let’s reset to a place we both recognise. Go back to the page this task started on, and I will pick the step up from there.",
       };
     }
     // STOP. Not a hint: an honest admission, plus the one thing that is still useful.
@@ -339,8 +364,11 @@
       // announce() is the non-positional voice: recovery is about the situation, not about a
       // control, so Rocky should not fly anywhere to say it.
       r.announce(rungObj.text, {
-        label: rungObj.kind === "STOP" ? "I AM STUCK TOO" : "STUCK?",
-        mood: rungObj.kind === "STOP" ? "sad" : "concerned",
+        // No chip. "STUCK?" over a permissions diagnosis told a learner who had done nothing
+        // wrong that they were stuck; the sentence says what is happening. Orange (concerned)
+        // is kept for a real portal error; a 45-second pause is not an incident.
+        label: "",
+        mood: rungObj.kind === "STOP" ? "sad" : (rungObj.kind === "DIAGNOSE" ? "concerned" : "neutral"),
         hint: "",
       });
     } catch (e) { return false; }
@@ -386,6 +414,10 @@
     if (d) {
       if (speak(d)) {
         st.saidFailure = d.id;            // one sentence per distinct failure, not per turn
+        // Feed the world model. "after-error" was one of its four stuck reasons and nothing
+        // ever incremented errors, so it could not fire; the portal failure Rocky has just
+        // quoted is exactly the observation it was waiting for.
+        try { w.note({ type: "error" }); } catch (e6) { /* no world model to tell */ }
         st.lastRungAt = Date.now();
         st.lastReason = "failure:" + d.code;
         st.engaged = true;

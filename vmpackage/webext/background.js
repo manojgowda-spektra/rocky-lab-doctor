@@ -231,15 +231,22 @@ function buildRequest(cfg, system, turns, limits) {
 
 function buildAIRequest(cfg, p) {
   const ctx = [];
-  if (p.grounding) ctx.push(`What is actually true right now: ${p.grounding}`);
-  if (p.observed) ctx.push(`Observed: ${p.observed}`);
-  if (p.upcoming) ctx.push(`Steps coming up: ${p.upcoming}`);
-  if (p.lab) ctx.push(`Lab: ${p.lab}`);
-  if (p.step) ctx.push(`Current step ${p.stepNo || ""}: ${p.step}`);
-  if (p.learn) ctx.push(`Step notes: ${p.learn}`);
-  if (p.title || p.route) ctx.push(`Page: ${p.title || ""} (${p.route || ""})`);
-  if (p.name) ctx.push(`Control the learner is asking about: "${p.name}" role=${p.role || "?"} section=${p.context || "?"} state=${(p.state || []).join(",") || "none"}`);
-  if (p.kb) ctx.push(`Rocky's own notes on it: ${p.kb}`);
+  /*
+   * EVERY LINE CARRIES ITS STANDING, not only the ones inside the grounding block. The system
+   * prompt tells the model to quote OBSERVED, hedge INFERRED and never upgrade UNKNOWN; eight of
+   * these nine lines used to arrive unmarked, and the grounding block itself sat under the header
+   * "What is actually true right now:" — a truth claim over lines the block labels INFERRED and
+   * UNKNOWN. The lab identity is PROVISIONED: written by the CloudLabs bootstrap, not observed.
+   */
+  if (p.grounding) ctx.push(`Context, each line marked by its standing:\n${p.grounding}`);
+  if (p.observed) ctx.push(`OBSERVED (what the page did): ${p.observed}`);
+  if (p.upcoming) ctx.push(`INFERRED from the done-ledger (steps coming up): ${p.upcoming}`);
+  if (p.lab) ctx.push(`PROVISIONED (lab, from lab.json): ${p.lab}`);
+  if (p.step) ctx.push(`INFERRED from the guide (current step${p.stepNo ? " " + p.stepNo : ""}): ${p.step}`);
+  if (p.learn) ctx.push(`INFERRED from the guide's notes: ${p.learn}`);
+  if (p.title || p.route) ctx.push(`OBSERVED (page): ${p.title || ""} (${p.route || ""})`);
+  if (p.name) ctx.push(`OBSERVED (control under the cursor): "${p.name}" role=${p.role || "?"} section=${p.context || "?"} state=${(p.state || []).join(",") || "none"}`);
+  if (p.kb) ctx.push(`INFERRED (Rocky's own notes on it): ${p.kb}`);
   const question = p.question ? String(p.question).slice(0, 600) : "Explain what this control is and what it does, in a bit more depth.";
   const turns = [];
   (p.history || []).slice(-4).forEach((h) => { if (h && h.q && h.a) { turns.push({ role: "user", content: String(h.q).slice(0, 400) }); turns.push({ role: "assistant", content: String(h.a).slice(0, 600) }); } });

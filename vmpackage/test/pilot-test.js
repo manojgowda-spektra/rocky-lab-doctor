@@ -298,6 +298,42 @@ check('what the guide said about a step survives ingest', () => {
   assert.deepStrictEqual(s.learn, { why: 'x' }, 'learn was dropped');
 });
 
+check('CHAIN: the guide\'s task heading reaches the mentor through the path that actually ships', () => {
+  /*
+   * THE TEST THAT WOULD HAVE CAUGHT TODAY'S BLOCKER. Three layers each rebuilt the step object:
+   * guide-reader kept the task heading, world-model's ingest was taught to pass it through, and
+   * pilot.js compactSteps() - the ONLY caller of ingest() - stripped it back to text and targets.
+   * Every gate called ingest() directly, so all of them were green while nothing reached the
+   * mentor in a browser. This drives the real chain, end to end, on a real guide line.
+   */
+  const code = (f) => fs.readFileSync(path.join(__dirname, '..', 'webext', 'content', f), 'utf8');
+  const gw = {};
+  new Function('window', 'document', 'setInterval', code('guide-reader.js'))(
+    gw, { readyState: 'complete', addEventListener() {}, querySelectorAll: () => [], querySelector: () => null }, () => 0);
+  const parsed = gw.LabPilotGuide._test.parseLines([
+    'Task 2: Create the custom departing-user policy',
+    'Select **Create policy** > **Custom policy**. Do not select **Quick policy**.',
+  ]);
+  assert.strictEqual(parsed.steps.length, 1, 'the real line should parse to one step');
+  assert.strictEqual(parsed.steps[0].task, 'Create the custom departing-user policy', 'guide-reader lost the task');
+
+  const compact = P._compactSteps(parsed.steps);
+  assert.strictEqual(compact.length, 1);
+  assert.strictEqual(compact[0].task, 'Create the custom departing-user policy', 'compactSteps stripped the task - the blocker is back');
+  assert.ok(compact[0].raw && /\*\*Create policy\*\*/.test(compact[0].raw), 'compactSteps stripped the mark-up');
+
+  W.reset(); W.ingest({ title: 'Zava', page: 4, steps: compact });
+  const step = W.steps()[0];
+  assert.strictEqual(step.task, 'Create the custom departing-user policy', 'ingest lost the task');
+
+  const mw = { LabPilotFrame: { isTop: true, ownsUI: true }, LabPilotWorld: W };
+  new Function('window', 'document', code('mentor.js'))(mw, { querySelector: () => null });
+  const why = mw.LabPilotMentor.why(step, 0);
+  assert.ok(why, 'the mentor found no reason for a step under a task heading');
+  assert.strictEqual(why.source, 'guide-task');
+  assert.strictEqual(why.text, 'This is part of the task \u201CCreate the custom departing-user policy\u201D.');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky knows where he is, and stays quiet when he should.\n`);

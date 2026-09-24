@@ -441,7 +441,7 @@
       }
     } else if (d.act === "ASK") {
       clearGlow();
-      say("I can see more than one “" + (verdict.label || "match") + "”. Which part of the page are you on?", "think");
+      say("There is more than one “" + (verdict.label || "match") + "” on this page, so I would be guessing. Which part of the page are you working in?", "think");
       st.lastSpoke = Date.now();
       st.said++;
     } else if (d.act === "ESCALATE") {
@@ -500,6 +500,22 @@
       if (s.surface && s.surface !== "browser") {
         cs.surface = s.surface;
         if (s.surfaceWhy) cs.surfaceWhy = s.surfaceWhy;
+      }
+      /*
+       * THE THIRD LAYER THAT REBUILT THE STEP FROM TEXT AND TARGETS ALONE.
+       *
+       * guide-reader keeps the author's mark-up, purpose clause and task heading; world-model's
+       * ingest() was taught to pass them through; and this function — the ONLY caller of
+       * ingest() in the extension — was compacting every step down to text and targets first,
+       * so none of it ever arrived. Measured: 79 parsed Zava steps, zero with a why, zero with a
+       * task, zero with raw. The gates missed it because every test called ingest() directly.
+       * Bounded, like everything else in a record that also travels cross-tab.
+       */
+      if (s.raw) cs.raw = String(s.raw).slice(0, 400);
+      if (s.why) cs.why = String(s.why).slice(0, 160);
+      if (s.task) cs.task = String(s.task).slice(0, 160);
+      if (s.learn && (s.learn.why || s.learn.what)) {
+        cs.learn = { why: s.learn.why || null, what: s.learn.what || null };
       }
       out.push(cs);
     }
@@ -727,6 +743,7 @@
     coach: coach,          // what Rocky would say now, at the best level the evidence allows
     mode: mode,
     _decide: decide,           // pure, unit-tested
+    _compactSteps: compactSteps, // the ONLY path into ingest(); the chain gate drives the real one
     _labelsFor: labelsFor,     // pure, unit-tested: the hop walk
     _turn: turn,               // for the end-state gate, which drives a turn with a mocked screen
     _summary: summarise,       // pure, unit-tested
