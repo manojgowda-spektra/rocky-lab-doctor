@@ -783,6 +783,12 @@
         M.confidence,
         M.furniture.pages < FURNITURE_MIN_PAGES ? UNPROVEN_CAP : 1
       ) * 100) / 100,
+      // The guide itself, and what is finished. The coach reads these to name the next
+      // UNFINISHED step by the guide's own words when the belief is too weak to name the
+      // current one. Without them its ORIENT level can say where the learner is but not
+      // what to do next, which is half an answer.
+      steps: M.steps,
+      doneMap: M.done,
       resolution: M.resolution,
       stuck: stuck(),
       done: Object.keys(M.done).length,

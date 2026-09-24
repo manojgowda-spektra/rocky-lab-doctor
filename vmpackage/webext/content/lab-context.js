@@ -105,10 +105,32 @@
           }
         } catch (e) { /* fall through to the bundle answer */ }
 
-        var s = steps(); if (!s || !s.totalSteps) return null;
-        var left = s.totalSteps - s.stepIndex - 1;
-        return 'Step ' + (s.stepIndex + 1) + ' of ' + s.totalSteps + '. ' +
-          (left > 0 ? left + ' to go after this one.' : 'This is the last one.');
+        var s = steps();
+        if (s && s.totalSteps) {
+          var left = s.totalSteps - s.stepIndex - 1;
+          return 'Step ' + (s.stepIndex + 1) + ' of ' + s.totalSteps + '. ' +
+            (left > 0 ? left + ' to go after this one.' : 'This is the last one.');
+        }
+
+        /*
+         * NEVER null FOR THIS QUESTION.
+         *
+         * "Where am I" used to return null whenever the pilot had no confident step and there
+         * was no captured bundle — so it fell through to the corpus, then to the model, and on
+         * a lab with no AI key configured the learner asking the single most basic question
+         * got "I cannot answer that yet". That is the failure this whole product sells against,
+         * arriving at the exact moment someone is lost.
+         *
+         * The coach ladder always has something true to say: the section from the URL, the
+         * next unfinished step from the done ledger, or failing everything a question back.
+         * It is a worse answer than a step number and an infinitely better one than an
+         * apology, so it goes here rather than after the model.
+         */
+        try {
+          var c = window.LabPilotPilot && window.LabPilotPilot.coach();
+          if (c && c.text) return c.text;
+        } catch (e) { /* the ladder is best-effort; the lines below still answer something */ }
+        return null;
       } },
     { m: /resource group|which region|what region|where.*deployed|subscription/i, a: function () {
         if (!ctx || !ctx.resourceGroup) return null;
