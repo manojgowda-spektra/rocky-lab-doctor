@@ -284,6 +284,37 @@ check('the coach says the lab is done instead of hunting for a finished step', (
   assert.ok(!/Step \d+ of/.test(said.text), `claimed a step number on a finished lab: "${said.text}"`);
 });
 
+// ---- aria-current is compared by VALUE, never by presence -------------------------------------
+check('aria-current is never tested by presence — "false" is a truthy string', () => {
+  /*
+   * getAttribute("aria-current") returns the STRING "false" on an unselected item, and "false"
+   * is truthy in JavaScript. A presence check therefore reports every item in a navigation as
+   * the current one. Fluent v9 marks unselected nav items exactly that way.
+   *
+   * Measured on this lab's Purview: 2 elements per page, both aria-current="page", none "false"
+   * — so this was latent here rather than firing. It is still wrong, and the position work now
+   * being designed treats aria-current as a primary position oracle, so it has to be read
+   * correctly before anything is built on it.
+   */
+  // Strip comments first: the comment explaining this rule contains the pattern it forbids,
+  // and a check that matches its own explanation is not a check.
+  const code = (f) => fs.readFileSync(path.join(__dirname, '..', 'webext', 'content', f), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const files = ['foundry-kb.js', 'guide-reader.js'];
+  for (const f of files) {
+    const js = code(f);
+    // a bare getAttribute("aria-current") used directly as a condition
+    const bare = /(?:\|\||&&|\(|!)\s*\w+\.getAttribute\(\s*["']aria-current["']\s*\)\s*(?:\)|\|\||&&)/;
+    assert.ok(!bare.test(js), `${f}: aria-current used as a truthiness test — "false" would read as selected`);
+    // a CSS selector matching the attribute regardless of value
+    const sel = /\[aria-current\](?!\s*[:=])/;
+    if (sel.test(js)) {
+      assert.ok(/aria-current["']?\]\s*:not\(\[aria-current=["']false["']\]\)/.test(js),
+        `${f}: [aria-current] selector does not exclude "false"`);
+    }
+  }
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky will not point at what you cannot see, nor at what you have finished.\n`);

@@ -170,7 +170,13 @@
     if (target.disabled || target.getAttribute("aria-disabled") === "true") state.push("disabled");
     if (target.getAttribute("aria-expanded") === "true") state.push("expanded");
     if (target.getAttribute("aria-expanded") === "false") state.push("collapsed");
-    if (target.getAttribute("aria-selected") === "true" || target.getAttribute("aria-current")) state.push("selected");
+    // aria-current IS COMPARED BY VALUE, NEVER BY PRESENCE. getAttribute returns the STRING
+    // "false" on an unselected item, and "false" is truthy, so a presence check describes every
+    // item in a navigation as "selected". Fluent v9 marks unselected nav items exactly that way.
+    // Measured on this lab's Purview: 2 elements, both aria-current="page", none "false" — so
+    // this is latent here rather than firing, and it is still wrong.
+    var cur = target.getAttribute("aria-current");
+    if (target.getAttribute("aria-selected") === "true" || (cur && cur !== "false")) state.push("selected");
     if (target.getAttribute("aria-checked") === "true" || target.checked === true) state.push("on");
     if (target.getAttribute("aria-checked") === "false" || target.checked === false && /checkbox|radio/.test(role)) state.push("off");
     if (target.required || target.getAttribute("aria-required") === "true") state.push("required");

@@ -426,7 +426,9 @@
   // Rocky knows his position without any platform API - the same fact Copilot is handed.
   function currentPage() {
     try {
-      var sel = document.querySelectorAll('[class*="pag" i] .active, [class*="pag" i] [aria-current], li.active, .page-item.active');
+      // [aria-current] as a bare attribute selector matches aria-current="false" too, which is
+      // how an unselected pagination item gets read as the current page. Match the VALUE.
+      var sel = document.querySelectorAll('[class*="pag" i] .active, [class*="pag" i] [aria-current]:not([aria-current="false"]), li.active, .page-item.active');
       for (var i = 0; i < sel.length; i++) {
         var n = parseInt((sel[i].innerText || "").trim(), 10);
         if (n > 0) return n;
