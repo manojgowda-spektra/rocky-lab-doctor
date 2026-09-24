@@ -83,6 +83,13 @@ const DIG = String.raw`(() => {
     iframes: frames.length,
     iframeSrcs: frames.slice(0, 6).map(function (f) { return (f.getAttribute('src') || f.getAttribute('name') || '(no src)').slice(0, 70); }),
     gridcells: document.querySelectorAll('[role="gridcell"]').length,
+    LISTS: Array.prototype.slice.call(document.querySelectorAll('[role="grid"],[role="table"],[role="treegrid"],table,[role="list"],[role="listbox"]')).map(function (g) {
+      var r = g.getBoundingClientRect();
+      var cs = getComputedStyle(g);
+      return { role: g.getAttribute('role') || g.tagName, rowcount: g.getAttribute('aria-rowcount'),
+               w: Math.round(r.width), h: Math.round(r.height), vis: cs.visibility, disp: cs.display, op: cs.opacity,
+               name: ((g.getAttribute('aria-label') || t(g)) || '').slice(0, 30) };
+    }),
     rows: document.querySelectorAll('[role="row"]').length,
     columnheaders: document.querySelectorAll('[role="columnheader"]').length,
     ariaCurrentAny: document.querySelectorAll('[aria-current]').length,

@@ -78,6 +78,7 @@
         "content/lab-context.js",
         "content/cloudlabs-kb.js",
         "content/perception.js",
+        "content/completion.js",
         "content/world-model.js",
         "content/label-resolver.js",
         "content/guide-reader.js",

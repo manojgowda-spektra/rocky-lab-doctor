@@ -1,7 +1,7 @@
 ﻿{
-    "version":  "1.0.0+af396ad",
+    "version":  "1.0.0+a2a945c",
     "extension":  "1.0.0",
-    "builtAt":  "2026-09-24T07:32:22.8457667Z",
+    "builtAt":  "2026-09-24T07:59:57.0788531Z",
     "bundles":  [
                     "full-bundle.json",
                     "test-bundle.json"
@@ -9,5 +9,5 @@
     "portalBuild":  "2026-09",
     "note":  "Bundles were captured against the portal build above. Re-capture if the portal changes.",
     "package":  "rocky-vm-package",
-    "commit":  "af396ad"
+    "commit":  "a2a945c"
 }
