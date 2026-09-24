@@ -318,6 +318,14 @@ check('recovery actually reads Position and the failure channel', () => {
     'recovery does not reset on an observed world change');
 });
 
+check('Purview\'s "not assigned to a role group" is a permissions problem', () => {
+  // The same recorded string as in completion-engine-test.js. If it reaches the ladder it must
+  // come out as the permissions move, which is the best sentence in this file.
+  const c = RC._classify("Attention: You currently aren't assigned to a role group that allows you to view alerts.");
+  assert.strictEqual(c.code, 'permission', 'classified as "' + c.code + '"');
+  assert.match(c.move, /permissions problem/);
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky helps when you are stuck, and knows when to stop.\n`);

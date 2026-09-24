@@ -561,6 +561,22 @@ check('attaching something that is not a live region stays silent', () => {
     'an ordinary node was treated as an announcement');
 });
 
+check('Purview\'s own "not assigned to a role group" is heard as a FAILURE', () => {
+  /*
+   * VERBATIM from test/traces/purview-irm-walk.trace.json, recorded on the live portal. It was
+   * classified "other", which meant the most common lab defect of all — the account has not got
+   * the role — produced a portal announcement Rocky heard and then ignored.
+   */
+  const dom = makeDom();
+  const C = load(dom);
+  C.start();
+  const region = dom.el({ attrs: { role: 'status' }, text: "Attention: You currently aren't assigned to a role group that allows you to view alerts." });
+  dom.announce(region, "Attention: You currently aren't assigned to a role group that allows you to view alerts.");
+  const hit = C.announcements(60000).find((a) => /role group/.test(a.text));
+  assert.ok(hit, 'the role-group warning was not heard at all');
+  assert.strictEqual(hit.kind, 'failure', 'heard, but filed as "' + hit.kind + '" rather than failure');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — only the world completes a step.\n`);

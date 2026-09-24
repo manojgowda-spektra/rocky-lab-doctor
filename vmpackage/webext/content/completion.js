@@ -87,7 +87,13 @@
    * completion (recoverable — other atoms still fire) rather than a false one.
    */
   var SAYS_SUCCESS = /\b(success|succeeded|saved|created|complete[d]?|updated|applied|added|enabled|turned on|published|deployed|provision(ed|ing)? complete|deleted|removed)\b/i;
-  var SAYS_FAILURE = /\b(fail(ed|ure)?|error|denied|unauthoriz|not authoriz|no permission|don'?t have (the )?right|insufficient|invalid|unable|couldn'?t|cannot|can'?t|try again|timed out|quota|forbidden|conflict)\b/i;
+  /*
+   * "aren't assigned to a role group" is how Purview says "no permission". It was recorded on the
+   * live portal (test/traces/purview-irm-walk.trace.json, the Insider Risk Management Policies
+   * page) and this classifier filed it as "other" — so the one portal message that most often
+   * means "the lab account has not got the role yet" was invisible to the failure channel.
+   */
+  var SAYS_FAILURE = /\b(fail(ed|ure)?|error|denied|unauthoriz|not authoriz|no permission|don'?t have (the )?right|insufficient|invalid|unable|couldn'?t|cannot|can'?t|try again|timed out|quota|forbidden|conflict|(aren|isn|not)['\u2019]?t? ?(currently )?assigned to a role|role group that allows)\b/i;
   var SAYS_BUSY = /\b(loading|working on it|in progress|please wait|saving|creating|provisioning|refreshing)\b/i;
 
   /*

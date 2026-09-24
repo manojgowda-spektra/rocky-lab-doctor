@@ -137,7 +137,8 @@
 
   var FAILURES = [
     { code: "permission",
-      re: /permission|not authoriz|unauthoriz|access denied|forbidden|do not have access|don.t have (the )?right|insufficient privileg|requires? (the )?role/i,
+      // "aren't assigned to a role group" is Purview's wording; recorded live, see completion.js.
+      re: /permission|not authoriz|unauthoriz|access denied|forbidden|do not have access|don.t have (the )?right|insufficient privileg|requires? (the )?role|assigned to a role|role group/i,
       move: "That is a permissions problem, not something you typed wrong. In a lab it usually " +
             "means the account has not been given the role yet. Wait a minute, refresh, and try " +
             "again - role assignments take time to take effect." },
