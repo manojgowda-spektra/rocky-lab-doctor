@@ -15,8 +15,12 @@
  *
  * (4) needs an error, and causing a real one on a lab tenant means doing something destructive
  * to get it. So the script ADDS A LIVE REGION of its own to the page and puts an error string
- * in it — the same mechanism the portal uses, measured on Azure as
+ * in it — the same mechanism the portal uses, measured on PURVIEW (the Users page, after a
+ * permissions failure; see the header of completion.js) as
  * `role=alertdialog "Client Error - Looks like you don't have the right permissions"`.
+ * An earlier version of this comment said Azure, and a demo plan was briefly written on that
+ * basis. What this validates is the PIPELINE, with a synthetic node; it is not a measurement
+ * of a real error on either portal, and must never be described as one.
  * Everything downstream of that node is the real code path: the real MutationObserver, the real
  * classifier, the real relay, the real Position read, the real ladder. The node is removed
  * afterwards and nothing in the portal's own state is touched.
