@@ -183,6 +183,7 @@
       index: -1,            // best-supported step, or -1 when unknown
       confidence: 0,
       done: {},             // stepId -> when it was satisfied
+      guideSig: "",         // what guide the done/hop ledgers belong to; see ingest()
       complete: false,      // every step the ledger knows about is finished
       hop: {},              // stepId -> how many of its ordered targets the page has satisfied
       resolution: null,     // last verdict for the current target
@@ -246,9 +247,54 @@
       });
     }
     M.lab = (guide && guide.title) || M.lab;
+
+    /*
+     * COMPLETION MUST NOT LEAK ACROSS GUIDE PAGES.
+     *
+     * Step identity is POSITIONAL — id is "s" + index, a few lines above — and the guide reader
+     * re-parses on every guide page turn. ingest() reset belief, index and confidence and left
+     * `done` and `hop` untouched, so page 2's step 1 silently inherited page 1's step 1's
+     * completion record. State the model treats as irreversible proof of work finished was
+     * being transplanted onto unrelated steps, on every multi-page lab, every time.
+     *
+     * It cannot simply reset every call: ingest() also runs when the SAME page is re-parsed,
+     * and wiping progress then would lose real work. So the ledgers are cleared exactly when
+     * the guide has actually changed, decided by a signature over the step texts and targets —
+     * the content, not the count, because two different pages can have the same number of steps.
+     */
+    // JSON, not a delimiter. An earlier version joined on "\u0001" and the literal control
+    // character reached the file — a backslash escape does not survive being written through a
+    // shell heredoc, which this repo has been bitten by before and has a gate for. JSON needs
+    // no separator to be unambiguous, so there is nothing to mangle.
+    var sig = JSON.stringify(steps.map(function (st) { return [st.text, st.labels]; }));
+    if (sig !== M.guideSig) {
+      M.done = {};
+      M.hop = {};
+      M.guideSig = sig;
+    }
+
     M.steps = steps;
     M.belief = steps.map(function () { return 0; });
-    M.index = steps.length ? 0 : -1;
+
+    /*
+     * RESUME, DO NOT GUESS.
+     *
+     * This asserted index 0 the moment a guide was parsed, before a single observation. For a
+     * genuinely fresh lab that is right — labs do start at step one. For a learner who
+     * reloaded the page half way through, or whose progress arrived from the guide tab, it
+     * declared them to be at the beginning and guided them back there.
+     *
+     * Both cases are served by the same rule: start at the first step the ledger does NOT
+     * record as done. On a fresh guide the ledger was just cleared above, so that is step one
+     * and nothing changes. After a reload of the same guide the ledger survives, so Rocky
+     * picks up where the evidence left off. Setting -1 here was tried and is too blunt: it
+     * makes every lab open silent, and the honest prior for an untouched lab really is step
+     * one. Confidence still starts at 0, so nothing states a NUMBER until evidence earns it.
+     */
+    M.index = -1;
+    for (var fi = 0; fi < steps.length; fi++) {
+      if (!M.done[steps[fi].id]) { M.index = fi; break; }
+    }
     M.confidence = 0;
     M.updatedAt = now();
     return M;
