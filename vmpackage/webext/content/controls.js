@@ -11,6 +11,19 @@
  */
 (function () {
   "use strict";
+  /*
+   * TOP FRAME ONLY.
+   *
+   * With all_frames:true — required because the Azure portal renders every blade control and
+   * every grid row inside a cross-origin iframe — this file would otherwise run once per
+   * frame. That means one Rocky per frame, each with its own belief, arguing on screen. The
+   * UI, the decisions and the single source of truth live in the top frame; a child frame
+   * observes and reports and draws nothing.
+   */
+  // Fails OPEN: if frame.js somehow did not load, run anyway rather than vanish.
+  // frame.js is first in the manifest, so a real child frame always carries it.
+  if (window.LabPilotFrame && !window.LabPilotFrame.ownsUI) return;
+
   if (window.__lpControls) return;
 
   // Next / Back. The learner has just clicked a menu item and is waiting for the step to

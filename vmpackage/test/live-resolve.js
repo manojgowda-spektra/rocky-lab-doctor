@@ -186,7 +186,10 @@ const EXPECTATIONS = [
 
 async function main() {
   const edge = findEdge();
-  const port = 9300 + Math.floor(Math.random() * 400);
+  // A port nothing else holds. This used to be a random number in a range that included
+  // 9600 — the port the live lab browser runs on — so a roll of that number attached the
+  // test to the ALREADY-RUNNING browser and reported "the extension never injected".
+  const port = await require('./free-port').freePort();
   const profile = path.join(os.tmpdir(), `rocky-cdp-${Date.now()}`);
   const url = argOf('--url', 'file:///' + path.join(__dirname, 'mock-foundry.html').replace(/\\/g, '/'));
 

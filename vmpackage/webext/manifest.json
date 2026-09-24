@@ -60,9 +60,12 @@
         "https://*.sharepoint.com/*",
         "https://*.microsoft.com/*",
         "https://ml.azure.com/*",
-        "https://*.azure.com/*"
+        "https://*.azure.com/*",
+        "https://*.portal.azure.net/*",
+        "https://*.azure.net/*"
       ],
       "js": [
+        "content/frame.js",
         "content/error-collector.js",
         "content/anchor-engine.js",
         "content/vision-matcher.js",
@@ -92,7 +95,7 @@
         "content/overlay.css"
       ],
       "run_at": "document_idle",
-      "all_frames": false
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [
@@ -125,7 +128,9 @@
         "https://*.sharepoint.com/*",
         "https://*.microsoft.com/*",
         "https://ml.azure.com/*",
-        "https://*.azure.com/*"
+        "https://*.azure.com/*",
+        "https://*.portal.azure.net/*",
+        "https://*.azure.net/*"
       ]
     }
   ],

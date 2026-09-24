@@ -126,7 +126,10 @@ async function main() {
                 `${process.env.ProgramFiles}\\Microsoft\\Edge\\Application\\msedge.exe`].find((p) => p && fs.existsSync(p));
   if (!edge) { console.log('[FAIL] Edge not found'); process.exit(1); }
 
-  const port = 9600 + Math.floor(Math.random() * 300);
+  // A port nothing else holds. This used to be a random number in a range that included
+  // 9600 — the port the live lab browser runs on — so a roll of that number attached the
+  // test to the ALREADY-RUNNING browser and reported "the extension never injected".
+  const port = await require('./free-port').freePort();
   const profile = path.join(os.tmpdir(), `rocky-behav-${Date.now()}`);
   const proc = spawn(edge, [
     `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, `--load-extension=${EXT}`,
