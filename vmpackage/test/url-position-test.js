@@ -49,7 +49,22 @@ load('pilot.js', win);
 const W = win.LabPilotWorld;
 const P = win.LabPilotPilot;
 const CONF_ADVANCE = W._tuning.CONF_ADVANCE;
-const CONF_SHOW = 0.80;                    // pilot.js CONF_SHOW: what "Step N of M" needs
+/*
+ * WHAT CONVERGENCE MEANS HERE, AND WHY IT IS NOT 0.80 ON PAGE ONE.
+ *
+ * These sequences each start on a page Rocky has never seen. Until he has seen a few distinct
+ * pages he cannot tell a navigation item from a target — measured live on
+ * purview.microsoft.com/home, where step 1's label "Solutions" is permanent left navigation
+ * and drove confidence to 1.0, which would have had Rocky announce "Step 1 of 5" for the whole
+ * lab however far the learner got. The world model therefore caps its STATED confidence at
+ * 0.75 until furniture is known; the belief itself, and so the glow, is untouched.
+ *
+ * So these tests assert what the URL signal is actually for: that the RIGHT STEP is identified
+ * and that the belief is at its ceiling. That the ceiling lifts to 0.80+ once several pages
+ * have been seen is covered by discrimination-test.js, which is where that behaviour belongs.
+ */
+const UNPROVEN_CAP = 0.75;
+const CONF_SHOW = UNPROVEN_CAP;            // the achievable ceiling early in a lab
 
 let pass = 0; const fails = [];
 function check(name, fn) {
@@ -148,8 +163,21 @@ check('the realistic Insider Risk sequence converges to the right step at >= 0.8
     assert.strictEqual(r.c.index, step, `${label}: settled on ${where(r.c)}, expected step ${step + 1}\n         ${trail.join('\n         ')}`);
     assert.ok(r.c.confidence >= CONF_SHOW, `${label}: only ${r.c.confidence} after ${r.n} observations\n         ${trail.join('\n         ')}`);
     assert.ok(r.n <= within, `${label}: took ${r.n} observations to converge, budget ${within}`);
+    /*
+     * The pilot shows a step NUMBER only above its own 0.80 threshold, and the world model
+     * caps stated confidence at 0.75 until it has seen enough pages to know which labels are
+     * furniture. So early in a sequence there is correctly no number — that restraint IS the
+     * fix for the live defect, where "Step 1 of 5" was asserted with certainty from a nav item
+     * that is on every page of the portal.
+     *
+     * What must hold is that when a number IS shown it is the right one. A wrong number is the
+     * failure; no number is the honest interim state.
+     */
     const p = P.status().progress;
-    assert.ok(p && p.n === step + 1, `${label}: pilot shows ${p ? 'step ' + p.n : 'no number'}, expected ${step + 1}`);
+    if (p) {
+      assert.strictEqual(p.n, step + 1,
+        `${label}: pilot showed step ${p.n} but the belief is step ${step + 1} — a number that is wrong`);
+    }
   };
   expect(HOME, STEP.SOLUTIONS, '/home', 4);
   W.observe(HOME_MENU);

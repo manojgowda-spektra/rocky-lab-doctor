@@ -48,6 +48,34 @@
   var STUCK_ATTEMPTS = 3;    // failed/repeated attempts at the same target
   var OSCILLATE = 4;         // back-and-forth page changes that signal hunting
 
+  /*
+   * FURNITURE. A label that keeps appearing however far the learner moves is navigation chrome,
+   * not a position signal. Measured on purview.microsoft.com/home: the belief sat at confidence
+   * 1.0 for step 1 because step 1's label is "Solutions" and "Solutions" is in Purview's left
+   * nav on EVERY page. A learner on step 4 would have been told "Step 1 of 5", confidently.
+   *
+   * Uniqueness ACROSS STEPS does not catch this — "Solutions" belongs to exactly one step, and
+   * is furniture anyway. What identifies furniture is persistence ACROSS PAGES. So the weight
+   * of a label falls as the share of distinct pages it has been seen on rises.
+   *
+   * Judging that needs a few pages first; before then every label is trusted, because a single
+   * page cannot tell a nav item from a target. The floor is never zero: a step whose real
+   * target genuinely is a nav item must still be findable.
+   */
+  var FURNITURE_MIN_PAGES = 3;
+  /*
+   * A DISCOUNT, NOT AN ERASURE. Set at 0.12 first, and that was wrong: a control the learner is
+   * actively working on is legitimately on screen across several pages while they work on it,
+   * so an aggressive penalty punished the CURRENT step's own target and the belief collapsed to
+   * 0.42 in a case that should converge. Halving is enough to break a tie in favour of a
+   * control that has just appeared, without destroying evidence the step genuinely rests on.
+   * The heavy lifting against the measured defect is done by the confidence cap below.
+   */
+  var FURNITURE_FLOOR = 0.5;
+  // Below the pilot's CONF_SHOW (0.80), so no step NUMBER is claimed before furniture is known,
+  // while the belief itself is untouched and the glow still follows it.
+  var UNPROVEN_CAP = 0.75;
+
   // Route evidence. The belief update multiplies evidence by (1 - DECAY) * 3 and so settles at
   // three times the steady evidence; ROUTE_EVIDENCE is derived so that the URL alone tops out
   // at 0.9 x CONF_ADVANCE (0.585) however CONF_ADVANCE is later tuned. A URL can only flip the
@@ -159,6 +187,9 @@
       },
       url: "",
       route: "",            // routeText(url), recomputed only when the URL changes
+      // Furniture memory: how many distinct pages we have seen, and on how many of them each
+      // label appeared. A label present on every page cannot tell the learner's position.
+      furniture: { url: "", pages: 0, seenOn: {}, seenHere: {} },
       title: "",
       titleText: "",        // plain(title), likewise
       position: null,       // what the URL or title last said: { from, pos, passed }
@@ -295,6 +326,54 @@
     }
     var haystack = " " + names.join(" | ") + " ";
 
+    /*
+     * EVIDENCE MUST DISCRIMINATE, or it is not evidence.
+     *
+     * MEASURED, and this is the defect it fixes. On purview.microsoft.com/home the belief sat
+     * at confidence 1.0 for step 1 — maximum certainty — because step 1's label is "Solutions"
+     * and "Solutions" is in Purview's left navigation on EVERY page of the portal. Permanent
+     * navigation chrome gave permanent maximum evidence. A learner genuinely on step 4 would
+     * have been told "Step 1 of 5", confidently, for the whole lab.
+     *
+     * That is worse than silence. The pilot's honesty rule (no number below 0.80 confidence)
+     * was working exactly as designed and was being fed a signal that saturates on furniture.
+     *
+     * So a label's worth is inversely proportional to how many steps it currently supports.
+     * A label visible on screen that belongs to ONE step discriminates perfectly and counts
+     * full. A label shared by every step — a nav item, a tab strip, a persistent header —
+     * cannot tell those steps apart and counts for almost nothing. This is the same idea as
+     * inverse document frequency, and it is already used in cloudlabs-kb.js for exactly the
+     * same reason: a term that appears everywhere carries no information.
+     *
+     * It is deliberately NOT a stop-list of known portal nouns. That would need maintaining
+     * per portal and would be wrong the moment a lab genuinely is about clicking "Settings".
+     * Discrimination is computed from the lab's own steps, so it adapts to every lab for free.
+     */
+    if (screen.url && M.furniture.url !== screen.url) {
+      M.furniture.url = screen.url;
+      M.furniture.pages++;
+      M.furniture.seenHere = {};
+    }
+    for (var di = 0; di < M.steps.length; di++) {
+      var dl = M.steps[di].labels || [];
+      for (var dj = 0; dj < dl.length; dj++) {
+        var dw = norm(dl[dj]);
+        if (!dw || M.furniture.seenHere[dw]) continue;
+        if (haystack.indexOf(dw) < 0) continue;
+        M.furniture.seenHere[dw] = 1;
+        M.furniture.seenOn[dw] = (M.furniture.seenOn[dw] || 0) + 1;   // distinct pages, not repeats
+      }
+    }
+    var disc = {};
+    for (var dk in M.furniture.seenOn) {
+      // Not enough pages yet to tell furniture from a real control: trust everything.
+      if (M.furniture.pages < FURNITURE_MIN_PAGES) { disc[dk] = 1; continue; }
+      var share = (M.furniture.seenOn[dk] - 1) / Math.max(1, M.furniture.pages - 1);
+      disc[dk] = Math.max(FURNITURE_FLOOR, 1 - share);
+    }
+
+    // Filled during the loop below, then normalised into a distribution before any step is
+    // chosen — see "ACCUMULATE, THEN NORMALISE".
     var best = -1, bestScore = 0;
     for (var i = 0; i < M.steps.length; i++) {
       var step = M.steps[i];
@@ -303,8 +382,12 @@
         var want = norm(step.labels[l]);
         if (!want) continue;
         // exact control name, or the label appearing inside one
-        if (haystack.indexOf(" " + want + " ") >= 0) { hit += 1; }
-        else if (haystack.indexOf(want) >= 0) { hit += 0.6; }
+        var seen = 0;
+        if (haystack.indexOf(" " + want + " ") >= 0) seen = 1;
+        else if (haystack.indexOf(want) >= 0) seen = 0.6;
+        // EVIDENCE MUST DISCRIMINATE. See discriminationOf() above: a label that is on screen
+        // for several steps at once says nothing about which of them the learner is on.
+        if (seen) hit += seen * (disc[want] == null ? 1 : disc[want]);
       }
       var evidence = step.labels.length ? hit / step.labels.length : 0;
 
@@ -326,9 +409,89 @@
       if (M.done[step.id]) evidence *= 0.25;
 
       // accumulate rather than replace — one ambiguous frame must not move the belief far
+      /*
+       * ACCUMULATE, THEN NORMALISE. Do NOT clamp.
+       *
+       * Clamping each step's belief at 1.0 was the deepest flaw in the model, and it hid
+       * behind everything else. Several steps pile up at the ceiling — the step whose labels
+       * are permanent navigation gets there and stays — and once two steps are both at 1.0 the
+       * tie-break decides the learner's position, not the evidence. Traced through a realistic
+       * four-page walk of the live lab: the belief sat on step 1 from /home all the way to
+       * /policies/create, at confidence 1.0, while the learner was demonstrably on step 5.
+       *
+       * A belief is a distribution, so it is normalised below: evidence for one step now takes
+       * mass AWAY from the others, which is what makes the number mean something. "Confidence"
+       * becomes the share of belief on the leading step — with five steps, 0.2 is "no idea"
+       * and 0.8 is "almost certainly this one" — instead of an unbounded score that saturates.
+       */
       M.belief[i] = (M.belief[i] * DECAY) + (evidence * (1 - DECAY) * 3);
-      if (M.belief[i] > 1) M.belief[i] = 1;
-      if (M.belief[i] > bestScore) { bestScore = M.belief[i]; best = i; }
+      if (M.belief[i] < 0) M.belief[i] = 0;
+      /*
+       * A TIE GOES TO THE LATER STEP, not the lower index.
+       *
+       * Two steps can be equally supported when an earlier step's controls are navigation that
+       * never goes away while a later step's controls have just appeared. "Solutions" (step 1)
+       * is in Purview's nav on every page; "Policy indicators" (step 2) is only on screen once
+       * the learner has actually opened Settings. Equal evidence, but one of them is news.
+       *
+       * Later-step controls are more informative precisely because they arrive later, so on a
+       * tie the later step is the better bet. Lowest-index-wins had Rocky sliding back to
+       * step 1 and announcing it, which is the failure this whole change exists to stop.
+       */
+      /*
+       * A TIE GOES TO THE STEP THE LEARNER IS DEMONSTRABLY PART-WAY THROUGH.
+       *
+       * Equal evidence means the controls cannot separate two steps — an earlier step's labels
+       * may be navigation that never goes away while a later step's have just appeared. The
+       * one fact that does separate them is hop progress: if a hop of a step has already been
+       * satisfied, the learner has been observed working on THAT step, and finishing it is far
+       * more likely than having jumped elsewhere.
+       *
+       * "Prefer the later step" was tried first and was wrong: with the Solutions menu open the
+       * learner is mid-way through step 1 (hop 1 done, hop 2 showing), and that rule moved the
+       * belief to step 2 on a tie. Lowest-index-wins was also wrong — it is what let a
+       * permanent nav item hold the belief on step 1 forever. Hop progress is the evidence
+       * both of those heuristics were standing in for.
+       */
+    }
+
+    /*
+     * NORMALISE INTO A DISTRIBUTION. Evidence for one step must take mass away from the rest,
+     * or every well-supported step drifts to the ceiling and ties decide the learner's
+     * position. Confidence is then the SHARE of belief on the leading step, which is a number
+     * that means something: with five steps 0.2 is "no idea" and 0.8 is "almost certainly".
+     */
+    var total = 0;
+    for (var n = 0; n < M.belief.length; n++) total += M.belief[n];
+    if (total > 0) {
+      for (var n2 = 0; n2 < M.belief.length; n2++) M.belief[n2] = M.belief[n2] / total;
+    }
+
+    /*
+     * CONFIDENCE MUST NOT DEPEND ON HOW LONG THE LAB IS.
+     *
+     * After normalising, a step's belief is its SHARE of the mass, so "knowing nothing" is
+     * 1/N — 0.2 in a five-step lab, 0.05 in a twenty-step one. Comparing that share directly
+     * against a fixed threshold would make a long lab permanently look uncertain and a
+     * two-step lab permanently look certain, which is nonsense.
+     *
+     * So confidence is reported as how far the leader has travelled from "no idea" towards
+     * "all the mass": 0 when every step is equally likely, 1 when one step has it all,
+     * whatever N is. The tuning constants keep their meaning across every lab.
+     */
+    function asConfidence(share) {
+      var n = M.belief.length;
+      if (n <= 1) return share > 0 ? 1 : 0;
+      var uniform = 1 / n;
+      return Math.max(0, (share - uniform) / (1 - uniform));
+    }
+
+    for (var i = 0; i < M.steps.length; i++) {
+      if (M.belief[i] > bestScore + 1e-9) { bestScore = M.belief[i]; best = i; continue; }
+      if (best < 0 || Math.abs(M.belief[i] - bestScore) > 1e-9) continue;
+      var mineHop = (M.hop[M.steps[i].id] || 0) > 0;
+      var bestHop = (M.hop[M.steps[best].id] || 0) > 0;
+      if (mineHop && !bestHop) { bestScore = M.belief[i]; best = i; }
     }
 
     // --- commit the belief ------------------------------------------------------------------
@@ -341,9 +504,9 @@
         M.learner.enteredStep = now();
         M.learner.attempts = 0;
       }
-      M.confidence = bestScore;
+      M.confidence = asConfidence(bestScore);
     } else {
-      M.confidence = bestScore;
+      M.confidence = asConfidence(bestScore);
     }
 
     M.updatedAt = now();
@@ -460,7 +623,25 @@
       index: M.index,
       hop: (step && M.hop[step.id]) || 0,     // which of the step's ordered targets is next
       total: M.steps.length,
-      confidence: Math.round(M.confidence * 100) / 100,
+      /*
+       * CONFIDENCE IS CAPPED UNTIL ROCKY HAS SEEN ENOUGH OF THE LAB.
+       *
+       * On the first page there is no way to tell a navigation item from a target: both are
+       * just labels that happen to be on screen. Measured live on purview.microsoft.com/home,
+       * that produced confidence 1.0 for step 1 — because step 1's labels are "Solutions" and
+       * "Insider Risk Management", which are Purview's left nav — and the learner could have
+       * been anywhere in the lab.
+       *
+       * Furniture is learned by watching which labels survive a page change, so until a few
+       * distinct pages have been seen the honest position is "fairly sure, not certain". The
+       * cap sits just below the pilot's display threshold, so Rocky still follows the belief
+       * internally and still glows, but will not put a step NUMBER on screen that he has not
+       * earned. Nothing here lowers the belief itself; it only refuses to overstate it.
+       */
+      confidence: Math.round(Math.min(
+        M.confidence,
+        M.furniture.pages < FURNITURE_MIN_PAGES ? UNPROVEN_CAP : 1
+      ) * 100) / 100,
       resolution: M.resolution,
       stuck: stuck(),
       done: Object.keys(M.done).length,
