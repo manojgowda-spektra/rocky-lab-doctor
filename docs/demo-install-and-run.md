@@ -23,12 +23,13 @@ live lab before the demo; it has never been seen there.
        Sign in as the lab user with the TAP.
  0:12  Back on the guide tab. Press Alt+E. Rocky must appear.             ← STOP if he does not
  0:13  node test/coach-live.js            (in a second terminal)          ← must print green
- 0:15  Switch to the Purview tab, go to Insider Risk Management > Policies.
+ 0:15  Purview tab: Insider Risk Management > Settings > Policy indicators.
        Rocky should name the step and glow a control.
- 0:18  Create one policy so the list is not empty. Leave the wizard on its
-       final Review page in a third tab.
- 0:25  Ask Rocky "what have I done so far?" and "which step am I on?"
- 0:28  Reset: delete nothing, keep one policy, reopen the wizard tab.
+ 0:18  Tick the four Office indicators and press Save. Watch for Rocky's
+       "I just saw ... Next, ..." — this is the centrepiece. START HERE, not
+       at Create policy: finishing Create policy leaves nothing ahead.
+ 0:24  Then follow his Next: Policies > Create policy > Custom > Submit.
+ 0:27  Ask Rocky "what have I done so far?" and "which step am I on?"
  0:30  Demo.
 ```
 
@@ -171,7 +172,8 @@ work in the Purview tab.
 | --- | --- | --- | --- |
 | 1 | Guide tab, page 5. Alt+E | names the Challenge 04 step and its task | "He read that off the page you're looking at. No API, no upload — the same guide you're reading." |
 | 2 | Switch to the Purview tab → Insider Risk Management → Policies | *You are on Policies.* Glow on the control | "He knows the page because the portal declares it, and the glow is him reading the guide against what's on screen." |
-| 3 | Create policy → Custom → name it → Submit. **Wait for the list.** | *I just saw the list went from 1 to 2 on Policies.* | **Stop here.** "The guide says what should happen. Rocky saw what did." |
+| 3 | **Task 1, not Task 2.** Settings → Policy indicators → tick the four Office indicators → **Save**. Wait for the notification. | *I just saw … **Next, "In Insider Risk Management, open Policies."*** | **Stop here.** "The guide says what should happen. Rocky saw what did — and he knows what comes next." |
+| 3b | Now follow that: Policies → Create policy → Custom → name it → Submit | a second change, and the glow moves | "He is not replaying a script. He followed me." |
 | 4 | Alt+A → *what have I done so far?* | *I have watched the portal change once so far. Most recently the list went from 1 to 2, on Policies. Those are changes I saw, not steps I ticked off.* | "No model in that answer. He's telling you what he watched — and what kind of evidence it is." |
 | 5 | Alt+A → *which step am I on?* | the step, hedged, or a number he can defend | "He'll give a number when he can defend it. Until then, the step." |
 | 6 | *(optional)* open a page the account cannot see | the permission diagnosis | "The most common lab defect there is. He says whose fault it is before the learner raises a ticket." |
@@ -179,6 +181,20 @@ work in the Purview tab.
 
 **Close:** *A chatbot knows what you tell it. The guide knows what should happen. Rocky knows what
 did.*
+
+### Why Task 1, measured
+
+Rocky reads **5 steps** from the Challenge 04 pane. Where you start decides whether the
+centrepiece sentence is complete:
+
+| Start at | Belief after | Steps ahead | The teaching moment says |
+| --- | --- | --- | --- |
+| **Task 1 Save** (step 3) | 2 of 5 | **2** | *I just saw … **Next, "In Insider Risk Management, open Policies."*** |
+| Task 2 Create policy (step 5) | 4 of 5 | 0 | *I just saw …* and nothing more |
+
+Two further reasons for Task 1: its guide line is literally *"Select Save and wait for the success
+notification"* — the clearest completion signal in the lab — and finishing step 5 first auto-marks
+the four before it done, so Rocky has nothing left to guide you to.
 
 ### Safest pages
 Purview **Insider Risk Management → Policies**, **Settings → Policy indicators**, **Alerts**
