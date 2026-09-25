@@ -1,0 +1,6 @@
+{
+  "_comment": "Placeholder. agent/rocky-vm.ps1 overwrites this on a lab VM with the real guide lines, because a VM browser has no guide pane and no second tab to follow. Empty here means the extension reads the guide off the screen as usual.",
+  "title": "",
+  "page": 0,
+  "lines": []
+}

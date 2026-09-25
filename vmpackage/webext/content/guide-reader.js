@@ -592,8 +592,32 @@
     }, 2000);
   }
 
+  /*
+   * A GUIDE THAT DID NOT COME OFF THIS SCREEN.
+   *
+   * In a VM lab the learner's browser shows the portal and nothing else: no guide pane to read,
+   * no second tab to follow. The VM installer has already fetched the real guide, so it writes
+   * the lines into the extension folder and this turns them into steps with the SAME parser the
+   * on-screen path uses - so a handed-over guide and a read guide cannot behave differently.
+   */
+  function fromLines(lines, page, title) {
+    var parsed = parseLines(lines || []);
+    return {
+      page: page || 1,
+      title: title || "",
+      steps: parsed.steps,
+      objective: parsed.objective || null,
+      unread: parsed.unparsed.length,
+      found: parsed.steps.length > 0,
+      lines: (lines || []).length,
+      assisted: 0,
+      handedOver: true,
+    };
+  }
+
   window.LabPilotGuide = {
     read: read,
+    fromLines: fromLines,
     steps: function () { return last; },
     onChange: function (cb) { watchers.push(cb); },
     _test: { purposeOf: purposeOf, parseLines: parseLines,

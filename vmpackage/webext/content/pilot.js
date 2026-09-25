@@ -718,7 +718,40 @@
     // follower starts inside subscribe(), otherwise it starts the moment one is published.
     subscribe();
     if (st.on) return { ok: true, role: st.role, steps: st.guide.steps.length };
+    /*
+     * A VM LAB HAS NO GUIDE IN THE BROWSER AT ALL. On a laptop the CloudLabs tab publishes the
+     * guide and the portal tab follows it; inside a lab VM the learner's browser shows only the
+     * portal, so both routes above come up empty and Rocky would sit there blind next to a
+     * learner who can see the guide perfectly well on the other screen.
+     *
+     * rocky-vm.ps1 has already fetched that guide, so it leaves the lines in the extension
+     * folder. Asked for once, asynchronously: if the file is not there - which is every install
+     * except a VM one - nothing happens and nothing is logged.
+     */
+    tryHandedOverGuide();
     return { ok: false, why: "no-guide-on-screen" };
+  }
+
+  var handoverTried = false;
+  function tryHandedOverGuide() {
+    if (handoverTried) return;
+    handoverTried = true;
+    var g = G();
+    if (!g || !g.fromLines) return;
+    try {
+      fetch(chrome.runtime.getURL("labguide.json"))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j || !j.lines || !j.lines.length || st.on) return;
+          var guide = g.fromLines(j.lines, j.page, j.title);
+          if (guide.steps.length) {
+            console.log("[Rocky] using the guide the VM installer handed over: " +
+                        guide.steps.length + " step(s) from " + j.lines.length + " lines");
+            begin(guide, "owner");
+          }
+        })
+        .catch(function () { /* no handed-over guide: the normal case */ });
+    } catch (e) { /* no fetch, no extension URL: nothing to do */ }
   }
 
   function stop() { st.on = false; st.role = null; st.stopped = true; clearGlow(); }

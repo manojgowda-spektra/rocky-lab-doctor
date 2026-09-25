@@ -38,7 +38,16 @@ param(
   [string]$LabName = "",
   [switch]$SelfTest,
   [switch]$NoUi,
-  [int]$PollMs = 1500
+  [int]$PollMs = 1500,
+  # The browser half. Rocky opens Edge himself so the extension is certainly loaded: Edge ignores
+  # --load-extension for a profile that is already running, so a learner who opens the ordinary
+  # Edge icon gets a browser with no Rocky in it and no way to tell.
+  [switch]$NoBrowser,
+  [string]$StartUrl = "https://purview.microsoft.com",
+  # Which guide page to hand to the extension. A VM browser has no guide pane and no second tab,
+  # so without this the pilot has nothing to guide from.
+  [int]$Page = 1,
+  [string]$Root = "$env:ProgramData\Rocky"
 )
 
 $ErrorActionPreference = "Stop"
@@ -380,6 +389,123 @@ function Try-Ring($guide, $app) {
   return $null
 }
 
+# ---- 2c. the browser half: the extension, and the guide handed to it --------------------------
+
+<#
+  Approximate what the guide looks like as RENDERED text, because that is what the extension's
+  parser is built for: CloudLabs renders this markdown and the learner sees headings and bullets
+  as plain lines, with bold and code spans as styling rather than characters. Handing over raw
+  markdown would give the extension asterisks and hashes it has never been asked to read.
+#>
+function Render-Markdown([string]$text) {
+  $out = New-Object System.Collections.ArrayList
+  $fence = $false
+  foreach ($raw in ($text -split "`r?`n")) {
+    if ($raw -match '^\s*```') { $fence = -not $fence; continue }
+    if ($fence) { continue }
+    $l = $raw -replace '^\s{0,3}#{1,6}\s+', ''
+    $l = $l -replace '^\s*([-*+]|\d+\.)\s+', ''
+    $l = $l -replace '^\s*>\s*(\[!\w+\]\s*)?', ''
+    $l = Clean-Line $l
+    if ($l) { [void]$out.Add($l) }
+  }
+  return $out
+}
+
+<#
+  Put the extension on this VM and hand it the guide. Fetched as the repository's own zipball:
+  one download, and it is the same tree the laptop runs, so the two halves cannot drift.
+#>
+function Install-BrowserHalf($guide, $pageNo) {
+  $ext = Join-Path $Root "webext"
+  try {
+    New-Item -ItemType Directory -Force -Path $Root | Out-Null
+    if (-not (Test-Path (Join-Path $ext "manifest.json"))) {
+      Say-Console "installing the browser half..." "DarkGray"
+      $zip = Join-Path $env:TEMP "rocky-repo.zip"
+      Invoke-WebRequest -UseBasicParsing -TimeoutSec 120 -OutFile $zip `
+        -Uri "https://github.com/manojgowda-spektra/rocky-lab-doctor/archive/refs/heads/main.zip"
+      $tmp = Join-Path $env:TEMP "rocky-repo"
+      if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue }
+      Expand-Archive -Path $zip -DestinationPath $tmp -Force
+      <#
+        PICK THE EXTENSION BY WHAT IS IN IT, NOT BY ITS NAME. The repository carries two folders
+        called webext: the real one under vmpackage (30 content scripts) and a stale one at the
+        root (3). Taking the first match installed the stale one, whose manifest listed scripts
+        that were not there - Edge loaded an extension that did nothing.
+      #>
+      $src = Get-ChildItem $tmp -Recurse -Directory -Filter "webext" |
+             Where-Object { Test-Path (Join-Path $_.FullName "manifest.json") } |
+             Sort-Object @{ Expression = {
+               try { (Get-Content (Join-Path $_.FullName "manifest.json") -Raw | ConvertFrom-Json).content_scripts[0].js.Count }
+               catch { 0 }
+             }; Descending = $true } |
+             Select-Object -First 1
+      if (-not $src) { throw "the repository zip carried no webext folder" }
+      if (Test-Path $ext) { Remove-Item $ext -Recurse -Force -ErrorAction SilentlyContinue }
+      <#
+        COPY THE FOLDER, NOT ITS CONTENTS. "Copy-Item <dir>\* <dest> -Recurse" into an existing
+        destination silently left content\ EMPTY - 0 of 30 content scripts - so the extension
+        installed, declared itself in the manifest, and did nothing at all. Copying the directory
+        itself is the form that actually recurses.
+      #>
+      Copy-Item -LiteralPath $src.FullName -Destination $Root -Recurse -Force
+
+      # AND CHECK. A half-copied extension is worse than none: Edge loads it, the learner sees a
+      # browser with no Rocky, and nothing anywhere says why.
+      $want = 0
+      try { $want = (Get-Content (Join-Path $ext "manifest.json") -Raw | ConvertFrom-Json).content_scripts[0].js.Count } catch { $want = 0 }
+      $have = @(Get-ChildItem (Join-Path $ext "content") -Filter *.js -ErrorAction SilentlyContinue).Count
+      if ($want -lt 1 -or $have -lt $want) {
+        throw "the extension copied incompletely ($have of $want content scripts)"
+      }
+      Say-Console "extension installed: $have content scripts" "Green"
+    }
+  } catch {
+    Say-Console "browser half unavailable ($($_.Exception.Message)); the desktop card still works" "DarkYellow"
+    return $null
+  }
+
+  # The guide, as rendered lines, for a browser that has no guide pane of its own.
+  try {
+    $page = $guide.Pages | Where-Object { $_.Order -eq $pageNo } | Select-Object -First 1
+    if (-not $page) { $page = $guide.Pages | Sort-Object Order | Select-Object -First 1 }
+    $lines = Render-Markdown $page.Text
+    $payload = [ordered]@{ title = $page.Title; page = $page.Order; lines = @($lines) }
+    $payload | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $ext "labguide.json") -Encoding UTF8
+    Say-Console "handed the extension page $($page.Order): $($lines.Count) lines" "Green"
+  } catch {
+    Say-Console "could not hand over the guide ($($_.Exception.Message))" "DarkYellow"
+  }
+  return $ext
+}
+
+function Start-RockyBrowser([string]$ext, [string]$url) {
+  $edge = @(
+    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
+  ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+  if (-not $edge -or -not $ext) { return $false }
+  $prof = Join-Path $Root "edge-profile"
+  New-Item -ItemType Directory -Force -Path $prof | Out-Null
+  try {
+    Start-Process -FilePath $edge -ArgumentList @(
+      "--user-data-dir=$prof"
+      "--load-extension=$ext"
+      "--no-first-run"
+      "--no-default-browser-check"
+      "--disable-features=DisableLoadExtensionCommandLineSwitch"
+      "--force-renderer-accessibility"
+      "--start-maximized"
+      $url
+    ) | Out-Null
+    return $true
+  } catch {
+    Say-Console "could not start Edge ($($_.Exception.Message))" "DarkYellow"
+    return $false
+  }
+}
+
 # ---- 3. is a browser open yet? ------------------------------------------------------------------
 
 <#
@@ -442,16 +568,34 @@ function Start-Rocky($guide) {
     Pump 3500
   }
 
-  Say "Open Microsoft Edge when you are ready. Once you are in the browser I can point at the actual controls." `
-      "Waiting for a browser..."
+  <#
+    ROCKY OPENS THE BROWSER HIMSELF, and this is not a flourish. Edge ignores --load-extension for
+    a profile that is already running, so a learner who clicks the ordinary Edge icon gets a
+    browser with no Rocky in it, no glow, and no sign that anything is missing. Opening it here is
+    the only way the promise in the next sentence is true.
+  #>
+  if (-not $NoBrowser -and -not $NoUi) {
+    Say "I'll open the browser for you, with me already in it." "Setting up..."
+    Pump 1200
+    $ext = Install-BrowserHalf $guide $Page
+    if ($ext -and (Start-RockyBrowser $ext $StartUrl)) {
+      Say "There you go - Edge is opening with me inside it. From here I can see the page and point at the actual controls." `
+          "I have given that browser page $Page of the guide."
+    } else {
+      Say "I could not open the browser myself, so please open Microsoft Edge when you are ready." `
+          "I will still help with anything on the desktop."
+    }
+  } else {
+    Say "Open Microsoft Edge when you are ready." "Waiting for a browser..."
+  }
 
   # ---- wait for the browser, then hand over ------------------------------------------------
   $handed = $false
   while (-not $handed) {
     $b = Get-BrowserWindow
     if ($b) {
-      Say "Good — you're in the browser. I'll follow you in there: from here on I can see the page and point at things." `
-          "I'll stay in the corner for anything outside the browser."
+      Say "You're in the browser now. The page half of me takes over there - I'll stay here for the desktop." `
+          "Look for Rocky in the bottom-right of the page."
       $handed = $true
       break
     }
