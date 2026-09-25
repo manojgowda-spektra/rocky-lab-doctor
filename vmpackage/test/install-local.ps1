@@ -54,10 +54,36 @@ try {
   if ($lab.learnerUpn) { Ok "learner identity recorded" }
 } catch { Bad "lab.json unreadable: $($_.Exception.Message)" }
 
-# the package must not contain a password, ever
-$leak = Get-ChildItem $Root -Recurse -File -Include *.json,*.txt,*.ps1 -ErrorAction SilentlyContinue |
-        Select-String -Pattern 'password' -SimpleMatch -ErrorAction SilentlyContinue |
-        Where-Object { $_.Line -notmatch 'vmAdminPassword|trainerUserPassword|never|Password=|no password|AzurePassword' }
+<#
+  THE PACKAGE MUST NOT CONTAIN A CREDENTIAL, EVER - and a leak is a VALUE, not a word.
+
+  This used to flag any line containing "password", so every honest mention had to be added to an
+  allowlist. The list reached five entries and still produced a false positive on a file whose
+  only crime was a regex for an <inject> key and a sentence telling the learner where to find
+  their own. A gate that fires on vocabulary gets allowlisted until it fires on nothing, which is
+  how a real leak eventually walks through it.
+
+  So: flag an ASSIGNED, NON-EMPTY, NON-PLACEHOLDER value next to a credential-ish name. Prose and
+  key-name patterns assign nothing; an empty string, an <inject> token and an environment
+  variable carry no secret.
+#>
+$credName = '(?i)(?:pass(?:word|phrase)?|secret|apikey|api[-_]key|clientsecret|token|credential)'
+$leakPat  = $credName + '\s*[''"]?\s*[:=]\s*[''"]?([^\s''",;})]{6,})'
+$leak = Get-ChildItem $Root -Recurse -File -Include *.json,*.txt,*.ps1,*.cmd,*.bat -ErrorAction SilentlyContinue |
+        Select-String -Pattern $leakPat -ErrorAction SilentlyContinue |
+        Where-Object {
+          $_.Line -notmatch '(?i)<inject|\$\(|\$\{|\$env:|%[A-Za-z_]+%|placeholder|example|changeme|your-|\.\.\.' -and
+          $_.Line -notmatch '(?i)[:=]\s*(""|''''|\$null|\$true|\$false)\s*,?\s*$' -and
+          $_.Line -notmatch '(?i)^\s*\[string\]|^\s*param\(' -and
+          # A VALUE THAT IS A VARIABLE IS NOT A SECRET. "apiKey = $AiKey" passes a value in; it
+          # does not contain one.
+          $_.Line -notmatch '[:=]\s*[''"]?\$[A-Za-z_]' -and
+          # A VALUE THAT IS AN ENGLISH WORD IS PROSE. "...or any secret: CloudLabs records the"
+          # is a warning in a comment, not a leak. A real credential carries a digit or a symbol,
+          # or is long enough that no sentence would look like it.
+          ($_.Matches[0].Groups[1].Value -match '[0-9]|[^A-Za-z0-9]' -or
+           $_.Matches[0].Groups[1].Value.Length -ge 16)
+        }
 if ($leak) { $leak | Select-Object -First 3 | ForEach-Object { Write-Host "    $($_.Path):$($_.LineNumber)" -ForegroundColor Yellow }; Bad "something password-shaped was installed" }
 else { Ok "no credential written to disk" }
 

@@ -315,7 +315,7 @@
    * desktop). The counts come straight from the guide reader's surface field — nothing is
    * inferred, so the sentence is honest by construction. Pure, and unit tested.
    */
-  function summarise(steps) {
+  function summarise(steps, unread) {
     steps = steps || [];
     var web = 0, outside = 0, where = [];
     for (var i = 0; i < steps.length; i++) {
@@ -331,7 +331,17 @@
     if (!outside)  text = "This page has " + n(web) + " I can point at.";
     else if (!web) text = "This page has no steps I can point at: " + (outside === 1 ? "its one step happens" : "all " + outside + " happen") + away;
     else           text = "This page has " + n(web) + " I can point at, and " + outside + " that happen" + (outside === 1 ? "s" : "") + away;
-    return { web: web, outside: outside, where: where, text: text };
+
+    /*
+     * AND WHAT HE CANNOT POINT AT. Saying only the good number invites a learner to believe the
+     * rest of the page is not there. Rocky reads 5 of 26 instructions on the demo challenge, and
+     * a mentor who does not admit that is the kind of mentor this project exists not to build.
+     */
+    if (unread > 0) {
+      text += " There " + (unread === 1 ? "is 1 more line" : "are " + unread + " more lines") +
+              " here I can read to you but not point at, so check the guide as well as me.";
+    }
+    return { web: web, outside: outside, unread: unread || 0, where: where, text: text };
   }
 
   // Queue the summary for this guide, keyed on its title, and say it now if that is allowed.
@@ -339,7 +349,7 @@
   function preflight(guide) {
     var key = String((guide && guide.title) || "");
     if (st.announced[key]) return false;
-    var s = summarise(guide && guide.steps);
+    var s = summarise(guide && guide.steps, guide && guide.unread);
     if (!s) return false;
     st.preflight = { key: key, text: s.text };
     return flushPreflight();
@@ -664,7 +674,10 @@
     // Once per guide title, in whichever tab is about to guide: what Rocky can point at here
     // and what he cannot. The cross-tab restructure moved start()'s body into begin(), so the
     // summary hooks in here to cover the follower path as well as the owner's.
-    preflight({ title: st.guide.title, steps: steps });
+    // `unread` rides along from guide-reader.read(): how many instruction-shaped lines on this
+    // page yielded no target. A follower has no page of its own to count, so it is absent there
+    // and the sentence simply does not appear.
+    preflight({ title: st.guide.title, steps: steps, unread: guide && guide.unread });
     if (opts.seed) adoptFrom(opts.seed);
 
     var fresh = !st.on;

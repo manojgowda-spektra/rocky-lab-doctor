@@ -554,6 +554,20 @@
       title: guideTitle(pane),
       steps: parsed.steps,
       objective: parsed.objective || null,
+      /*
+       * HOW MUCH OF THIS PAGE ROCKY CANNOT POINT AT.
+       *
+       * Measured over the 22 real guides on this machine: the rules yield a pointable step for
+       * 17% of instruction-shaped lines (76 of ~439). On Challenge 04 of the Zava lab that is 5
+       * steps out of 26 instructions. Until now nothing anywhere carried that number, so a
+       * learner could not tell "Rocky has nothing to say" apart from "Rocky is blind here" - the
+       * single biggest honesty gap left in the product.
+       *
+       * `unread` counts the lines that look like instructions and yielded no target. It is not
+       * the whole truth (a line the parser rejects as prose is not counted) but it is a floor,
+       * and a floor Rocky can state without overclaiming.
+       */
+      unread: parsed.unparsed.length,
       found: true,
       lines: lines.length,
       assisted: helped,

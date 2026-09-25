@@ -60,7 +60,10 @@ $leaks = Get-ChildItem $src -Recurse -File -Include *.js,*.json,*.ps1,*.txt -Err
   # right to flag a key — that is its job — but this file is deliberately local and must
   # never be packaged, so it is excluded from the scan AND from the zip below rather than
   # failing the build. If it ever reaches dist/, the package-integrity gate fails loudly.
-  Where-Object { $_.FullName -notlike "*\dist\*" -and $_.Name -ne 'build-package.ps1' -and $_.Name -ne 'ai.local.json' } |
+  # leak-rule-test.ps1 exists to prove the installer's secret check still catches a credential,
+  # so it holds FAKE ones on purpose ("sk-abc123def456" and friends). Scanning the file that
+  # tests the scanner is circular; it is excluded by name, and it is a test so it never ships.
+  Where-Object { $_.FullName -notlike "*\dist\*" -and $_.Name -ne 'build-package.ps1' -and $_.Name -ne 'ai.local.json' -and $_.Name -ne 'leak-rule-test.ps1' } |
   Select-String -Pattern $patterns -ErrorAction SilentlyContinue
 if ($leaks) { $leaks | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber)" -ForegroundColor Yellow }; Die "possible secret or personal endpoint in the package" }
 Say "no secrets found"

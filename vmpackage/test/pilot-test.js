@@ -334,6 +334,34 @@ check('CHAIN: the guide\'s task heading reaches the mentor through the path that
   assert.strictEqual(why.text, 'This is part of the task \u201CCreate the custom departing-user policy\u201D.');
 });
 
+check('the preflight admits what Rocky CANNOT point at, not only what he can', () => {
+  /*
+   * THE BIGGEST HONESTY GAP THE RELEASE AUDIT FOUND. Measured over the 22 real guides on this
+   * machine, the rules yield a pointable step for 17% of instruction-shaped lines - 5 of 26 on
+   * the demo challenge. Saying only \"this page has 5 steps I can point at\" invites a learner to
+   * believe the rest of the page is not there. A mentor who will not admit its blind spot is the
+   * kind of mentor this project exists not to build.
+   */
+  const steps = [
+    { text: 'Open Settings.', surface: 'browser', targets: [{ n: 1, label: 'Settings' }] },
+    { text: 'Select Save.', surface: 'browser', targets: [{ n: 1, label: 'Save' }] },
+  ];
+  const withUnread = P._summary(steps, 7);
+  assert.match(withUnread.text, /2 steps I can point at/);
+  assert.match(withUnread.text, /7 more lines here I can read to you but not point at/, withUnread.text);
+  assert.match(withUnread.text, /check the guide as well as me/);
+
+  // Nothing unread: no apology, no padding.
+  const clean = P._summary(steps, 0);
+  assert.ok(!/more lines/.test(clean.text), 'invented a blind spot: ' + clean.text);
+
+  // One line reads as one line.
+  assert.match(P._summary(steps, 1).text, /is 1 more line here/);
+
+  // A follower tab has no page of its own to count, so the sentence is simply absent.
+  assert.ok(!/more lines/.test(P._summary(steps, undefined).text));
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky knows where he is, and stays quiet when he should.\n`);
