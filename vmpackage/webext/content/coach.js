@@ -195,9 +195,16 @@
     if (ctx.complete && total) {
       return {
         level: "DONE", canGlow: false, why: "complete",
-        // "as far as I can see": completion here is the done-ledger, which infers.
-        text: "You have worked through all " + total + " steps of " + (ctx.lab ? clean(ctx.lab) : "the lab") +
-              ", as far as I can see. Anything you want to go back over before you close the lab?",
+        /*
+         * "STEPS I COULD READ", NOT "STEPS OF THE LAB". Measured over 22 real guides, the rules
+         * yield a pointable step for 17% of instruction lines; Challenge 04 of the Zava lab has
+         * 26 instructions and Rocky reads 5. So `total` is Rocky's count, and the moment the
+         * ledger marks those 5 done this sentence used to tell a learner two tasks from the end
+         * that they had worked through all the steps of the lab. That is a false claim on the
+         * demo path itself.
+         */
+        text: "You have worked through all " + total + " of the steps I could read from this page, as far as I can see. " +
+              "The guide may have more that I could not read, so check it before you close the lab.",
       };
     }
 
