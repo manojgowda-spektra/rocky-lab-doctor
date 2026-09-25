@@ -160,6 +160,21 @@ $script:Ui = $null
   it, showing the window steals the caret from whatever the learner is typing into, which is the
   fastest way to make a helper hated.
 #>
+<#
+  A rounded rectangle as a path. The head and the visor are both one, and GDI+ has no primitive
+  for it. Kept at script scope because a Paint handler cannot declare functions.
+#>
+function New-RoundPath([single]$x, [single]$y, [single]$w, [single]$h, [single]$r) {
+  $d = $r * 2
+  $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+  $path.AddArc($x, $y, $d, $d, 180, 90)
+  $path.AddArc(($x + $w - $d), $y, $d, $d, 270, 90)
+  $path.AddArc(($x + $w - $d), ($y + $h - $d), $d, $d, 0, 90)
+  $path.AddArc($x, ($y + $h - $d), $d, $d, 90, 90)
+  $path.CloseFigure()
+  return $path
+}
+
 function New-Buddy {
   Add-Type -AssemblyName System.Windows.Forms, System.Drawing
   if (-not ([System.Management.Automation.PSTypeName]'Rocky.NoFocusForm').Type) {
@@ -191,27 +206,110 @@ namespace Rocky {
   $f.StartPosition = 'Manual'
   $f.Size = New-Object System.Drawing.Size($W, $H)
   $f.Location = New-Object System.Drawing.Point(($screen.Right - $W - 24), ($screen.Bottom - $H - 24))
-  $f.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#0D1426")
+  $f.BackColor = [System.Drawing.ColorTranslator]::FromHtml("#12172B")
 
-  # Rocky, drawn rather than shipped: one less file to get onto the VM, and he matches the
-  # browser half's palette.
+<#
+    ROCKY, AND NOT A SMILEY.
+
+    This used to paint a gold disc with two dots and a smile, which is not Rocky and read on a
+    real VM as a stock emoji dropped into the corner of someone's lab. Rocky is a white shell
+    with a dark visor and two amber eyes inside a gold halo, and that face IS the product's
+    identity - the learner should recognise the same character on the desktop and in the page.
+
+    Ported from webext/content/rocky.js drawRocky(): the same geometry and the same hex values,
+    scaled by SC from its 150x172 canvas so the two halves cannot drift apart by eye. Static
+    rather than animated - the browser half bobs and blinks on a render loop; a WinForms timer
+    repainting a top-most window over a streamed desktop buys a flicker risk for nothing.
+  #>
   $face = New-Object System.Windows.Forms.Panel
-  $face.Size = New-Object System.Drawing.Size(56, 56)
-  $face.Location = New-Object System.Drawing.Point(18, 20)
+  $face.Size = New-Object System.Drawing.Size(66, 104)
+  $face.Location = New-Object System.Drawing.Point(12, 22)
   $face.BackColor = $f.BackColor
   $face.Add_Paint({
     param($s, $e)
     $g = $e.Graphics
-    $g.SmoothingMode = 'AntiAlias'
-    $halo = New-Object System.Drawing.SolidBrush ([System.Drawing.ColorTranslator]::FromHtml("#1E2A4A"))
-    $g.FillEllipse($halo, 0, 0, 54, 54)
-    $body = New-Object System.Drawing.SolidBrush ([System.Drawing.ColorTranslator]::FromHtml("#FFCF5A"))
-    $g.FillEllipse($body, 7, 7, 40, 40)
-    $eye = New-Object System.Drawing.SolidBrush ([System.Drawing.ColorTranslator]::FromHtml("#0D1426"))
-    $g.FillEllipse($eye, 19, 22, 6, 9)
-    $g.FillEllipse($eye, 31, 22, 6, 9)
-    $pen = New-Object System.Drawing.Pen ([System.Drawing.ColorTranslator]::FromHtml("#0D1426")), 2
-    $g.DrawArc($pen, 20, 30, 16, 10, 20, 140)
+    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+
+    # rocky.js: ART is 150x172 with cx=75, head centre y=56. SC scales that onto this panel.
+    $SC = 0.58
+    $cx = 33.0
+    $hy = 34.0
+    $by = $hy + 34 * $SC          # body starts below the head, as in drawRocky()
+
+    $cHalo  = [System.Drawing.ColorTranslator]::FromHtml("#FFCF5A")   # MOODS.neutral.halo
+    $cShell = [System.Drawing.ColorTranslator]::FromHtml("#F7F9FC")   # head and body
+    $cWing  = [System.Drawing.ColorTranslator]::FromHtml("#EEF1F7")
+    $cVisor = [System.Drawing.ColorTranslator]::FromHtml("#0C1224")
+    $cEye   = [System.Drawing.ColorTranslator]::FromHtml("#F7C23A")   # EYE - Rocky's identity
+    $cEyeHi = [System.Drawing.ColorTranslator]::FromHtml("#FFF3C4")   # EYE_HI
+
+    # --- the warm halo behind the head (radial, amber to transparent) ---
+    $hr = 58 * $SC
+    $hp = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $hp.AddEllipse(($cx - $hr), ($hy - $hr), ($hr * 2), ($hr * 2))
+    $pg = New-Object System.Drawing.Drawing2D.PathGradientBrush $hp
+    $pg.CenterPoint = New-Object System.Drawing.PointF($cx, $hy)
+    $pg.CenterColor = [System.Drawing.Color]::FromArgb(170, $cHalo)
+    $pg.SurroundColors = @([System.Drawing.Color]::FromArgb(0, $cHalo))
+    $g.FillPath($pg, $hp)
+    $pg.Dispose(); $hp.Dispose()
+
+    # --- the teardrop body ---
+    $bBrush = New-Object System.Drawing.SolidBrush $cShell
+    $bp = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $bp.AddBezier(
+      (New-Object System.Drawing.PointF($cx, $by)),
+      (New-Object System.Drawing.PointF(($cx - 34 * $SC), ($by + 6 * $SC))),
+      (New-Object System.Drawing.PointF(($cx - 32 * $SC), ($by + 70 * $SC))),
+      (New-Object System.Drawing.PointF($cx, ($by + 78 * $SC))))
+    $bp.AddBezier(
+      (New-Object System.Drawing.PointF($cx, ($by + 78 * $SC))),
+      (New-Object System.Drawing.PointF(($cx + 32 * $SC), ($by + 70 * $SC))),
+      (New-Object System.Drawing.PointF(($cx + 34 * $SC), ($by + 6 * $SC))),
+      (New-Object System.Drawing.PointF($cx, $by)))
+    $bp.CloseFigure()
+    $g.FillPath($bBrush, $bp)
+    $bp.Dispose()
+
+    # --- the wing-arms, resting down at 0.95 rad as drawRocky() has them ---
+    $wBrush = New-Object System.Drawing.SolidBrush $cWing
+    $wLen = 34 * $SC
+    $wHalf = 9 * $SC
+    foreach ($side in -1, 1) {
+      $st = $g.Save()
+      $g.TranslateTransform($cx, ($by + 16 * $SC))
+      $g.RotateTransform($side * 54.4)     # 0.95 rad
+      if ($side -lt 0) { $g.FillEllipse($wBrush, (-$wLen), (-$wHalf), $wLen, ($wHalf * 2)) }
+      else             { $g.FillEllipse($wBrush, 0, (-$wHalf), $wLen, ($wHalf * 2)) }
+      $g.Restore($st)
+    }
+    $wBrush.Dispose()
+
+    # --- the head ---
+    $hw = 80 * $SC; $hh = 60 * $SC
+    $hpath = New-RoundPath ($cx - $hw / 2) ($hy - $hh / 2) $hw $hh (26 * $SC)
+    $g.FillPath($bBrush, $hpath)
+    $hpath.Dispose(); $bBrush.Dispose()
+
+    # --- the visor ---
+    $vw = 66 * $SC; $vh = 38 * $SC
+    $vBrush = New-Object System.Drawing.SolidBrush $cVisor
+    $vpath = New-RoundPath ($cx - $vw / 2) ($hy - 19 * $SC) $vw $vh (19 * $SC)
+    $g.FillPath($vBrush, $vpath)
+    $vpath.Dispose(); $vBrush.Dispose()
+
+    # --- the eyes: amber ovals with a soft glow and a highlight ---
+    $eRx = 7 * $SC; $eRy = 11 * $SC; $eDx = 15 * $SC
+    $glow = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(70, $cEye))
+    $eBrush = New-Object System.Drawing.SolidBrush $cEye
+    $hiBrush = New-Object System.Drawing.SolidBrush $cEyeHi
+    foreach ($side in -1, 1) {
+      $ex = $cx + $side * $eDx
+      $g.FillEllipse($glow, ($ex - $eRx - 2.2), ($hy - $eRy - 2.2), (($eRx + 2.2) * 2), (($eRy + 2.2) * 2))
+      $g.FillEllipse($eBrush, ($ex - $eRx), ($hy - $eRy), ($eRx * 2), ($eRy * 2))
+      $g.FillEllipse($hiBrush, ($ex - $eRx * 0.9), ($hy - $eRy * 0.72), ($eRx * 0.62), ($eRy * 0.42))
+    }
+    $glow.Dispose(); $eBrush.Dispose(); $hiBrush.Dispose()
   })
   $f.Controls.Add($face)
 
