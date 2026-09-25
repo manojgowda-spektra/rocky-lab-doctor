@@ -205,8 +205,14 @@
          * ledger marks those 5 done this sentence used to tell a learner two tasks from the end
          * that they had worked through all the steps of the lab. That is a false claim on the
          * demo path itself.
+         *
+         * IT NO LONGER SAYS "FROM THIS PAGE" EITHER. Inside a lab VM the browser shows the portal
+         * and nothing else; the guide is handed over by the installer, not read off the screen, so
+         * "from this page" would be a false claim about where the steps came from - in the one
+         * product whose whole case is that it does not assert what it has not observed. Dropping
+         * the clause is true on both paths, and the sentence after it still carries the caveat.
          */
-        text: "You have worked through all " + total + " of the steps I could read from this page, as far as I can see. " +
+        text: "You have worked through all " + total + " of the steps I could read, as far as I can see. " +
               "The guide may have more that I could not read, so check it before you close the lab.",
       };
     }

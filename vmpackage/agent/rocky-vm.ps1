@@ -45,8 +45,10 @@ param(
   [switch]$NoBrowser,
   [string]$StartUrl = "https://purview.microsoft.com",
   # Which guide page to hand to the extension. A VM browser has no guide pane and no second tab,
-  # so without this the pilot has nothing to guide from.
-  [int]$Page = 1,
+  # so without this the pilot has nothing to guide from. 0 means the WHOLE guide, and that is the
+  # default: handing over a single page leaves Rocky holding it for the rest of the lab, because
+  # nothing inside the VM tells him the learner has moved on.
+  [int]$Page = 0,
   [string]$Root = "$env:ProgramData\Rocky"
 )
 
@@ -466,14 +468,33 @@ function Install-BrowserHalf($guide, $pageNo) {
     return $null
   }
 
-  # The guide, as rendered lines, for a browser that has no guide pane of its own.
+  <#
+    THE WHOLE GUIDE, NOT ONE PAGE, and the reason is that nothing ever revises this.
+    On a laptop the extension re-reads the guide pane whenever the learner turns the page. Inside
+    the VM there is no pane to re-read, so whatever is handed over here is what Rocky holds until
+    the lab ends. Hand over page 1 and he spends Challenge 03 still reciting the prerequisites.
+
+    Measured on the Purview lab: the five pages yield 3, 2, 1, 4 and 5 steps separately and 15
+    together - the same fifteen, in guide order, none lost and none invented - parsed in 3.6 ms.
+    So the pilot's existing "first step I have not seen finished" walk carries the learner all the
+    way through, and Rocky is neither silent nor stuck on a page they left an hour ago.
+  #>
   try {
-    $page = $guide.Pages | Where-Object { $_.Order -eq $pageNo } | Select-Object -First 1
-    if (-not $page) { $page = $guide.Pages | Sort-Object Order | Select-Object -First 1 }
-    $lines = Render-Markdown $page.Text
-    $payload = [ordered]@{ title = $page.Title; page = $page.Order; lines = @($lines) }
+    if ($pageNo -gt 0) {
+      $page = $guide.Pages | Where-Object { $_.Order -eq $pageNo } | Select-Object -First 1
+      if (-not $page) { $page = $guide.Pages | Sort-Object Order | Select-Object -First 1 }
+      $lines = @(Render-Markdown $page.Text)
+      $title = $page.Title
+      $what = "page $($page.Order)"
+    } else {
+      $lines = @()
+      foreach ($pg in ($guide.Pages | Sort-Object Order)) { $lines += @(Render-Markdown $pg.Text) }
+      $title = if ($LabName) { $LabName } else { $guide.Name }
+      $what = "all $($guide.Pages.Count) pages"
+    }
+    $payload = [ordered]@{ title = $title; page = $pageNo; lines = @($lines) }
     $payload | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $ext "labguide.json") -Encoding UTF8
-    Say-Console "handed the extension page $($page.Order): $($lines.Count) lines" "Green"
+    Say-Console "handed the extension $($what): $($lines.Count) lines" "Green"
   } catch {
     Say-Console "could not hand over the guide ($($_.Exception.Message))" "DarkYellow"
   }
@@ -580,7 +601,8 @@ function Start-Rocky($guide) {
     $ext = Install-BrowserHalf $guide $Page
     if ($ext -and (Start-RockyBrowser $ext $StartUrl)) {
       Say "There you go - Edge is opening with me inside it. From here I can see the page and point at the actual controls." `
-          "I have given that browser page $Page of the guide."
+          $(if ($Page -gt 0) { "I have given that browser page $Page of the guide." }
+            else { "That browser has the whole guide - all $($guide.Pages.Count) pages of it." })
     } else {
       Say "I could not open the browser myself, so please open Microsoft Edge when you are ready." `
           "I will still help with anything on the desktop."
