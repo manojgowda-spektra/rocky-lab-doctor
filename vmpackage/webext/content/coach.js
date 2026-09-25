@@ -120,6 +120,9 @@
 
   // Where a control usually hides when it is not on screen. Generic on purpose: a specific
   // claim Rocky cannot verify would be a guess dressed as help.
+  // The CloudLabs experience shell: the page that hosts the guide and, in a VM lab, the VM itself.
+  var ON_LAB_SHELL = /(^|\.)cloudlabs\.ai$|(^|\.)cloudlabs\.ai\//i;
+
   function whereItUsuallyIs(label) {
     if (/^(save|cancel|next|back|submit|create|apply|ok)$/i.test(label)) {
       return "On these forms it usually sits at the top or bottom of the panel you are filling in.";
@@ -237,7 +240,21 @@
           ? num2 + "There is more than one “" + label + "” on this page, so I would be guessing. " +
             "Which part of the page are you working in?"
           : num2 + "“" + label + "” is not showing anywhere I can see on this page. " +
-            whereItUsuallyIs(label),
+            /*
+             * ON THE LAB SHELL, "look behind a menu" IS THE WRONG ADVICE.
+             *
+             * In a VM-centric lab the only tab is the CloudLabs page: the guide on one side, the
+             * VM as a canvas on the other. The portal control the step names is inside that VM,
+             * which Rocky cannot see at all - so telling the learner it is probably behind a menu
+             * on THIS page sends them hunting for something that was never in their browser.
+             * Measured: a step reading "open Solutions > Insider Risk Management" produced
+             * "...It may be inside a menu or tab that is not open yet." on the CloudLabs shell.
+             */
+            (ON_LAB_SHELL.test(String(ctx.url || ""))
+              ? "This page is the lab shell rather than the portal. If you are working inside the " +
+                "lab's own VM I cannot see in there at all; if the portal is open in another tab of " +
+                "this window, switch to it and I will pick the step up there."
+              : whereItUsuallyIs(label)),
       };
     }
 

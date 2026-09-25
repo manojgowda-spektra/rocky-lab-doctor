@@ -336,6 +336,32 @@ check('ORIENT does not present the first unfinished step as \"the next thing her
   assert.match(r.text, /first step I have not seen finished/, r.text);
 });
 
+check('on the lab shell, LOCATE says the VM - not \"look behind a menu\"', () => {
+  /*
+   * VM-CENTRIC LABS. The only tab is the CloudLabs page: guide on one side, the VM as a canvas on
+   * the other. The portal control the step names is inside that VM, which Rocky cannot see.
+   * Measured: \"open Solutions > Insider Risk Management\" produced \"It may be inside a menu or
+   * tab that is not open yet\" on the shell - sending the learner hunting in the wrong browser.
+   */
+  const ctx = {
+    lab: 'VM lab', steps: STEPS, doneMap: {}, total: 5, done: 0,
+    step: { text: 'Open Solutions > Insider Risk Management.', targets: [{ n: 1, label: 'Solutions' }] },
+    index: 0, confidence: 0.7, verdict: { status: 'absent', reason: 'no-candidates' }, place: {},
+    sayable: { stepNumber: null, total: 5, source: 'none', why: '' },
+  };
+  const shell = C.say(Object.assign({}, ctx, { url: 'https://experience.cloudlabs.ai/#/lab' }));
+  assert.strictEqual(shell.level, 'LOCATE');
+  assert.match(shell.text, /lab shell rather than the portal/, shell.text);
+  assert.match(shell.text, /cannot see in there at all/, 'the VM limit must be stated');
+  assert.ok(!/behind the gear icon|inside a menu or tab that is not open/.test(shell.text),
+    'still sending the learner hunting on the shell: ' + shell.text);
+
+  // On the portal itself the ordinary advice is still right.
+  const portal = C.say(Object.assign({}, ctx, { url: 'https://purview.microsoft.com/insiderriskmgmt' }));
+  assert.match(portal.text, /menu|gear icon|panel/, 'lost the normal where-it-usually-is help: ' + portal.text);
+  assert.ok(!/lab shell/.test(portal.text), 'the shell line leaked onto the portal');
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky degrades in specificity, never into silence.\n`);
