@@ -250,7 +250,15 @@
         level: "ORIENT", canGlow: false, why: "section-only",
         text: (ctx.place && ctx.place.page ? "You are on " : "You are in ") + section + ". " +
               (next
-                ? "The next thing the guide asks for here is “" + clean(next).replace(/\.$/, "") + ".”"
+                /*
+                 * NOT "here". ORIENT fires when the belief is too weak to name a step, so
+                 * `next` is the first step the ledger has not seen finished ANYWHERE - which,
+                 * when nothing has been observed yet, is step 1. Measured: with the portal
+                 * renaming a control, a learner standing on Policies was told the next thing
+                 * was "open Purview, then open Solutions > Insider Risk Management". True of
+                 * the ledger, misleading about the page.
+                 */
+                ? "The first step I have not seen finished is “" + clean(next).replace(/\.$/, "") + ".”"
                 : (total
                     ? done + " of the " + total + " steps look done, and I cannot yet tell which one you are on. " +
                       "What did you last click?"

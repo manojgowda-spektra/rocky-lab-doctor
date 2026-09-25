@@ -319,6 +319,23 @@ check('a place name derived from a URL reads like a place, not like a URL', () =
   })).level, 'SITUATE');
 });
 
+check('ORIENT does not present the first unfinished step as \"the next thing here\"', () => {
+  /*
+   * MEASURED. With the portal renaming a control so nothing matched, a learner standing on the
+   * Policies page was told: \"You are on Policies. The next thing the guide asks for here is
+   * 'In Microsoft Edge, open https://purview.microsoft.com...'\" - step 1, because the ledger
+   * had seen nothing finished. True of the ledger, misleading about the page. ORIENT fires
+   * precisely when Rocky CANNOT place the learner, so it must not imply the step belongs here.
+   */
+  const r = C.say(Object.assign({}, BASE, {
+    step: null, confidence: 0.1, place: { page: 'Policies' },
+    sayable: { stepNumber: null, total: 5, source: 'none', why: '' },
+  }));
+  assert.strictEqual(r.level, 'ORIENT');
+  assert.ok(!/asks for here/.test(r.text), 'ORIENT still claims the step belongs to this page: ' + r.text);
+  assert.match(r.text, /first step I have not seen finished/, r.text);
+});
+
 console.log('');
 if (fails.length) { console.log(`${pass} passed, ${fails.length} FAILED\n`); process.exit(1); }
 console.log(`${pass} passed, 0 failed — Rocky degrades in specificity, never into silence.\n`);
