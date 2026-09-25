@@ -6,14 +6,47 @@ One line, pasted into the VM. Nothing to download by hand, no extension to side-
 
 ## The command
 
-Open **Command Prompt** (or the Run box, or PowerShell) inside the Windows lab VM and paste this:
+**Which shell you are in matters.** A CloudLabs Windows VM usually opens PowerShell, not Command
+Prompt. Use the matching form — the two are not interchangeable, and the failure is ugly rather
+than obvious.
+
+### In PowerShell (the usual case)
+
+Three short lines, pasted one at a time:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+```
+```powershell
+iwr -useb https://raw.githubusercontent.com/manojgowda-spektra/rocky-lab-doctor/main/vmpackage/agent/rocky-vm.ps1 -OutFile $env:TEMP\rocky.ps1
+```
+```powershell
+& $env:TEMP\rocky.ps1
+```
+
+Three short lines rather than one long one on purpose: a long line pasted through a streamed VM
+desktop can arrive duplicated or truncated, and lands you at a `>>` continuation prompt with no
+clue which part went wrong. Each line here is valid on its own, so a bad paste fails visibly.
+
+`Set-ExecutionPolicy ... -Scope Process` lasts only for that console. `iwr -useb` is
+`Invoke-WebRequest -UseBasicParsing`. Verified in a clean Windows PowerShell 5.1 on
+25 September 2026.
+
+> **Do not paste the Command Prompt form below into PowerShell.** PowerShell expands `$f` inside
+> the outer double-quoted string before the inner `powershell` ever sees it, so the command arrives
+> as `=Join-Path ... -OutFile ; & -SelfTest` and throws three CommandNotFoundException errors. This
+> happened on a live VM.
+
+### In Command Prompt or the Run box
+
+One line, with no double quotes inside the outer pair:
 
 ```
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$f=Join-Path $env:TEMP 'rocky-vm.ps1'; iwr -UseBasicParsing 'https://raw.githubusercontent.com/manojgowda-spektra/rocky-lab-doctor/main/vmpackage/agent/rocky-vm.ps1' -OutFile $f; & $f"
 ```
 
-It contains no double quotes inside the outer pair, so it survives Command Prompt, PowerShell and
-the Run box unchanged. Verified through `cmd.exe` on 25 September 2026.
+Verified through `cmd.exe` on 25 September 2026. `cmd.exe` does not expand `$f`, which is exactly
+why this form works there and fails in PowerShell.
 
 The command downloads and runs a script from the public `rocky-lab-doctor` repository. That is the
 whole trust story: public raw GitHub over HTTPS, no credentials, no token, nothing written outside
@@ -64,7 +97,7 @@ over all five pages. Measured on this lab: the pages yield 3, 2, 1, 4 and 5 step
 
 | Flag | What it does |
 | --- | --- |
-| `-SelfTest` | Fetch and parse the guide, print what was found, exit. No window, no browser, no install. Run this first if you want to check a lab before a session. |
+| `-SelfTest` | Fetch and parse the guide, print what was found, exit. No window, no browser, no install. Run this first: it is the cheapest way to prove the VM has outbound HTTPS, which is the most likely thing to be missing. In PowerShell that is `& $env:TEMP\rocky.ps1 -SelfTest`. |
 | `-Masterdoc <url>` | Another lab. Point it at that lab's `masterdoc.json` — the same file CloudLabs renders from. Defaults to the Zava Purview lab. |
 | `-LabName "<name>"` | A shorter name for the card, when the lab's own title is long. |
 | `-NoBrowser` | Desktop card only. Does not install the extension and does not open Edge. |
