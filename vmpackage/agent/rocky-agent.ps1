@@ -40,7 +40,11 @@ param(
   [string]$Bridge = "$env:ProgramData\Rocky\step.json",
   [int]$PollMs = 700,
   [switch]$Once,
-  [switch]$ParseTest   # run the guide parser against real guide lines and exit; no desktop needed
+  [switch]$ParseTest,  # run the guide parser against real guide lines and exit; no desktop needed
+  # Define everything and return without watching anything. rocky-vm.ps1 dot-sources this so the
+  # learner gets ONE Rocky in ONE process - the card in the corner and the ring on the desktop -
+  # rather than two scripts that each think they are in charge.
+  [switch]$AsLibrary
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes, System.Windows.Forms, System.Drawing
@@ -466,6 +470,9 @@ if ($Find) {
   Write-Host ""
   return
 }
+
+# Loaded as a library: the caller drives. Everything above is a function; nothing below runs.
+if ($AsLibrary) { return }
 
 # ---- the main loop -----------------------------------------------------------------------
 # Read the guide from the browser window, find the first target that resolves on the desktop,

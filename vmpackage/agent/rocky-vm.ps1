@@ -253,6 +253,133 @@ function Pump([int]$ms) {
   }
 }
 
+# ---- 2b. the desktop half, loaded into this same process --------------------------------------
+
+<#
+  ONE ROCKY, ONE PROCESS. rocky-agent.ps1 holds the UI Automation resolver and the ring, under the
+  same 0.70 / 0.20 contract the browser half keeps. Running it as a second script would give the
+  learner two Rockys that cannot see each other: one announcing a step while the other rings a
+  control for a different one. Dot-sourced with -AsLibrary, its functions become ours and the card
+  and the ring are decided in one place.
+
+  If it cannot be loaded, Rocky carries on WITHOUT the ring rather than failing to start. A buddy
+  who greets you and reads the guide is worth having even when he cannot point.
+#>
+$script:CanRing = $false
+
+function Load-DesktopHalf {
+  $local = Join-Path $PSScriptRoot "rocky-agent.ps1"
+  $path = $local
+  if (-not (Test-Path $path)) {
+    # Installed by the one-liner, which fetches only this file: pull its other half the same way.
+    $path = Join-Path $env:TEMP "rocky-agent.ps1"
+    try {
+      Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -OutFile $path `
+        -Uri "https://raw.githubusercontent.com/manojgowda-spektra/rocky-lab-doctor/main/vmpackage/agent/rocky-agent.ps1"
+    } catch {
+      Say-Console "desktop pointing unavailable ($($_.Exception.Message)); carrying on without it" "DarkYellow"
+      return $false
+    }
+  }
+  try {
+    . $path -AsLibrary
+    return $true
+  } catch {
+    Say-Console "desktop pointing unavailable ($($_.Exception.Message)); carrying on without it" "DarkYellow"
+    return $false
+  }
+}
+
+# Which application is in front right now, in words a learner would use.
+function Get-ForegroundApp {
+  try {
+    if (-not ([System.Management.Automation.PSTypeName]'Rocky.Fg').Type) {
+      Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+namespace Rocky {
+  public class Fg {
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern int GetWindowThreadProcessId(IntPtr h, out int pid);
+    public static int Pid() { int p; GetWindowThreadProcessId(GetForegroundWindow(), out p); return p; }
+  }
+}
+"@
+    }
+    $proc = Get-Process -Id ([Rocky.Fg]::Pid()) -ErrorAction SilentlyContinue
+    if (-not $proc) { return $null }
+    $friendly = switch -Regex ($proc.ProcessName) {
+      '^(msedge|chrome|firefox)$'   { "the browser" }
+      '^Code$'                      { "VS Code" }
+      '^(powershell|pwsh|WindowsTerminal|cmd)$' { "PowerShell" }
+      '^notepad$'                   { "Notepad" }
+      '^explorer$'                  { "File Explorer" }
+      default                       { $proc.ProcessName }
+    }
+    return [pscustomobject]@{ Name = $proc.ProcessName; Friendly = $friendly }
+  } catch { return $null }
+}
+
+<#
+  Ring a control the guide names, if it is on the desktop in front of the learner. Browser steps
+  are the extension's job, so this deliberately does nothing while a browser is in front: two
+  things pointing at once is worse than one.
+#>
+<#
+  EVERY CANDIDATE LABEL COSTS A UI AUTOMATION SCAN, so the search must be bounded or Rocky goes
+  quiet. Measured: a full scan is ~670 ms, and the first version of this walked every target on
+  all five guide pages - minutes of silence per loop, which is precisely the "stuck" a learner
+  reads as broken. The labels are therefore collected ONCE, capped, and searched under a deadline;
+  whatever is not found in that budget is simply not found this time round.
+#>
+$script:RingLabels = $null
+$RING_MAX_LABELS = 12
+$RING_BUDGET_MS = 1500
+
+function Get-RingLabels($guide) {
+  if ($script:RingLabels) { return $script:RingLabels }
+  $seen = @{}
+  $out = New-Object System.Collections.ArrayList
+  foreach ($page in ($guide.Pages | Sort-Object Order)) {
+    foreach ($raw in ($page.Text -split "`r?`n")) {
+      $line = Clean-Line $raw
+      if ($line.Length -lt 12 -or $line.Length -gt 300) { continue }
+      # Desktop work only. A browser step is the extension's job and scanning for it out here
+      # wastes the whole budget on something Rocky must not point at anyway.
+      if ($line -notmatch '(?i)\b(VS Code|Visual Studio Code|PowerShell|Notepad|File Explorer|desktop|terminal|command prompt)\b') { continue }
+      $targets = @()
+      try { $targets = @(Parse-GuideLine $line) } catch { continue }
+      foreach ($t in $targets) {
+        if (-not $t.label -or $seen[$t.label]) { continue }
+        $seen[$t.label] = $true
+        [void]$out.Add([pscustomobject]@{ Label = $t.label; Line = $line })
+        if ($out.Count -ge $RING_MAX_LABELS) { $script:RingLabels = $out; return $out }
+      }
+    }
+  }
+  $script:RingLabels = $out
+  return $out
+}
+
+function Try-Ring($guide, $app) {
+  if (-not $script:CanRing -or -not $app -or $app.Friendly -eq "the browser") {
+    try { Hide-Ring } catch { }
+    return $null
+  }
+  $deadline = (Get-Date).AddMilliseconds($RING_BUDGET_MS)
+  foreach ($c in (Get-RingLabels $guide)) {
+    if ((Get-Date) -gt $deadline) { break }
+    $r = $null
+    try { $r = Resolve-Control $c.Label } catch { continue }
+    if ($r -and $r.rect) {
+      try { Show-Ring $r.rect.x $r.rect.y $r.rect.w $r.rect.h $c.Label } catch { }
+      return $c
+    }
+  }
+  try { Hide-Ring } catch { }
+  return $null
+}
+
 # ---- 3. is a browser open yet? ------------------------------------------------------------------
 
 <#
@@ -282,6 +409,7 @@ function Start-Rocky($guide) {
   if ($labName.Length -gt 72) { $labName = $labName.Substring(0, 69).TrimEnd() + "..." }
 
   if (-not $NoUi) { [void](New-Buddy) }
+  if (-not $NoUi) { $script:CanRing = Load-DesktopHalf }
 
   Say "Hello — I'm Rocky, and I'll be with you for this lab." `
       "I have read all $($guide.Pages.Count) pages of the guide."
@@ -330,11 +458,55 @@ function Start-Rocky($guide) {
     Pump $PollMs
   }
 
-  Pump 6000
-  Say "I'm here in the corner whenever you need me." "Ask me anything in the browser, or look here for the desktop steps."
+  Pump 5000
 
-  # Stay alive so the card remains on screen; the desktop agent handles rings separately.
-  while ($true) { Pump 4000 }
+  <#
+    THE RESTING LOOP, AND WHY IT IS NOT SILENT.
+    Rocky stays on screen for the rest of the lab. He does two things: he rings a control when the
+    guide names one that is actually in front of the learner outside the browser, and he keeps the
+    card saying something true about where they are. He does NOT point while a browser is in
+    front - that is the extension's job, and two Rockys pointing at once is worse than one.
+  #>
+  $lastSaid = ""
+  $lastApp = ""
+  while ($true) {
+    # SAY FIRST, POINT SECOND. Working out what to say is instant; finding a control is not, and
+    # a learner must never watch an empty card while Rocky thinks.
+    $app = Get-ForegroundApp
+    $where = if ($app) { $app.Friendly } else { "the desktop" }
+    if ($where -ne $lastApp) {
+      $resting = "I am here in the corner whenever you need me."
+      Say $resting "You are in $where. I have all $($guide.Pages.Count) pages of the guide."
+      $lastApp = $where
+      # Remember what was just said, not nothing: setting this empty made the card repeat itself
+      # one tick later, which reads as a stutter.
+      $lastSaid = $resting
+    }
+    $hit = Try-Ring $guide $app
+
+    if ($hit) {
+      $msg = "That is " + $hit.Label + " - I have ringed it for you."
+      $hint = $hit.Line
+      if ($hint.Length -gt 120) { $hint = $hint.Substring(0, 117) + "..." }
+    } elseif ($where -eq "the browser") {
+      $msg = "You are in the browser, so I will let the page half of me take it from here."
+      $hint = "I am still here for anything on the desktop."
+    } elseif ($where -eq "PowerShell") {
+      $msg = "PowerShell steps are typed, not clicked, so I will not point - run them as the guide prints them."
+      $hint = "Tell me if a command errors and I will say what I know."
+    } else {
+      $msg = "I am here in the corner whenever you need me."
+      $hint = "You are in $where. I have all $($guide.Pages.Count) pages of the guide."
+    }
+
+    # Only speak when something actually changed: a card that rewrites itself every two seconds
+    # reads as noise, and the learner stops looking at it.
+    if ($msg -ne $lastSaid) {
+      Say $msg $hint
+      $lastSaid = $msg
+    }
+    Pump 2000
+  }
 }
 
 # ---- 5. run --------------------------------------------------------------------------------------
